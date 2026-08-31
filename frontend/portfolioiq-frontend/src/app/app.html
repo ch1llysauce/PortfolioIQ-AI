@@ -1,0 +1,80 @@
+<h1>PortfolioIQ AI</h1>
+
+<p>{{ backendStatus() }}</p>
+
+<hr>
+
+<h2>Authentication Test</h2>
+
+<input
+  type="text"
+  placeholder="Display Name"
+  #displayName
+>
+
+<input
+  type="email"
+  placeholder="Email"
+  #email
+>
+
+<input
+  type="password"
+  placeholder="Password"
+  #password
+>
+
+<br><br>
+
+<button
+  type="button"
+  (click)="register(
+    email.value,
+    password.value,
+    displayName.value
+  )"
+>
+  Register
+</button>
+
+<hr>
+
+<h2>Login Test</h2>
+
+<input
+  type="email"
+  placeholder="Email"
+  #loginEmail
+>
+
+<input
+  type="password"
+  placeholder="Password"
+  #loginPassword
+>
+
+<br><br>
+
+<button
+  type="button"
+  (click)="login(
+    loginEmail.value,
+    loginPassword.value
+  )"
+>
+  Login
+</button>
+
+<button
+  type="button"
+  (click)="checkUser()"
+>
+  Check Current User
+</button>
+
+<button
+  type="button"
+  (click)="logout()"
+>
+  Logout
+</button>
