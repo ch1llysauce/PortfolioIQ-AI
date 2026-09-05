@@ -1,0 +1,671 @@
+<div class="app-layout">
+  <!-- LEFT SIDEBAR NAVIGATION (UI 2 Wireframe Spec) -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="logo">⚡ PortfolioIQ<span class="logo-accent">.AI</span></span>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item" [class.active]="activeTab() === 'dashboard'" (click)="setTab('dashboard')">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab() === 'projects'" (click)="setTab('projects')">
+        <span class="nav-icon">📁</span>
+        <span>Projects</span>
+        <span class="nav-count" *ngIf="projects().length">{{ projects().length }}</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab() === 'skills'" (click)="setTab('skills')">
+        <span class="nav-icon">💡</span>
+        <span>Skills Catalog</span>
+        <span class="nav-count" *ngIf="skills().length">{{ skills().length }}</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab() === 'career'" (click)="setTab('career')">
+        <span class="nav-icon">🎯</span>
+        <span>Career Goals</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab() === 'optimizer'" (click)="setTab('optimizer')">
+        <span class="nav-icon">⚡</span>
+        <span>Optimization</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab() === 'resume'" (click)="setTab('resume')">
+        <span class="nav-icon">📄</span>
+        <span>Resume Extractor</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="badge" [class.badge-success]="backendConnected()" [class.badge-danger]="!backendConnected()">
+        {{ backendStatus() }}
+      </span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="main-wrapper">
+    <!-- TOP HEADER -->
+    <header class="top-header">
+      <div class="header-title">
+        <h1 *ngIf="activeTab() === 'dashboard'">📊 Developer Portfolio Dashboard</h1>
+        <h1 *ngIf="activeTab() === 'projects'">📁 My Developer Projects</h1>
+        <h1 *ngIf="activeTab() === 'skills'">💡 Technical Skills Catalog</h1>
+        <h1 *ngIf="activeTab() === 'career'">🎯 Career Goal & Skill Gap Analysis</h1>
+        <h1 *ngIf="activeTab() === 'optimizer'">⚡ Portfolio Optimization & Recommendations</h1>
+        <h1 *ngIf="activeTab() === 'resume'">📄 AI Resume PDF Extractor</h1>
+      </div>
+
+
+      <div class="user-auth-bar">
+        <ng-container *ngIf="currentUser(); else authButtons">
+          <div class="user-profile-badge">
+            <span class="user-avatar">👤</span>
+            <span class="user-greeting"><strong>{{ currentUser()?.email }}</strong></span>
+          </div>
+          <button class="btn btn-secondary btn-sm" (click)="logout()">Sign Out</button>
+        </ng-container>
+        <ng-template #authButtons>
+          <div class="header-auth-actions">
+            <button class="btn btn-outline btn-sm" (click)="openAuthModal('login')">Sign In</button>
+            <button class="btn btn-primary btn-sm" (click)="openAuthModal('register')">Get Started</button>
+          </div>
+        </ng-template>
+      </div>
+    </header>
+
+
+    <!-- CONTENT BODY -->
+    <main class="content-container">
+
+      <!-- TAB 1: MAIN DASHBOARD (UI 2 & UI 3 Wireframe Specs) -->
+      <div *ngIf="activeTab() === 'dashboard'" class="tab-pane">
+        <div class="dashboard-grid-layout">
+          
+          <!-- Health Score Box -->
+          <div class="card health-card">
+            <div class="card-header flex-between">
+              <h2>Portfolio Health Status</h2>
+              <span class="status-indicator-tag" *ngIf="(portfolioScore()?.overall_health_score ?? 0) >= 70">GOOD PORTFOLIO</span>
+              <span class="status-indicator-tag status-warning" *ngIf="(portfolioScore()?.overall_health_score ?? 0) < 70">NEEDS IMPROVEMENT</span>
+            </div>
+
+            <div class="health-hero-display">
+              <div class="score-display">
+                <span class="score-number">{{ portfolioScore()?.overall_health_score ?? 0 }}</span>
+                <span class="score-max">/ 100</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" [style.width.%]="portfolioScore()?.overall_health_score ?? 0"></div>
+              </div>
+            </div>
+
+            <div class="sub-metrics-list" *ngIf="portfolioScore()?.metrics">
+              <div class="sub-metric-item">
+                <span>Skill Coverage</span>
+                <span class="sub-val">{{ portfolioScore()?.metrics?.skill_diversity_score }}/35</span>
+              </div>
+              <div class="sub-metric-item">
+                <span>Project Volume</span>
+                <span class="sub-val">{{ portfolioScore()?.metrics?.project_volume_score }}/25</span>
+              </div>
+              <div class="sub-metric-item">
+                <span>Detail Quality</span>
+                <span class="sub-val">{{ portfolioScore()?.metrics?.detail_quality_score }}/20</span>
+              </div>
+              <div class="sub-metric-item">
+                <span>Role Alignment</span>
+                <span class="sub-val">{{ skillGap()?.match_percentage ?? 0 }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strengths & Weaknesses Checklist Card (UI 3 Spec) -->
+          <div class="card evaluation-card">
+            <div class="card-header">
+              <h2>Portfolio Strengths & Weaknesses</h2>
+            </div>
+
+            <div class="evaluation-section">
+              <h4 class="eval-title text-success">✓ Strengths</h4>
+              <ul class="eval-list" *ngIf="strengthsList().length; else noStrengths">
+                <li *ngFor="let item of strengthsList()" class="eval-item eval-item-success">
+                  <span class="icon">✓</span> {{ item }}
+                </li>
+              </ul>
+              <ng-template #noStrengths>
+                <p class="empty-hint">Add more projects and skills to build strengths.</p>
+              </ng-template>
+            </div>
+
+            <div class="evaluation-section margin-top-md">
+              <h4 class="eval-title text-danger">! Areas for Improvement</h4>
+              <ul class="eval-list" *ngIf="weaknessesList().length; else noWeaknesses">
+                <li *ngFor="let item of weaknessesList()" class="eval-item eval-item-danger">
+                  <span class="icon">!</span> {{ item }}
+                </li>
+              </ul>
+              <ng-template #noWeaknesses>
+                <p class="empty-hint text-success">Great job! No major portfolio weaknesses detected.</p>
+              </ng-template>
+            </div>
+          </div>
+
+          <!-- Quick Summary Stat Cards -->
+          <div class="card stats-summary-card full-width">
+            <div class="stats-grid">
+              <div class="stat-box" (click)="setTab('projects')">
+                <span class="stat-num">{{ projects().length }}</span>
+                <span class="stat-label">Total Projects</span>
+              </div>
+              <div class="stat-box" (click)="setTab('skills')">
+                <span class="stat-num">{{ skills().length }}</span>
+                <span class="stat-label">Skills Catalog</span>
+              </div>
+              <div class="stat-box" (click)="setTab('career')">
+                <span class="stat-num">{{ skillGap()?.match_percentage ?? 0 }}%</span>
+                <span class="stat-label">Target Role Match ({{ selectedRole()?.title || 'None' }})</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB 2: PROJECTS MANAGEMENT (UI 4 & UI 5 Wireframe Specs) -->
+      <div *ngIf="activeTab() === 'projects'" class="tab-pane">
+        <div class="card">
+          <div class="card-header flex-between">
+            <h2>📁 My Projects</h2>
+            <span class="count-badge">{{ projects().length }} Projects</span>
+          </div>
+
+          <!-- Add Project Form -->
+          <div class="add-project-form" *ngIf="currentUser(); else loginPrompt">
+            <h3>+ Create New Project</h3>
+            <div class="form-row">
+              <input type="text" placeholder="Project Name (e.g. MathMentor AI)" [(ngModel)]="newProjectName" class="form-input" />
+              <select [(ngModel)]="newProjectStatus" class="form-select">
+                <option value="idea">Idea</option>
+                <option value="active">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <textarea placeholder="Description of technologies used, domain, and functionality..." [(ngModel)]="newProjectDesc" class="form-textarea"></textarea>
+            <button class="btn btn-primary" (click)="createProject()">+ Add Project</button>
+          </div>
+          <ng-template #loginPrompt>
+            <div class="alert-info">
+              🔐 Please <strong>Login</strong> at the top right to create and manage your developer projects.
+            </div>
+          </ng-template>
+
+          <!-- Projects Grid -->
+          <div class="projects-list">
+            <div class="project-item-card" *ngFor="let project of projects()">
+              <div class="project-card-header flex-between">
+                <h4 class="project-title">{{ project.name }}</h4>
+                <div class="flex-align">
+                  <span class="status-tag" [class]="'status-' + project.status">{{ project.status }}</span>
+                  <button class="btn-icon" (click)="deleteProject(project.id)" title="Delete Project">🗑️</button>
+                </div>
+              </div>
+
+              <p class="project-desc">{{ project.description || 'No description provided.' }}</p>
+
+              <!-- ML Classification Badge -->
+              <div class="ml-badge-box" *ngIf="mlPredictions()[project.id]">
+                <span class="ml-badge">
+                  🤖 ML Domain: <strong>{{ mlPredictions()[project.id].predicted_category }}</strong>
+                  <span class="ml-confidence">({{ mlPredictions()[project.id].confidence_score }}%)</span>
+                </span>
+              </div>
+
+              <!-- Attached Skills List -->
+              <div class="project-attached-skills" *ngIf="project.project_skills?.length">
+                <span class="skill-chip-tag" *ngFor="let ps of project.project_skills">
+                  {{ ps.skills?.name }}
+                  <span class="remove-skill-btn" (click)="detachSkillFromProject(project.id, ps.skill_id)" title="Remove skill">×</span>
+                </span>
+              </div>
+              <div class="empty-skills-hint" *ngIf="!project.project_skills?.length">
+                <em>No skills attached yet. Attach skills below:</em>
+              </div>
+
+              <div class="project-actions-row">
+
+                <button class="btn btn-outline btn-sm" (click)="openProjectAnalysis(project)">🔍 View Analysis</button>
+                <div class="attach-skill-picker">
+                  <select #skillPicker class="form-select form-select-sm" (change)="attachSkillToProject(project.id, skillPicker.value); skillPicker.value=''">
+                    <option value="">+ Attach Skill...</option>
+                    <option *ngFor="let s of skills()" [value]="s.id">{{ s.name }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="currentUser() && projects().length === 0">
+              <p>No projects added yet. Create your first project above to start tracking your portfolio health!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SKILLS CATALOG (UI 6 Wireframe Spec) -->
+      <div *ngIf="activeTab() === 'skills'" class="tab-pane">
+        <div class="card">
+          <div class="card-header flex-between">
+            <h2>💡 Available Skills Catalog</h2>
+            <span class="count-badge">{{ skills().length }} Skills</span>
+          </div>
+
+          <div class="new-skill-inline-form">
+            <input type="text" placeholder="New Skill (e.g. PyTorch)" [(ngModel)]="newSkillName" class="form-input" />
+            <select [(ngModel)]="newSkillCategory" class="form-select">
+              <option value="Programming Language">Programming Language</option>
+              <option value="Framework">Framework</option>
+              <option value="Database">Database</option>
+              <option value="AI & Data Science">AI & Data Science</option>
+              <option value="Tool & DevOps">Tool & DevOps</option>
+            </select>
+            <button class="btn btn-primary" (click)="createNewSkill()">+ Add Skill</button>
+          </div>
+
+          <div class="skills-grid">
+            <div class="skill-badge-item" *ngFor="let skill of skills()">
+              <span class="skill-name">{{ skill.name }}</span>
+              <span class="skill-cat">{{ skill.category }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: CAREER GOALS & SKILL GAP (UI 7 & UI 8 Wireframe Specs) -->
+      <div *ngIf="activeTab() === 'career'" class="tab-pane">
+        <div class="card">
+          <div class="card-header flex-between">
+            <h2>🎯 Target Career Role & Skill Gap Analysis</h2>
+            <div class="role-selector-wrapper" *ngIf="careerRoles().length > 0">
+              <select class="form-select" [ngModel]="selectedRoleId()" (ngModelChange)="selectCareerRole($event)">
+                <option *ngFor="let role of careerRoles()" [value]="role.id">
+                  Target: {{ role.title }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="role-summary-box" *ngIf="selectedRole()">
+            <h3>{{ selectedRole()?.title }}</h3>
+            <p>{{ selectedRole()?.description }}</p>
+          </div>
+
+          <div class="skill-gap-analysis-grid">
+            <div class="metric-box">
+              <div class="flex-between">
+                <h3>Role Alignment Score</h3>
+                <span class="match-badge" [class.high-match]="(skillGap()?.match_percentage ?? 0) >= 70">
+                  {{ skillGap()?.match_percentage ?? 0 }}% Match
+                </span>
+              </div>
+              <div class="progress-bar-bg margin-top-sm">
+                <div class="progress-bar-fill" [style.width.%]="skillGap()?.match_percentage ?? 0"></div>
+              </div>
+            </div>
+
+            <div class="skill-lists-wrapper">
+              <div class="skill-list-group">
+                <span class="group-title text-success">✔ Matching Skills ({{ skillGap()?.matching_skills?.length ?? 0 }})</span>
+                <div class="chip-container">
+                  <span class="chip chip-success" *ngFor="let skill of skillGap()?.matching_skills">
+                    {{ skill }}
+                  </span>
+                  <span class="empty-hint" *ngIf="!skillGap()?.matching_skills?.length">No matching skills yet</span>
+                </div>
+              </div>
+
+              <div class="skill-list-group">
+                <span class="group-title text-danger">⚠️ Skill Gaps Needed ({{ skillGap()?.missing_skills?.length ?? 0 }})</span>
+                <div class="chip-container">
+                  <span class="chip chip-danger" *ngFor="let skill of skillGap()?.missing_skills">
+                    {{ skill }}
+                  </span>
+                  <span class="empty-hint text-success" *ngIf="!skillGap()?.missing_skills?.length">Great job! All target role skills acquired!</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: RESUME PDF EXTRACTOR -->
+      <div *ngIf="activeTab() === 'resume'" class="tab-pane">
+        <div class="card">
+          <div class="card-header flex-between">
+            <h2>📄 AI Resume PDF Extractor</h2>
+            <span class="badge badge-success">Bonus Capstone Feature</span>
+          </div>
+
+          <div class="resume-upload-box">
+            <p class="resume-upload-instructions">
+              Upload your <strong>PDF Resume</strong> to automatically extract technical skills and candidate projects into your PortfolioIQ profile.
+            </p>
+            
+            <div class="file-upload-row">
+              <input type="file" accept=".pdf" (change)="onResumeUpload($event)" #resumeFileInput class="file-input-hidden" id="resume-file-input" />
+              <label for="resume-file-input" class="btn btn-primary">
+                📁 Select PDF Resume...
+              </label>
+              <span class="loading-spinner" *ngIf="resumeParsing()">⏳ Extracting skills & projects from PDF...</span>
+            </div>
+          </div>
+
+          <div class="extracted-results-container" *ngIf="resumeData()">
+            <h3>Extracted Resume Data</h3>
+            
+            <div class="extracted-group">
+              <h4>Extracted Skills ({{ resumeData()?.extracted_skills?.length }})</h4>
+              <div class="chip-container">
+                <span class="chip chip-success" *ngFor="let s of resumeData()?.extracted_skills" (click)="importExtractedSkill(s)" title="Click to add to catalog">
+                  + {{ s }}
+                </span>
+              </div>
+            </div>
+
+            <div class="extracted-group" *ngIf="resumeData()?.extracted_projects?.length">
+              <h4>Extracted Projects ({{ resumeData()?.extracted_projects?.length }})</h4>
+              <div class="extracted-projects-grid">
+                <div class="extracted-project-card" *ngFor="let proj of resumeData()?.extracted_projects">
+                  <div class="flex-between">
+                    <strong>{{ proj.name }}</strong>
+                    <button class="btn btn-outline btn-sm" (click)="importExtractedProject(proj)">+ Import to Portfolio</button>
+                  </div>
+                  <p class="project-desc">{{ proj.description }}</p>
+                  <div class="chip-container" *ngIf="proj.detected_skills?.length">
+                    <span class="chip chip-primary" *ngFor="let sk of proj.detected_skills">{{ sk }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      <!-- TAB 6: PORTFOLIO OPTIMIZATION & RECOMMENDATIONS (STAGE 11) -->
+      <div *ngIf="activeTab() === 'optimizer'" class="tab-pane">
+        
+        <!-- Controls & Configuration Header Card -->
+        <div class="card optimizer-header-card">
+          <div class="card-header flex-between">
+            <div>
+              <h2>⚡ Portfolio Optimization & Recommendation Engine</h2>
+              <p class="section-subtitle">
+                Uses multi-objective constraint optimization to calculate the highest-yield projects and skills for your target role.
+              </p>
+            </div>
+            <div class="optimizer-role-badge">
+              <span class="badge badge-primary">
+                Target Role: <strong>{{ selectedRole()?.title || 'General Developer' }}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="optimizer-controls-row">
+            <div class="control-group">
+              <label class="control-label">Development Effort Budget:</label>
+              <div class="budget-pill-group">
+                <button 
+                  type="button" 
+                  class="budget-pill" 
+                  [class.active]="effortBudgetHours() === 20" 
+                  (click)="setEffortBudget(20)">
+                  ⚡ Sprint (~20 hrs)
+                </button>
+                <button 
+                  type="button" 
+                  class="budget-pill" 
+                  [class.active]="effortBudgetHours() === 40" 
+                  (click)="setEffortBudget(40)">
+                  🚀 Standard (~40 hrs)
+                </button>
+                <button 
+                  type="button" 
+                  class="budget-pill" 
+                  [class.active]="effortBudgetHours() === 80" 
+                  (click)="setEffortBudget(80)">
+                  🏆 Capstone (~80 hrs)
+                </button>
+              </div>
+            </div>
+
+            <button 
+              class="btn btn-primary run-opt-btn" 
+              [disabled]="isOptimizing()" 
+              (click)="runPortfolioOptimization()">
+              <span *ngIf="!isOptimizing()">⚡ Run Portfolio Optimization</span>
+              <span *ngIf="isOptimizing()">🔄 Computing Optimal Path...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State Prompt -->
+        <div class="card optimizer-empty-state" *ngIf="!optimizationResult() && !isOptimizing()">
+          <div class="empty-state-icon">🧠</div>
+          <h3>Ready to Optimize Your Developer Portfolio</h3>
+          <p>
+            Our optimization algorithm evaluates your current projects, detected skill gaps for 
+            <strong>{{ selectedRole()?.title || 'your career goal' }}</strong>, and available study hours to formulate 
+            the best blueprint projects and learning schedule.
+          </p>
+          <button class="btn btn-primary" (click)="runPortfolioOptimization()">
+            Compute My Optimal Recommendations
+          </button>
+        </div>
+
+        <!-- Results View -->
+        <div class="optimization-results-container" *ngIf="optimizationResult()">
+          
+          <!-- Impact Simulation Bar -->
+          <div class="card simulation-hero-card">
+            <div class="sim-metrics-grid">
+              <div class="sim-metric-box">
+                <span class="sim-label">Target Role Alignment</span>
+                <div class="sim-value-row">
+                  <span class="sim-val current">{{ optimizationResult()?.impact_simulation?.current_match_percentage }}%</span>
+                  <span class="sim-arrow">➔</span>
+                  <span class="sim-val projected">{{ optimizationResult()?.impact_simulation?.projected_match_percentage }}%</span>
+                </div>
+                <span class="sim-gain-badge">+{{ optimizationResult()?.impact_simulation?.match_increase }}% Match Increase</span>
+              </div>
+
+              <div class="sim-metric-box">
+                <span class="sim-label">Estimated Health Score Boost</span>
+                <div class="sim-value-row">
+                  <span class="sim-val highlight">+{{ optimizationResult()?.impact_simulation?.projected_health_gain }} pts</span>
+                </div>
+                <span class="sim-sub">Comprehensive portfolio boost</span>
+              </div>
+
+              <div class="sim-metric-box">
+                <span class="sim-label">Allocated Development Hours</span>
+                <div class="sim-value-row">
+                  <span class="sim-val">{{ optimizationResult()?.allocated_effort_hours }} hrs</span>
+                  <span class="sim-sub">/ {{ optimizationResult()?.effort_budget_hours }} hrs budget</span>
+                </div>
+                <span class="sim-sub">Maximized efficiency</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommended Projects Section -->
+          <div class="optimizer-section-heading">
+            <h3>Recommended Blueprint Projects</h3>
+            <p>Tailored projects mathematically proven to close your biggest skill gaps with highest ROI.</p>
+          </div>
+
+          <div class="rec-projects-grid">
+            <div class="card rec-project-card" *ngFor="let rec of optimizationResult()?.recommended_projects">
+              <div class="rec-card-header flex-between">
+                <div class="flex-align">
+                  <span class="domain-tag">{{ rec.domain }}</span>
+                  <span class="difficulty-tag" [class]="'diff-' + rec.difficulty.toLowerCase()">{{ rec.difficulty }}</span>
+                </div>
+                <span class="hours-tag">⏱ ~{{ rec.estimated_hours }} hrs</span>
+              </div>
+
+              <h4 class="rec-title">{{ rec.title }}</h4>
+              <p class="rec-desc">{{ rec.description }}</p>
+
+              <div class="rec-arch-box">
+                <strong>🏛 Architecture Highlights:</strong>
+                <p>{{ rec.architecture_highlights }}</p>
+              </div>
+
+              <!-- Skills Addressed -->
+              <div class="rec-skills-section">
+                <div class="skills-group" *ngIf="rec.covered_gaps?.length">
+                  <span class="skills-group-label text-success">✓ Closes Target Gap:</span>
+                  <div class="chip-container">
+                    <span class="chip chip-success" *ngFor="let s of rec.covered_gaps">{{ s }}</span>
+                  </div>
+                </div>
+
+                <div class="skills-group" *ngIf="rec.new_skills?.length">
+                  <span class="skills-group-label text-primary">★ New Complementary Skills:</span>
+                  <div class="chip-container">
+                    <span class="chip chip-primary" *ngFor="let s of rec.new_skills">{{ s }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rec-card-footer flex-between">
+                <div class="rec-stats">
+                  <span class="efficiency-badge" title="Gain per hour">ROI Efficiency: {{ rec.efficiency_score }}x</span>
+                </div>
+                <button class="btn btn-primary btn-sm" (click)="adoptRecommendedProject(rec)">
+                  + Add to My Projects
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optimal Skill Acquisition Learning Path -->
+          <div class="card skill-path-card" *ngIf="optimizationResult()?.optimal_skill_path?.length">
+            <div class="card-header">
+              <h2>Optimal Skill Learning Sequence</h2>
+              <p class="section-subtitle">Recommended sequential order to acquire technologies for maximum learning velocity.</p>
+            </div>
+
+            <div class="skill-steps-list">
+              <div class="skill-step-item" *ngFor="let skill of optimizationResult()?.optimal_skill_path; let i = index">
+                <div class="step-circle">{{ i + 1 }}</div>
+                <div class="step-info">
+                  <span class="step-skill-name">{{ skill }}</span>
+                  <span class="step-tag" *ngIf="i === 0">Highest Priority Gap</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- PROJECT ANALYSIS MODAL (UI 5 Wireframe Spec) -->
+<div class="modal-backdrop" *ngIf="activeAnalysisProject()" (click)="closeProjectAnalysis()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <h2>Project Analysis: {{ activeAnalysisProject()?.name }}</h2>
+      <button class="btn-icon" (click)="closeProjectAnalysis()">✖</button>
+    </div>
+
+    <div class="modal-body" *ngIf="activeAnalysisProject()">
+      <p class="modal-desc">{{ activeAnalysisProject()?.description }}</p>
+      <div class="flex-align margin-bottom-md">
+        <span class="status-tag" [class]="'status-' + activeAnalysisProject()?.status">{{ activeAnalysisProject()?.status }}</span>
+      </div>
+
+      <!-- ML Probabilities Breakdown (UI 5 Spec) -->
+      <div class="card sub-card" *ngIf="mlPredictions()[activeAnalysisProject()?.id]">
+        <h3>🤖 Machine Learning Classification Breakdown</h3>
+        <p class="predicted-highlight">
+          Predicted Domain: <strong>{{ mlPredictions()[activeAnalysisProject().id].predicted_category }}</strong>
+          ({{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence)
+        </p>
+
+        <div class="prob-list">
+          <div class="prob-item" *ngFor="let item of mlPredictions()[activeAnalysisProject().id].probabilities | keyvalue">
+            <div class="flex-between">
+              <span class="prob-label">{{ item.key }}</span>
+              <span class="prob-pct">{{ (item.value * 100).toFixed(1) }}%</span>
+            </div>
+            <div class="progress-bar-bg small">
+              <div class="progress-bar-fill" [style.width.%]="item.value * 100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeProjectAnalysis()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTHENTICATION MODAL DIALOG -->
+<div class="modal-backdrop" *ngIf="showAuthModal()" (click)="closeAuthModal()">
+  <div class="modal-card auth-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <h2>{{ authMode() === 'login' ? '🔑 Sign In to PortfolioIQ' : '✨ Create Developer Account' }}</h2>
+      <button class="btn-icon" (click)="closeAuthModal()">✖</button>
+    </div>
+
+    <!-- Mode Switcher Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab-btn" [class.active]="authMode() === 'login'" (click)="switchAuthMode('login')">
+        Sign In
+      </button>
+      <button class="auth-tab-btn" [class.active]="authMode() === 'register'" (click)="switchAuthMode('register')">
+        Register
+      </button>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="alert-danger" *ngIf="authError()">
+      ⚠️ {{ authError() }}
+    </div>
+
+    <div class="auth-form-body">
+      <div class="form-group" *ngIf="authMode() === 'register'">
+        <label>Display Name</label>
+        <input type="text" placeholder="e.g. John Doe" [(ngModel)]="authDisplayName" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="developer@example.com" [(ngModel)]="authEmail" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="••••••••" [(ngModel)]="authPassword" class="form-input" />
+      </div>
+
+      <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'login'" (click)="login()">
+        Sign In
+      </button>
+      <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'register'" (click)="register()">
+        Create Account
+      </button>
+    </div>
+
+    <div class="auth-modal-footer">
+      <p *ngIf="authMode() === 'login'">
+        Don't have an account yet? 
+        <a href="javascript:void(0)" (click)="switchAuthMode('register')" class="auth-link">Create one</a>
+      </p>
+      <p *ngIf="authMode() === 'register'">
+        Already have an account? 
+        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">Sign in here</a>
+      </p>
+    </div>
+  </div>
+</div>
