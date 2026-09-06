@@ -60,6 +60,7 @@ export class App implements OnInit {
   forgotConfirmPassword = '';
   forgotLoading = signal<boolean>(false);
   forgotSuccessMsg = signal<string>('');
+  showOtpInput = signal<boolean>(false);
 
   // Form Inputs
   authEmail = '';
@@ -183,11 +184,17 @@ export class App implements OnInit {
     this.forgotLoading.set(false);
     this.forgotSuccessMsg.set('');
     this.authError.set('');
+    this.showOtpInput.set(false);
+  }
+
+  toggleOtpInput(show: boolean) {
+    this.showOtpInput.set(show);
   }
 
   setForgotStep(step: 1 | 2 | 3) {
     this.forgotStep.set(step);
     this.authError.set('');
+    this.showOtpInput.set(false);
   }
 
   // 3-Step Forgot Password Flow
@@ -210,7 +217,7 @@ export class App implements OnInit {
       if (error) {
         this.authError.set(error.message);
       } else {
-        this.forgotSuccessMsg.set(`A 6-digit OTP code was sent to ${email}`);
+        this.forgotSuccessMsg.set(`Password reset email sent to ${email}. Check your inbox!`);
         this.forgotStep.set(2);
       }
     } catch (err: any) {
@@ -235,7 +242,7 @@ export class App implements OnInit {
       if (error) {
         this.authError.set(error.message);
       } else {
-        this.forgotSuccessMsg.set('OTP verified successfully! Now set your new password.');
+        this.forgotSuccessMsg.set('Code verified successfully! Now set your new password.');
         this.forgotStep.set(3);
       }
     } catch (err: any) {
@@ -257,7 +264,7 @@ export class App implements OnInit {
       if (error) {
         this.authError.set(error.message);
       } else {
-        this.forgotSuccessMsg.set('A new OTP code has been sent to your email.');
+        this.forgotSuccessMsg.set('A new reset link has been sent to your email.');
       }
     } catch (err: any) {
       this.authError.set(err.message || 'Failed to resend code.');

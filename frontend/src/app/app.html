@@ -933,7 +933,7 @@
       <div class="stepper-divider" [class.active]="forgotStep() > 1"></div>
       <div class="stepper-item" [class.active]="forgotStep() === 2" [class.completed]="forgotStep() > 2">
         <div class="stepper-bubble">2</div>
-        <span class="stepper-label">OTP Code</span>
+        <span class="stepper-label">Verify</span>
       </div>
       <div class="stepper-divider" [class.active]="forgotStep() > 2"></div>
       <div class="stepper-item" [class.active]="forgotStep() === 3">
@@ -1005,15 +1005,15 @@
     <!-- Step 1: Email Input -->
     <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 1">
       <p class="forgot-instructions">
-        Enter your registered email address and we'll send a 6-digit verification code to reset your password.
+        Enter your registered email address and we'll send a password reset link to recover your account.
       </p>
       <div class="form-group">
-        <label>Email Address</label>
+        <label>Account Email Address</label>
         <input type="email" placeholder="developer@example.com" [(ngModel)]="forgotEmail" class="form-input" (keydown.enter)="sendForgotOtp()" [disabled]="forgotLoading()" />
       </div>
 
       <button class="btn btn-primary full-width-btn" (click)="sendForgotOtp()" [disabled]="forgotLoading()">
-        {{ forgotLoading() ? 'Sending Code...' : 'Send Verification Code ➔' }}
+        {{ forgotLoading() ? 'Sending Reset Link...' : 'Send Reset Link ➔' }}
       </button>
 
       <div class="auth-modal-footer">
@@ -1021,24 +1021,57 @@
       </div>
     </div>
 
-    <!-- Step 2: 6-digit OTP Code Input -->
-    <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 2">
-      <p class="forgot-instructions">
-        We sent an email to <strong>{{ forgotEmail }}</strong>. Click the <strong>Reset password</strong> link in the email, or enter the 6-digit code below:
+    <!-- Step 2: Verification / Email Check -->
+    <div class="auth-form-body forgot-step2-container" *ngIf="authMode() === 'forgot' && forgotStep() === 2">
+      <div class="email-sent-badge">
+        <span class="email-sent-icon">✉️</span>
+      </div>
+      <h3 class="step2-title">Check Your Email</h3>
+      <p class="forgot-instructions text-center">
+        We sent a password reset link to <strong>{{ forgotEmail }}</strong>.
       </p>
-      <div class="form-group">
-        <label>6-Digit OTP Code</label>
-        <input type="text" maxlength="8" placeholder="123456" [(ngModel)]="forgotOtp" class="form-input otp-code-input" (keydown.enter)="verifyForgotOtp()" [disabled]="forgotLoading()" />
+
+      <div class="step2-guide-box">
+        <div class="guide-item">
+          <span class="guide-badge">1</span>
+          <span>Open the reset email in your inbox.</span>
+        </div>
+        <div class="guide-item">
+          <span class="guide-badge">2</span>
+          <span>Click the <strong>Reset password</strong> link in the email.</span>
+        </div>
+        <div class="guide-item">
+          <span class="guide-badge">3</span>
+          <span>This window will automatically advance to <strong>Step 3: New Password</strong>!</span>
+        </div>
       </div>
 
-      <button class="btn btn-primary full-width-btn" (click)="verifyForgotOtp()" [disabled]="forgotLoading()">
-        {{ forgotLoading() ? 'Verifying...' : 'Verify Code ➔' }}
-      </button>
+      <div class="waiting-indicator">
+        <span class="pulse-indicator"></span>
+        <span class="waiting-text">Waiting for email verification...</span>
+      </div>
+
+      <!-- Optional: Toggle for 6-digit OTP code -->
+      <div class="otp-toggle-section" *ngIf="!showOtpInput()">
+        <button class="btn-text-link" (click)="toggleOtpInput(true)">
+          Have a 6-digit OTP code? Enter it here
+        </button>
+      </div>
+
+      <div class="otp-input-section" *ngIf="showOtpInput()">
+        <div class="form-group">
+          <label>6-Digit OTP Code</label>
+          <input type="text" maxlength="8" placeholder="123456" [(ngModel)]="forgotOtp" class="form-input otp-code-input" (keydown.enter)="verifyForgotOtp()" [disabled]="forgotLoading()" />
+        </div>
+        <button class="btn btn-primary full-width-btn" (click)="verifyForgotOtp()" [disabled]="forgotLoading()">
+          {{ forgotLoading() ? 'Verifying...' : 'Verify Code ➔' }}
+        </button>
+      </div>
 
       <div class="forgot-step-actions flex-between">
         <a href="javascript:void(0)" (click)="setForgotStep(1)" class="auth-link-subtle">← Change email</a>
         <button class="btn-text-link" (click)="resendForgotOtp()" [disabled]="forgotLoading()">
-          Resend email
+          {{ forgotLoading() ? 'Resending...' : 'Resend email' }}
         </button>
       </div>
 
@@ -1050,7 +1083,7 @@
     <!-- Step 3: Set New Password -->
     <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 3">
       <p class="forgot-instructions">
-        Code verified! Please enter your new password below.
+        Identity verified! Please enter your new password below.
       </p>
       <div class="form-group">
         <label>New Password (min 6 characters)</label>
