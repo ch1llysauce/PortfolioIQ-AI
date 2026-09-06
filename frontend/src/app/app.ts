@@ -167,6 +167,9 @@ export class App implements OnInit {
 
   setTab(tabName: string) {
     this.activeTab.set(tabName);
+    if (tabName === 'github') {
+      this.loadGitHubStatus();
+    }
   }
 
   checkBackendHealth() {
@@ -979,6 +982,7 @@ export class App implements OnInit {
       next: (res) => {
         this.githubScanData.set(res);
         this.isScanningGitHub.set(false);
+        this.loadGitHubStatus();
       },
       error: (err) => {
         this.githubError.set(err.error?.detail || err.message || 'Failed to scan GitHub profile.');

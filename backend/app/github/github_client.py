@@ -23,9 +23,14 @@ class GitHubClient:
     BASE_URL = "https://api.github.com"
 
     def __init__(self):
+        self._refresh_token()
+
+    def _refresh_token(self):
+        load_dotenv(override=True)
         self.token = os.getenv("GITHUB_TOKEN", "").strip()
 
     def _get_headers(self) -> Dict[str, str]:
+        self._refresh_token()
         headers = {
             "User-Agent": "PortfolioIQ-AI/1.0",
             "Accept": "application/vnd.github.v3+json"
