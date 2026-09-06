@@ -36,6 +36,14 @@ export class SkillService {
       .single();
   }
 
+  // Delete a skill definition from the catalog
+  async deleteSkill(id: string) {
+    return await this.supabase
+      .from('skills')
+      .delete()
+      .eq('id', id);
+  }
+
   // Add skill to a specific project
   async addSkillToProject(projectId: string, skillId: string) {
     return await this.supabase

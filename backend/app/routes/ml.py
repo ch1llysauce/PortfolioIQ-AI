@@ -22,5 +22,14 @@ def classify_project(request: ClassifyProjectRequest):
     Returns predicted category, confidence percentage, and class probabilities.
     """
     result = classifier_instance.predict(request.name, request.description)
+    
+    # Confidence threshold fallback:
+    # If confidence is <= 30% (e.g. keyboard smash or flat tie), flag as Needs More Details
+    confidence = result.get("confidence_score", 0.0)
+    if confidence <= 30.0:
+        result["predicted_category"] = "Needs More Details"
+        result["needs_details"] = True
+    
     return result
+
 

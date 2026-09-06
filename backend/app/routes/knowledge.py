@@ -31,12 +31,12 @@ def get_full_graph():
     """Returns nodes and edges formatted for visual network rendering."""
     return get_graph_visualization_data()
 
-@router.get("/role-tree/{role_title}")
+@router.get("/role-tree/{role_title:path}")
 def get_role_tree_endpoint(role_title: str):
     """Returns the full hierarchical skill tree for a specific career role."""
     return get_role_skill_tree(role_title)
 
-@router.get("/prerequisites/{skill_name}")
+@router.get("/prerequisites/{skill_name:path}")
 def get_prerequisites_endpoint(skill_name: str):
     """Returns ordered prerequisite skills needed before learning skill_name."""
     return {
@@ -44,7 +44,7 @@ def get_prerequisites_endpoint(skill_name: str):
         "prerequisites": get_prerequisites_for_skill(skill_name)
     }
 
-@router.get("/unlocked-skills/{skill_name}")
+@router.get("/unlocked-skills/{skill_name:path}")
 def get_unlocked_endpoint(skill_name: str):
     """Returns skills and tools unlocked after mastering skill_name."""
     return {
@@ -52,7 +52,7 @@ def get_unlocked_endpoint(skill_name: str):
         "unlocked_skills": get_skills_unlocked_by(skill_name)
     }
 
-@router.get("/complements/{tech_name}")
+@router.get("/complements/{tech_name:path}")
 def get_complements_endpoint(tech_name: str):
     """Returns technologies and tools commonly paired with tech_name."""
     return {

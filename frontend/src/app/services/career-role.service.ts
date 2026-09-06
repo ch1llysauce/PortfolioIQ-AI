@@ -20,18 +20,27 @@ export class CareerRoleService {
 
   // Get all target career roles
   async getCareerRoles() {
-    return await this.supabase
+    const res = await this.supabase
       .from('career_roles')
-      .select('*')
-      .order('title', { ascending: true });
+      .select('*');
+
+    if (res.data) {
+      res.data = res.data.map((r: any) => ({
+        ...r,
+        title: r.title || r.name || 'Target Role',
+        name: r.name || r.title || 'Target Role'
+      }));
+      res.data.sort((a: any, b: any) => (a.title || '').localeCompare(b.title || ''));
+    }
+    return res;
   }
 
   // Get required skills for a specific career role
   async getRoleSkills(roleId: string) {
-    return await this.supabase
+    const res = await this.supabase
       .from('role_skills')
       .select(`
-        importance_level,
+        *,
         skills (
           id,
           name,
@@ -39,6 +48,14 @@ export class CareerRoleService {
         )
       `)
       .eq('role_id', roleId);
+
+    if (res.data) {
+      res.data = res.data.map((item: any) => ({
+        ...item,
+        importance_level: item.importance_level || item.importance || 'required'
+      }));
+    }
+    return res;
   }
 }
 

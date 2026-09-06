@@ -31,9 +31,10 @@ class SavedProjectClassifier:
         combined_text = f"{name} {description}".strip()
         if not combined_text:
             return {
-                "predicted_category": "Web Development",
-                "confidence_score": 50.0,
-                "probabilities": {}
+                "predicted_category": "Needs More Details",
+                "confidence_score": 0.0,
+                "probabilities": {},
+                "needs_details": True
             }
 
         predicted_class = self.pipeline.predict([combined_text])[0]
@@ -47,10 +48,22 @@ class SavedProjectClassifier:
 
         confidence = prob_dict.get(predicted_class, 0.5)
 
+        # Confidence Threshold:
+        # If highest class probability is <= 30% (flat tie or gibberish with no vocabulary matches),
+        # mark as "Needs More Details" instead of blindly guessing a domain
+        if confidence <= 0.30:
+            return {
+                "predicted_category": "Needs More Details",
+                "confidence_score": round(confidence * 100, 1),
+                "probabilities": prob_dict,
+                "needs_details": True
+            }
+
         return {
             "predicted_category": predicted_class,
             "confidence_score": round(confidence * 100, 1),
-            "probabilities": prob_dict
+            "probabilities": prob_dict,
+            "needs_details": False
         }
 
 # Singleton instance

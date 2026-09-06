@@ -17,8 +17,8 @@
       </button>
       <button class="nav-item" [class.active]="activeTab() === 'skills'" (click)="setTab('skills')">
         <span class="nav-icon">💡</span>
-        <span>Skills Catalog</span>
-        <span class="nav-count" *ngIf="skills().length">{{ skills().length }}</span>
+        <span>My Skills</span>
+        <span class="nav-count" *ngIf="currentUser() && getUserSkillNames().length">{{ getUserSkillNames().length }}</span>
       </button>
       <button class="nav-item" [class.active]="activeTab() === 'career'" (click)="setTab('career')">
         <span class="nav-icon">🎯</span>
@@ -62,7 +62,7 @@
       <div class="header-title">
         <h1 *ngIf="activeTab() === 'dashboard'">📊 Developer Portfolio Dashboard</h1>
         <h1 *ngIf="activeTab() === 'projects'">📁 My Developer Projects</h1>
-        <h1 *ngIf="activeTab() === 'skills'">💡 Technical Skills Catalog</h1>
+        <h1 *ngIf="activeTab() === 'skills'">💡 Developer Skills Profile</h1>
         <h1 *ngIf="activeTab() === 'career'">🎯 Career Goal & Skill Gap Analysis</h1>
         <h1 *ngIf="activeTab() === 'optimizer'">⚡ Portfolio Optimization & Recommendations</h1>
         <h1 *ngIf="activeTab() === 'knowledge'">🕸️ Developer Knowledge Graph & Skill Trees</h1>
@@ -188,12 +188,12 @@
                 <span class="stat-label">Total Projects</span>
               </div>
               <div class="stat-box" (click)="setTab('skills')">
-                <span class="stat-num">{{ skills().length }}</span>
-                <span class="stat-label">Skills Catalog</span>
+                <span class="stat-num">{{ currentUser() ? getUserSkillNames().length : 0 }}</span>
+                <span class="stat-label">Acquired Skills</span>
               </div>
               <div class="stat-box" (click)="setTab('career')">
-                <span class="stat-num">{{ skillGap()?.match_percentage ?? 0 }}%</span>
-                <span class="stat-label">Target Role Match ({{ selectedRole()?.title || 'None' }})</span>
+                <span class="stat-num">{{ currentUser() ? (skillGap()?.match_percentage ?? 0) : 0 }}%</span>
+                <span class="stat-label">Target Role Match ({{ currentUser() ? (selectedRole()?.title || 'None') : 'Guest' }})</span>
               </div>
             </div>
           </div>
@@ -244,9 +244,15 @@
 
               <!-- ML Classification Badge -->
               <div class="ml-badge-box" *ngIf="mlPredictions()[project.id]">
-                <span class="ml-badge">
-                  🤖 ML Domain: <strong>{{ mlPredictions()[project.id].predicted_category }}</strong>
-                  <span class="ml-confidence">({{ mlPredictions()[project.id].confidence_score }}%)</span>
+                <span class="ml-badge" [class.ml-badge-warning]="mlPredictions()[project.id].needs_details || mlPredictions()[project.id].confidence_score <= 30">
+                  <span *ngIf="!mlPredictions()[project.id].needs_details && mlPredictions()[project.id].confidence_score > 30">
+                    🤖 ML Domain: <strong>{{ mlPredictions()[project.id].predicted_category }}</strong>
+                    <span class="ml-confidence">({{ mlPredictions()[project.id].confidence_score }}%)</span>
+                  </span>
+                  <span *ngIf="mlPredictions()[project.id].needs_details || mlPredictions()[project.id].confidence_score <= 30">
+                    ⚠️ Domain: <strong>Needs More Details</strong>
+                    <span class="ml-confidence">(Low confidence: {{ mlPredictions()[project.id].confidence_score }}%)</span>
+                  </span>
                 </span>
               </div>
 
@@ -280,33 +286,116 @@
         </div>
       </div>
 
-      <!-- TAB 3: SKILLS CATALOG (UI 6 Wireframe Spec) -->
+      <!-- TAB 3: DEVELOPER SKILLS PROFILE & CATALOG (User-Centric) -->
       <div *ngIf="activeTab() === 'skills'" class="tab-pane">
-        <div class="card">
-          <div class="card-header flex-between">
-            <h2>💡 Available Skills Catalog</h2>
-            <span class="count-badge">{{ skills().length }} Skills</span>
-          </div>
 
-          <div class="new-skill-inline-form">
-            <input type="text" placeholder="New Skill (e.g. PyTorch)" [(ngModel)]="newSkillName" class="form-input" />
-            <select [(ngModel)]="newSkillCategory" class="form-select">
-              <option value="Programming Language">Programming Language</option>
-              <option value="Framework">Framework</option>
-              <option value="Database">Database</option>
-              <option value="AI & Data Science">AI & Data Science</option>
-              <option value="Tool & DevOps">Tool & DevOps</option>
-            </select>
-            <button class="btn btn-primary" (click)="createNewSkill()">+ Add Skill</button>
-          </div>
-
-          <div class="skills-grid">
-            <div class="skill-badge-item" *ngFor="let skill of skills()">
-              <span class="skill-name">{{ skill.name }}</span>
-              <span class="skill-cat">{{ skill.category }}</span>
-            </div>
+        <!-- Case 1: Signed Out (Guest) - ZERO Skills displayed, 100% Locked -->
+        <div class="card locked-card text-center" *ngIf="!currentUser()" style="padding: 48px 24px;">
+          <div style="font-size: 3.2rem; margin-bottom: 12px;">🔒</div>
+          <h2>Developer Skills Profile Locked</h2>
+          <p class="text-muted" style="max-width: 520px; margin: 8px auto 24px; line-height: 1.5;">
+            Sign in to view your verified skills, project tech stack breakdown, and career goal alignment. Private developer skills are never visible to guests.
+          </p>
+          <div class="flex-center gap-sm">
+            <button class="btn btn-primary" (click)="openAuthModal('login')">Sign In</button>
+            <button class="btn btn-outline" (click)="openAuthModal('register')">Create Account</button>
           </div>
         </div>
+
+        <!-- Case 2: Signed In - User's Verified Skills Portfolio -->
+        <div *ngIf="currentUser()">
+          
+          <!-- Sub-view switcher: My Skills vs Platform Tech Library -->
+          <div class="skills-sub-nav flex-between margin-bottom-md">
+            <div class="skills-tab-pills flex-align gap-xs">
+              <button 
+                class="btn btn-sm" 
+                [class.btn-primary]="skillsSubView() === 'my-skills'" 
+                [class.btn-outline]="skillsSubView() !== 'my-skills'" 
+                (click)="setSkillsSubView('my-skills')">
+                👤 My Verified Skills ({{ getUserSkillNames().length }})
+              </button>
+              <button 
+                class="btn btn-sm" 
+                [class.btn-primary]="skillsSubView() === 'catalog'" 
+                [class.btn-outline]="skillsSubView() !== 'catalog'" 
+                (click)="setSkillsSubView('catalog')">
+                🌐 Platform Tech Library ({{ skills().length }})
+              </button>
+            </div>
+
+            <span class="sub-view-hint text-muted" *ngIf="skillsSubView() === 'my-skills'">
+              Derived from your {{ projects().length }} portfolio projects
+            </span>
+          </div>
+
+          <!-- SUB-VIEW 1: MY VERIFIED SKILLS -->
+          <div class="card" *ngIf="skillsSubView() === 'my-skills'">
+            <div class="card-header flex-between">
+              <div>
+                <h2>💡 My Verified Developer Skills</h2>
+                <p class="sub-text">Technologies extracted and verified across your active portfolio projects.</p>
+              </div>
+              <span class="count-badge badge-success">{{ getUserSkillNames().length }} Acquired Skills</span>
+            </div>
+
+            <!-- Empty State when user has 0 skills attached -->
+            <div class="empty-state text-center" *ngIf="getUserSkillNames().length === 0" style="padding: 32px 16px;">
+              <div style="font-size: 2.5rem; margin-bottom: 8px;">📂</div>
+              <h3>No Skills in Your Portfolio Yet</h3>
+              <p class="text-muted" style="max-width: 480px; margin: 6px auto 16px;">
+                You haven't attached any skills to your projects yet. Go to <strong>My Projects</strong> or import your repositories in <strong>GitHub Sync</strong> to automatically detect and populate your skills!
+              </p>
+              <div class="flex-center gap-sm">
+                <button class="btn btn-primary btn-sm" (click)="setTab('projects')">📁 Go to My Projects</button>
+                <button class="btn btn-secondary btn-sm" (click)="setTab('github')">🐙 GitHub Sync</button>
+              </div>
+            </div>
+
+            <!-- User's Skills Grid -->
+            <div class="user-skills-grid" *ngIf="getUserSkillNames().length > 0">
+              <div class="user-skill-card" *ngFor="let s of getUserSkillsDetailed()">
+                <div class="user-skill-top flex-between">
+                  <span class="user-skill-name">{{ s.name }}</span>
+                  <div class="flex-align gap-xs">
+                    <span class="user-skill-count-pill" [title]="'Used in ' + s.count + ' project(s)'">
+                      {{ s.count }} project{{ s.count > 1 ? 's' : '' }}
+                    </span>
+                    <button class="btn-icon delete-user-skill-btn" (click)="removeSkillFromUserPortfolio(s.name)" title="Remove {{ s.name }} from your portfolio">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+                <div class="user-skill-meta">
+                  <span class="skill-cat-pill">{{ s.category }}</span>
+                </div>
+                <div class="user-skill-projects">
+                  <span class="project-tag" *ngFor="let pName of s.projectNames">{{ pName }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 2: PLATFORM TECH LIBRARY (REFERENCE CATALOG) -->
+          <div class="card" *ngIf="skillsSubView() === 'catalog'">
+            <div class="card-header flex-between">
+              <div>
+                <h2>🌐 Platform Technology Library</h2>
+                <p class="sub-text">Standardized industry taxonomy of {{ skills().length }} technologies across all 14 career roles & knowledge graphs. (System-Administered)</p>
+              </div>
+              <span class="count-badge">{{ skills().length }} Standardized Tech</span>
+            </div>
+
+            <div class="skills-grid">
+              <div class="skill-badge-item" *ngFor="let skill of skills()">
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-cat">{{ skill.category }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
       <!-- TAB 4: CAREER GOALS & SKILL GAP (UI 7 & UI 8 Wireframe Specs) -->
@@ -625,14 +714,14 @@
                 class="view-mode-btn" 
                 [class.active]="knowledgeViewMode() === 'inspector'" 
                 (click)="setKnowledgeViewMode('inspector')">
-                🔍 Entity Inspector
+                🔍 Skill Explorer
               </button>
               <button 
                 type="button" 
                 class="view-mode-btn" 
                 [class.active]="knowledgeViewMode() === 'path'" 
                 (click)="setKnowledgeViewMode('path')">
-                🧭 Path Solver
+                🧭 My Learning Path
               </button>
             </div>
           </div>
@@ -752,7 +841,7 @@
           
           <div class="card inspector-search-card">
             <div class="form-row flex-align">
-              <label class="control-label">Select Technology or Skill to Inspect:</label>
+              <label class="control-label">🔍 Explore Skill Connections (General Info):</label>
               <select #nodeSelect class="form-select" [value]="inspectedNodeName()" (change)="inspectNode(nodeSelect.value)">
                 <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
               </select>
@@ -828,7 +917,7 @@
           <div class="card path-search-card">
             <div class="flex-between flex-wrap gap-md">
               <div class="flex-align flex-1">
-                <label class="control-label">Target Skill to Acquire:</label>
+                <label class="control-label">🧭 Calculate My Personal Learning Path for:</label>
                 <select #goalSelect class="form-select" [value]="goalSkillInput()" (change)="calculateGoalSkillPath(goalSelect.value)">
                   <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }}</option>
                 </select>
@@ -1030,6 +1119,54 @@
             </div>
           </div>
 
+          <!-- Linked GitHub Profile & OAuth Ownership Verification Bar -->
+          <div class="linked-github-bar flex-between margin-bottom-sm" [class.verified-bar]="isGitHubOAuthVerified()" [class.unverified-bar]="!isGitHubOAuthVerified()">
+            <div class="flex-align gap-sm">
+              <ng-container *ngIf="isGitHubOAuthVerified()">
+                <span class="badge badge-success">🛡️ Verified Owner:</span>
+                <strong class="text-success">@{{ verifiedGitHubUsername() }}</strong>
+                <span class="verified-tag">✓ Authenticated via GitHub OAuth</span>
+              </ng-container>
+
+              <ng-container *ngIf="!isGitHubOAuthVerified()">
+                <ng-container *ngIf="linkedGitHubUsername()">
+                  <span class="badge badge-warning">⚠️ Ownership Unverified:</span>
+                  <strong class="text-muted">@{{ linkedGitHubUsername() }}</strong>
+                  <button class="btn btn-primary btn-xs" (click)="connectGitHubOAuth()" [disabled]="isOAuthConnecting()">
+                    <span *ngIf="!isOAuthConnecting()">🔗 Connect GitHub OAuth</span>
+                    <span *ngIf="isOAuthConnecting()">Connecting... ⏳</span>
+                  </button>
+                  <button class="btn btn-subtle btn-xs" (click)="openOAuthHelpModal()">ℹ️ Setup Guide</button>
+                  <button *ngIf="!isEditingLinkedGitHub()" class="btn btn-outline btn-xs" (click)="startEditingLinkedGitHub()" title="Change username target">✏️ Change</button>
+                </ng-container>
+
+                <ng-container *ngIf="!linkedGitHubUsername()">
+                  <span class="badge badge-secondary">🔗 No GitHub Account Connected</span>
+                  <button class="btn btn-primary btn-xs" (click)="connectGitHubOAuth()" [disabled]="isOAuthConnecting()">
+                    <span *ngIf="!isOAuthConnecting()">🔗 Connect GitHub OAuth</span>
+                    <span *ngIf="isOAuthConnecting()">Connecting... ⏳</span>
+                  </button>
+                  <button *ngIf="!isEditingLinkedGitHub()" class="btn btn-outline btn-xs" (click)="startEditingLinkedGitHub()">✏️ Enter Username</button>
+                </ng-container>
+
+                <div *ngIf="isEditingLinkedGitHub()" class="flex-align gap-xs">
+                  <input type="text" class="form-input form-input-sm" [(ngModel)]="tempLinkedUsername" placeholder="GitHub username" (keydown.enter)="saveLinkedGitHubUsername()" />
+                  <button class="btn btn-primary btn-xs" (click)="saveLinkedGitHubUsername()">Save</button>
+                  <button class="btn btn-secondary btn-xs" (click)="cancelEditingLinkedGitHub()">Cancel</button>
+                </div>
+              </ng-container>
+            </div>
+
+            <div class="flex-align gap-xs">
+              <button class="btn btn-outline btn-xs dev-bypass-pill" [class.active]="devBypassActive()" (click)="toggleDevOAuthBypass()" title="Toggle simulated GitHub OAuth for testing">
+                🧪 {{ devBypassActive() ? 'Dev Bypass: ON' : 'Dev Bypass: OFF' }}
+              </button>
+              <button class="btn btn-outline btn-xs" *ngIf="linkedGitHubUsername() || verifiedGitHubUsername()" (click)="scanGitHub(isGitHubOAuthVerified() ? (verifiedGitHubUsername() || '') : linkedGitHubUsername())">
+                🔄 Sync Profile
+              </button>
+            </div>
+          </div>
+
           <!-- Input Bar -->
           <div class="gh-input-bar">
             <div class="gh-input-wrapper">
@@ -1037,7 +1174,7 @@
               <input 
                 type="text" 
                 class="form-input gh-username-input" 
-                placeholder="Enter GitHub username (e.g. ch1llysauce, torvalds, gaearon)" 
+                placeholder="Enter GitHub username to scan (e.g. tiangolo, karpathy, or your username)" 
                 [(ngModel)]="githubUsername" 
                 (keydown.enter)="scanGitHub()" 
                 [disabled]="isScanningGitHub()" 
@@ -1052,10 +1189,10 @@
           <!-- Quick Suggestion Chips -->
           <div class="gh-quick-chips">
             <span class="quick-chip-label">Quick Scan:</span>
-            <button class="gh-chip" (click)="scanGitHub('ch1llysauce')">👤 ch1llysauce (My Profile)</button>
-            <button class="gh-chip" (click)="scanGitHub('tiangolo')">⚡ tiangolo (FastAPI)</button>
-            <button class="gh-chip" (click)="scanGitHub('karpathy')">🧠 karpathy (AI/ML)</button>
-            <button class="gh-chip" (click)="scanGitHub('antfu')">✨ antfu (Vue/OpenSource)</button>
+            <button class="gh-chip chip-my-account" *ngIf="linkedGitHubUsername()" (click)="scanGitHub(linkedGitHubUsername())">👤 @{{ linkedGitHubUsername() }} (My Account)</button>
+            <button class="gh-chip" (click)="scanGitHub('tiangolo')">⚡ tiangolo (Explore)</button>
+            <button class="gh-chip" (click)="scanGitHub('karpathy')">🧠 karpathy (Explore)</button>
+            <button class="gh-chip" (click)="scanGitHub('antfu')">✨ antfu (Explore)</button>
           </div>
 
           <!-- Feedback Alerts -->
@@ -1160,15 +1297,31 @@
 
           </div>
 
+          <!-- Benchmark Notice for Unlinked / External Accounts -->
+          <div class="alert-info margin-bottom-md" *ngIf="!isScannedAccountLinked()">
+            👁️ <strong>Read-Only Benchmark Mode:</strong> You are exploring public repositories from <strong>@{{ githubScanData()?.profile?.username }}</strong>. Importing is restricted to your verified GitHub account (<strong>@{{ isGitHubOAuthVerified() ? verifiedGitHubUsername() : linkedGitHubUsername() }}</strong>).
+          </div>
+          <div class="alert-warning margin-bottom-md" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">
+            🔒 <strong>GitHub OAuth Verification Required:</strong> You are viewing <strong>@{{ linkedGitHubUsername() }}</strong>. To verify ownership and prevent unauthorized portfolio imports, please authenticate with GitHub OAuth.
+          </div>
+
           <!-- Repositories Section Header with Batch Import -->
           <div class="gh-repos-header flex-between margin-bottom-md">
             <div>
               <h3>📦 Scanned Repositories ({{ githubScanData()?.repos?.length || 0 }})</h3>
-              <p class="sub-text">Review and import individual repositories directly into your portfolio with detected skills attached.</p>
+              <p class="sub-text" *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()">Verified owner. Review and import your repositories directly into your portfolio with detected skills attached.</p>
+              <p class="sub-text text-warning" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">OAuth verification required before repositories can be imported.</p>
+              <p class="sub-text text-muted" *ngIf="!isScannedAccountLinked()">Browsing external profile for skill benchmarking & exploration (Read-Only).</p>
             </div>
             <div>
-              <button class="btn btn-secondary btn-sm" (click)="importAllScannedRepos()" [disabled]="importingRepoId() !== null">
+              <button *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()" class="btn btn-secondary btn-sm" (click)="importAllScannedRepos()" [disabled]="importingRepoId() !== null">
                 📥 Import All Repositories to Portfolio
+              </button>
+              <button *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()" class="btn btn-warning btn-sm" (click)="connectGitHubOAuth()">
+                🔒 Connect OAuth to Import All
+              </button>
+              <button *ngIf="!isScannedAccountLinked()" class="btn btn-outline btn-sm" disabled title="Import restricted to @{{ isGitHubOAuthVerified() ? verifiedGitHubUsername() : linkedGitHubUsername() }}">
+                🔒 Import Restricted (External Profile)
               </button>
             </div>
           </div>
@@ -1214,16 +1367,30 @@
                 <span class="gh-repo-updated text-muted">Updated {{ repo.updated_at | slice:0:10 }}</span>
                 
                 <div>
-                  <button 
-                    *ngIf="!isRepoAlreadyImported(repo.name)" 
-                    class="btn btn-primary btn-sm gh-import-btn" 
-                    (click)="importRepoToPortfolio(repo)" 
-                    [disabled]="importingRepoId() === repo.id">
-                    <span *ngIf="importingRepoId() !== repo.id">📥 1-Click Import</span>
-                    <span *ngIf="importingRepoId() === repo.id">Importing... ⏳</span>
-                  </button>
-                  <span *ngIf="isRepoAlreadyImported(repo.name)" class="badge badge-success gh-imported-badge">
-                    ✅ In Portfolio
+                  <ng-container *ngIf="isScannedAccountLinked()">
+                    <ng-container *ngIf="isGitHubOAuthVerified()">
+                      <button 
+                        *ngIf="!isRepoAlreadyImported(repo.name)" 
+                        class="btn btn-primary btn-sm gh-import-btn" 
+                        (click)="importRepoToPortfolio(repo)" 
+                        [disabled]="importingRepoId() === repo.id">
+                        <span *ngIf="importingRepoId() !== repo.id">📥 1-Click Import</span>
+                        <span *ngIf="importingRepoId() === repo.id">Importing... ⏳</span>
+                      </button>
+                      <span *ngIf="isRepoAlreadyImported(repo.name)" class="badge badge-success gh-imported-badge">
+                        ✅ In Portfolio
+                      </span>
+                    </ng-container>
+                    <button 
+                      *ngIf="!isGitHubOAuthVerified()" 
+                      class="btn btn-warning btn-sm gh-import-btn" 
+                      (click)="connectGitHubOAuth()" 
+                      [disabled]="isOAuthConnecting()">
+                      🔒 Verify OAuth to Import
+                    </button>
+                  </ng-container>
+                  <span *ngIf="!isScannedAccountLinked()" class="badge badge-secondary" title="Only the verified account can import this repository">
+                    🔒 View Only
                   </span>
                 </div>
               </div>
@@ -1256,9 +1423,13 @@
       <!-- ML Probabilities Breakdown (UI 5 Spec) -->
       <div class="card sub-card" *ngIf="mlPredictions()[activeAnalysisProject()?.id]">
         <h3>🤖 Machine Learning Classification Breakdown</h3>
-        <p class="predicted-highlight">
+        <p class="predicted-highlight" *ngIf="!mlPredictions()[activeAnalysisProject().id].needs_details && mlPredictions()[activeAnalysisProject().id].confidence_score > 30">
           Predicted Domain: <strong>{{ mlPredictions()[activeAnalysisProject().id].predicted_category }}</strong>
           ({{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence)
+        </p>
+        <p class="predicted-highlight warning-highlight" *ngIf="mlPredictions()[activeAnalysisProject().id].needs_details || mlPredictions()[activeAnalysisProject().id].confidence_score <= 30">
+          ⚠️ Status: <strong>Needs More Details</strong>
+          ({{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence — Add a detailed description of features and tools used)
         </p>
 
         <div class="prob-list">
@@ -1354,6 +1525,17 @@
       </button>
       <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'register'" (click)="register()">
         Create Account
+      </button>
+
+      <div class="auth-divider">
+        <span>OR</span>
+      </div>
+
+      <button class="btn btn-github full-width-btn" (click)="signInWithGitHub()" [disabled]="isOAuthConnecting()">
+        <svg class="github-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        <span>{{ isOAuthConnecting() ? 'Connecting to GitHub...' : 'Continue with GitHub' }}</span>
       </button>
     </div>
 
@@ -1470,6 +1652,57 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- GITHUB OAUTH SETUP GUIDE MODAL -->
+<div class="modal-backdrop" *ngIf="showOAuthHelpModal()" (click)="closeOAuthHelpModal()">
+  <div class="modal-card oauth-help-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <h2>🛡️ GitHub OAuth Setup Guide</h2>
+      <button class="btn-icon" (click)="closeOAuthHelpModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <p class="sub-text margin-bottom-md">
+        To enable authenticated GitHub OAuth login and prevent anyone else from importing your projects, link your GitHub App in Supabase in 2 minutes:
+      </p>
+
+      <div class="oauth-setup-steps">
+        <div class="oauth-step-card">
+          <span class="step-badge">Step 1</span>
+          <h4>Create an OAuth App on GitHub</h4>
+          <p>Go to <a href="https://github.com/settings/developers" target="_blank" rel="noopener noreferrer" class="text-primary">github.com/settings/developers ↗</a> and click <strong>New OAuth App</strong>.</p>
+        </div>
+
+        <div class="oauth-step-card">
+          <span class="step-badge">Step 2</span>
+          <h4>Configure URLs</h4>
+          <p>• <strong>Application Name:</strong> <code>PortfolioIQ-AI</code></p>
+          <p>• <strong>Homepage URL:</strong> <code>http://localhost:4200</code></p>
+          <p>• <strong>Authorization callback URL:</strong></p>
+          <div class="copy-box">
+            <code>https://rigtwkuypixwwontbckr.supabase.co/auth/v1/callback</code>
+          </div>
+        </div>
+
+        <div class="oauth-step-card">
+          <span class="step-badge">Step 3</span>
+          <h4>Enable in Supabase Dashboard</h4>
+          <p>Generate a <strong>Client Secret</strong> in GitHub, then go to your <a href="https://supabase.com/dashboard/project/rigtwkuypixwwontbckr/auth/providers" target="_blank" rel="noopener noreferrer" class="text-primary">Supabase Auth Providers ↗</a>.</p>
+          <p>Enable <strong>GitHub</strong>, paste your <strong>Client ID</strong> &amp; <strong>Client Secret</strong>, and click <strong>Save</strong>.</p>
+        </div>
+      </div>
+
+      <div class="alert-info margin-top-md">
+        💡 <strong>Defense / Local Demo Shortcut:</strong> You can click <strong>"🧪 Enable Dev Bypass"</strong> below to simulate verified OAuth status right now during your test without waiting for Supabase!
+      </div>
+    </div>
+    <div class="modal-footer flex-between">
+      <button class="btn btn-outline btn-sm" (click)="toggleDevOAuthBypass(); closeOAuthHelpModal()">
+        🧪 Toggle Dev Mode Bypass
+      </button>
+      <button class="btn btn-secondary btn-sm" (click)="closeOAuthHelpModal()">Close</button>
+    </div>
   </div>
 </div>
 

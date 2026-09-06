@@ -82,6 +82,7 @@ export class App implements OnInit {
   
   newSkillName = '';
   newSkillCategory = 'Programming Language';
+  skillsSubView = signal<'my-skills' | 'catalog'>('my-skills');
 
   // Resume Parser Operations
   resumeParsing = signal<boolean>(false);
@@ -123,7 +124,14 @@ export class App implements OnInit {
   ]);
 
   // GitHub Integration Operations (Stage 14)
-  githubUsername = 'ch1llysauce';
+  linkedGitHubUsername = signal<string>('');
+  verifiedGitHubUsername = signal<string | null>(null);
+  isGitHubOAuthVerified = signal<boolean>(false);
+  isOAuthConnecting = signal<boolean>(false);
+  showOAuthHelpModal = signal<boolean>(false);
+  isEditingLinkedGitHub = signal<boolean>(false);
+  tempLinkedUsername = '';
+  githubUsername = '';
   isScanningGitHub = signal<boolean>(false);
   githubScanData = signal<GitHubScanResponse | null>(null);
   githubStatus = signal<GitHubStatus | null>(null);
@@ -190,6 +198,43 @@ export class App implements OnInit {
   async loadCurrentUser() {
     const user = await this.authService.getUser();
     this.currentUser.set(user);
+    this.checkOAuthGitHubIdentity(user);
+  }
+
+  checkOAuthGitHubIdentity(user: any) {
+    if (!user) {
+      this.verifiedGitHubUsername.set(null);
+      this.isGitHubOAuthVerified.set(false);
+      this.linkedGitHubUsername.set('');
+      this.githubUsername = '';
+      this.githubScanData.set(null);
+      return;
+    }
+
+    // 1. Check if user has an OAuth verified GitHub identity
+    const verified = this.authService.extractGitHubUsername(user);
+    if (verified) {
+      this.verifiedGitHubUsername.set(verified);
+      this.isGitHubOAuthVerified.set(true);
+      this.linkedGitHubUsername.set(verified);
+      this.githubUsername = verified;
+      localStorage.setItem(`portfolioiq_github_${user.id}`, verified);
+      return;
+    }
+
+    // 2. Load linked GitHub username specifically tied to THIS user ID
+    const userSavedGithub = localStorage.getItem(`portfolioiq_github_${user.id}`) || '';
+    this.linkedGitHubUsername.set(userSavedGithub);
+    this.githubUsername = userSavedGithub;
+
+    // 3. Check if simulated Dev Mode bypass is active for this session
+    if (this.devBypassActive() && userSavedGithub) {
+      this.verifiedGitHubUsername.set(userSavedGithub);
+      this.isGitHubOAuthVerified.set(true);
+    } else {
+      this.verifiedGitHubUsername.set(null);
+      this.isGitHubOAuthVerified.set(false);
+    }
   }
 
   async loadInitialData() {
@@ -361,9 +406,19 @@ export class App implements OnInit {
   }
 
   setupAuthRecoveryListener() {
-    // 1. Listen for Supabase recovery auth state change event
+    // 1. Listen for Supabase auth state change events
     this.authService.onAuthStateChange(async (event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === 'SIGNED_IN') {
+        const user = session?.user ?? null;
+        this.currentUser.set(user);
+        this.checkOAuthGitHubIdentity(user);
+        await this.fetchProjects();
+      } else if (event === 'SIGNED_OUT') {
+        this.currentUser.set(null);
+        this.verifiedGitHubUsername.set(null);
+        this.isGitHubOAuthVerified.set(false);
+        this.projects.set([]);
+      } else if (event === 'PASSWORD_RECOVERY') {
         this.currentUser.set(session?.user ?? null);
         this.authMode.set('forgot');
         this.forgotStep.set(3);
@@ -387,6 +442,59 @@ export class App implements OnInit {
         }, 400);
       }
     }
+  }
+
+  // GitHub OAuth Operations
+  async signInWithGitHub() {
+    this.authError.set('');
+    this.isOAuthConnecting.set(true);
+    try {
+      const { error } = await this.authService.signInWithGitHub();
+      if (error) {
+        if (error.message.toLowerCase().includes('not enabled') || error.message.toLowerCase().includes('unsupported provider')) {
+          this.authError.set('GitHub OAuth is not yet enabled in your Supabase project. Click "Setup Guide" below for 2-minute instructions.');
+          this.showOAuthHelpModal.set(true);
+        } else {
+          this.authError.set(error.message);
+        }
+      }
+    } catch (err: any) {
+      this.authError.set(err.message || 'GitHub OAuth sign-in failed.');
+    } finally {
+      this.isOAuthConnecting.set(false);
+    }
+  }
+
+  async connectGitHubOAuth() {
+    this.githubError.set('');
+    this.isOAuthConnecting.set(true);
+    try {
+      if (this.currentUser()) {
+        const { error } = await this.authService.linkWithGitHub();
+        if (error) {
+          if (error.message.toLowerCase().includes('not enabled') || error.message.toLowerCase().includes('unsupported provider')) {
+            this.githubError.set('GitHub OAuth provider is not yet enabled in your Supabase Dashboard.');
+            this.showOAuthHelpModal.set(true);
+          } else {
+            this.githubError.set(error.message);
+          }
+        }
+      } else {
+        await this.signInWithGitHub();
+      }
+    } catch (err: any) {
+      this.githubError.set(err.message || 'Failed to connect GitHub account.');
+    } finally {
+      this.isOAuthConnecting.set(false);
+    }
+  }
+
+  openOAuthHelpModal() {
+    this.showOAuthHelpModal.set(true);
+  }
+
+  closeOAuthHelpModal() {
+    this.showOAuthHelpModal.set(false);
   }
 
   // Auth Operations
@@ -431,6 +539,13 @@ export class App implements OnInit {
   async logout() {
     await this.authService.signOut();
     this.currentUser.set(null);
+    this.linkedGitHubUsername.set('');
+    this.verifiedGitHubUsername.set(null);
+    this.isGitHubOAuthVerified.set(false);
+    this.devBypassActive.set(false);
+    localStorage.removeItem('portfolioiq_dev_oauth_bypass');
+    this.githubUsername = '';
+    this.githubScanData.set(null);
     this.projects.set([]);
     this.portfolioScore.set(null);
     this.skillGap.set(null);
@@ -460,6 +575,73 @@ export class App implements OnInit {
       this.newSkillName = '';
       await this.fetchSkills();
       this.showToast(`Skill "${added}" added to catalog!`, 'success');
+    }
+  }
+
+  async deleteSkillFromCatalog(id: string, name: string) {
+    if (!confirm(`Are you sure you want to delete ${name} from the catalog?`)) return;
+    
+    const { error } = await this.skillService.deleteSkill(id);
+    if (error) {
+      this.showToast('Error deleting skill: ' + error.message, 'error');
+    } else {
+      await this.fetchSkills();
+      this.showToast(`Skill "${name}" deleted from catalog.`, 'success');
+    }
+  }
+
+  setSkillsSubView(view: 'my-skills' | 'catalog') {
+    this.skillsSubView.set(view);
+  }
+
+  getUserSkillsDetailed(): { name: string; category: string; count: number; projectNames: string[] }[] {
+    const skillMap = new Map<string, { name: string; category: string; count: number; projectNames: string[] }>();
+    for (const p of this.projects()) {
+      if (p.project_skills) {
+        for (const ps of p.project_skills) {
+          const s = ps.skills;
+          if (s?.name) {
+            const key = s.name.toLowerCase();
+            if (!skillMap.has(key)) {
+              skillMap.set(key, {
+                name: s.name,
+                category: s.category || 'Technology',
+                count: 1,
+                projectNames: [p.name]
+              });
+            } else {
+              const existing = skillMap.get(key)!;
+              existing.count++;
+              if (!existing.projectNames.includes(p.name)) {
+                existing.projectNames.push(p.name);
+              }
+            }
+          }
+        }
+      }
+    }
+    return Array.from(skillMap.values()).sort((a, b) => b.count - a.count);
+  }
+
+  async removeSkillFromUserPortfolio(skillName: string) {
+    if (!confirm(`Are you sure you want to remove "${skillName}" from your developer skills? This will detach it from your projects.`)) return;
+
+    try {
+      let removedCount = 0;
+      for (const p of this.projects()) {
+        if (p.project_skills) {
+          for (const ps of p.project_skills) {
+            if (ps.skills?.name?.toLowerCase() === skillName.toLowerCase()) {
+              await this.skillService.removeSkillFromProject(p.id, ps.skill_id);
+              removedCount++;
+            }
+          }
+        }
+      }
+      await this.fetchProjects();
+      this.showToast(`Removed "${skillName}" from ${removedCount} project(s) in your portfolio.`, 'success');
+    } catch (err: any) {
+      this.showToast(`Failed to remove skill: ${err.message}`, 'error');
     }
   }
 
@@ -1000,11 +1182,85 @@ export class App implements OnInit {
     });
   }
 
+  devBypassActive = signal<boolean>(localStorage.getItem('portfolioiq_dev_oauth_bypass') === 'true');
+
+  toggleDevOAuthBypass() {
+    const next = !this.devBypassActive();
+    this.devBypassActive.set(next);
+    localStorage.setItem('portfolioiq_dev_oauth_bypass', String(next));
+    if (next) {
+      const username = this.linkedGitHubUsername();
+      if (username) {
+        this.verifiedGitHubUsername.set(username);
+        this.isGitHubOAuthVerified.set(true);
+        this.showToast(`[Dev Mode] Simulated GitHub OAuth verified for @${username}`, 'success');
+      } else {
+        this.showToast('[Dev Mode] Please enter or link a GitHub username first.', 'warning');
+      }
+    } else {
+      this.checkOAuthGitHubIdentity(this.currentUser());
+      this.showToast('[Dev Mode] Real OAuth enforcement active.', 'info');
+    }
+  }
+
+  isScannedAccountLinked(): boolean {
+    const scanned = this.githubScanData()?.profile?.username?.trim().toLowerCase();
+    if (!scanned) return false;
+
+    // If OAuth is verified, strict match with cryptographically verified username
+    if (this.isGitHubOAuthVerified() && this.verifiedGitHubUsername()) {
+      return scanned === this.verifiedGitHubUsername()?.trim().toLowerCase();
+    }
+
+    // Unverified fallback: match against linked account
+    const linked = this.linkedGitHubUsername()?.trim().toLowerCase();
+    return !!linked && scanned === linked;
+  }
+
+  startEditingLinkedGitHub() {
+    this.tempLinkedUsername = this.linkedGitHubUsername();
+    this.isEditingLinkedGitHub.set(true);
+  }
+
+  saveLinkedGitHubUsername() {
+    const trimmed = this.tempLinkedUsername.trim();
+    if (trimmed) {
+      this.linkedGitHubUsername.set(trimmed);
+      const user = this.currentUser();
+      if (user?.id) {
+        localStorage.setItem(`portfolioiq_github_${user.id}`, trimmed);
+      }
+      this.isEditingLinkedGitHub.set(false);
+      this.scanGitHub(trimmed);
+    }
+  }
+
+  cancelEditingLinkedGitHub() {
+    this.isEditingLinkedGitHub.set(false);
+  }
+
   async importRepoToPortfolio(repo: GitHubRepository) {
     if (!this.currentUser()) {
       this.openAuthModal('login');
       return;
     }
+
+    // Option 3 Security Check: Require GitHub OAuth verification to import
+    if (!this.isGitHubOAuthVerified()) {
+      this.githubError.set(
+        `🔒 OAuth Verification Required: To prevent unauthorized imports and prove you own this repository, please verify via GitHub OAuth before importing.`
+      );
+      this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
+      return;
+    }
+
+    if (!this.isScannedAccountLinked()) {
+      this.githubError.set(
+        `🔒 Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
+      );
+      return;
+    }
+
     this.importingRepoId.set(repo.id);
     this.githubError.set('');
     this.githubImportSuccessMsg.set('');
@@ -1035,7 +1291,11 @@ export class App implements OnInit {
           }
         }
         if (skillId) {
-          await this.skillService.addSkillToProject(newProject.id, skillId);
+          const { error: attachErr } = await this.skillService.addSkillToProject(newProject.id, skillId);
+          if (attachErr) {
+            console.error('Failed to attach skill:', skillName, attachErr);
+            throw new Error(`Failed to attach skill ${skillName}: ${attachErr.message}`);
+          }
         }
       }
 
@@ -1059,6 +1319,22 @@ export class App implements OnInit {
     if (!data || !data.repos || data.repos.length === 0) return;
     if (!this.currentUser()) {
       this.openAuthModal('login');
+      return;
+    }
+
+    // Option 3 Security Check: Require GitHub OAuth verification to import
+    if (!this.isGitHubOAuthVerified()) {
+      this.githubError.set(
+        `🔒 OAuth Verification Required: To prevent unauthorized imports and prove you own these repositories, please verify via GitHub OAuth before importing.`
+      );
+      this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
+      return;
+    }
+
+    if (!this.isScannedAccountLinked()) {
+      this.githubError.set(
+        `🔒 Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
+      );
       return;
     }
 

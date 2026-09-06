@@ -68,6 +68,42 @@ export class AuthService {
         });
     }
 
+    async signInWithGitHub() {
+        return await this.supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: window.location.origin,
+                scopes: 'read:user user:email'
+            }
+        });
+    }
+
+    async linkWithGitHub() {
+        return await this.supabase.auth.linkIdentity({
+            provider: 'github',
+            options: {
+                redirectTo: window.location.origin
+            }
+        });
+    }
+
+    extractGitHubUsername(user: any): string | null {
+        if (!user) return null;
+        if (user.identities && Array.isArray(user.identities)) {
+            const ghIdentity = user.identities.find((id: any) => id.provider === 'github');
+            if (ghIdentity?.identity_data?.user_name) {
+                return ghIdentity.identity_data.user_name;
+            }
+        }
+        if (user.user_metadata?.user_name) {
+            return user.user_metadata.user_name;
+        }
+        if (user.user_metadata?.preferred_username) {
+            return user.user_metadata.preferred_username;
+        }
+        return null;
+    }
+
     onAuthStateChange(callback: (event: string, session: any) => void) {
         return this.supabase.auth.onAuthStateChange((event, session) => {
             callback(event, session);

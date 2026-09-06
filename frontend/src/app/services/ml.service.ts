@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 export interface ClassifyProjectResponse {
   predicted_category: string;
   confidence_score: number;
   probabilities: { [key: string]: number };
+  needs_details?: boolean;
 }
 
 @Injectable({
@@ -21,7 +22,18 @@ export class MlService {
     return this.http.post<ClassifyProjectResponse>(`${this.apiUrl}/classify-project`, {
       name,
       description
-    });
+    }).pipe(
+      map(res => {
+        if (!res || res.confidence_score <= 30 || res.needs_details) {
+          return {
+            ...res,
+            predicted_category: 'Needs More Details',
+            needs_details: true
+          };
+        }
+        return res;
+      })
+    );
   }
 }
 

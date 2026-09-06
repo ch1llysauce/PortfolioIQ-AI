@@ -2,12 +2,6 @@
 title PortfolioIQ AI — Unified System Launcher
 color 0b
 
-echo =====================================================================
-echo           PORTFOLIOIQ AI - 4TH YEAR CAPSTONE / THESIS DEMO
-echo           Unified System Launcher (Backend + Frontend)
-echo =====================================================================
-echo.
-
 :: 1. Check Python Virtual Environment
 if not exist "backend\venv\Scripts\python.exe" (
     echo [ERROR] Backend virtualenv not found at backend\venv!
@@ -47,3 +41,4 @@ echo  Keep both backend and frontend terminal windows open during demo.
 echo =====================================================================
 echo.
 pause
+
