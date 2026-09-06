@@ -2676,6 +2676,396 @@
   to { transform: rotate(360deg); }
 }
 
+/* ==========================================================================
+   STAGE 15: FINAL POLISH, TELEMETRY, TOASTS & PRINT DOSSIER
+   ========================================================================== */
+
+/* Header Center Actions */
+.header-center-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.system-telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 20px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #a7f3d0;
+}
+
+.system-telemetry-pill:hover {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.telemetry-pill-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.telemetry-pill-tag {
+  background: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-ring 1.8s infinite;
+}
+
+.status-pulse-dot.large {
+  width: 12px;
+  height: 12px;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.export-dossier-btn {
+  font-weight: 600;
+}
+
+/* Floating Toast Notification Stack */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #f8fafc;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.toast-item:hover {
+  transform: translateX(-4px);
+}
+
+.toast-success {
+  border-left: 4px solid #10b981;
+}
+
+.toast-error {
+  border-left: 4px solid #ef4444;
+}
+
+.toast-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.toast-info {
+  border-left: 4px solid #3b82f6;
+}
+
+.toast-icon {
+  font-size: 1.1rem;
+}
+
+.toast-msg {
+  flex: 1;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.toast-close:hover {
+  color: #cbd5e1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Telemetry Modal */
+.telemetry-modal-card {
+  max-width: 960px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.telemetry-modal-title-group h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.telemetry-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.telemetry-summary-banner {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.telemetry-card {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.telemetry-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.telemetry-card h4 {
+  margin: 8px 0 10px 0;
+  font-size: 1.02rem;
+  color: #f1f5f9;
+}
+
+.engine-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #818cf8;
+  letter-spacing: 0.5px;
+}
+
+.telemetry-card-detail {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  margin: 4px 0;
+}
+
+.telemetry-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.chip-sm {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+/* Printable Dossier Sheet Styles (Hidden by default on screen) */
+.printable-dossier-report {
+  display: none;
+}
+
+/* Print Specific Rules */
+@media print {
+  /* Hide the entire web application shell */
+  .sidebar,
+  .top-header,
+  .content-container,
+  .toast-container,
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  /* Display and format the clean printable report */
+  .printable-dossier-report {
+    display: block !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    padding: 30px !important;
+  }
+
+  .dossier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .dossier-brand h1 {
+    font-size: 1.6rem;
+    color: #1e1b4b;
+    margin: 0 0 6px 0;
+  }
+
+  .dossier-tagline {
+    font-size: 0.9rem;
+    color: #4b5563;
+    margin: 0;
+  }
+
+  .dossier-meta {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #374151;
+  }
+
+  .dossier-meta p {
+    margin: 3px 0;
+  }
+
+  .dossier-divider {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin: 16px 0 24px 0;
+  }
+
+  .dossier-scores-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .dossier-score-box {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    background: #f9fafb;
+  }
+
+  .dossier-score-num {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #4f46e5;
+  }
+
+  .dossier-score-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+
+  .dossier-section {
+    margin-bottom: 24px;
+  }
+
+  .dossier-section h3 {
+    font-size: 1.15rem;
+    color: #111827;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  .dossier-section p {
+    font-size: 0.9rem;
+    color: #374151;
+    margin: 6px 0;
+  }
+
+  .dossier-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.88rem;
+  }
+
+  .dossier-table th,
+  .dossier-table td {
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  .dossier-table th {
+    background: #f3f4f6;
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .dossier-skill-pill {
+    display: inline-block;
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin: 2px;
+  }
+
+  .dossier-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.78rem;
+    color: #6b7280;
+    text-align: center;
+  }
+}
+
+
 
 
 

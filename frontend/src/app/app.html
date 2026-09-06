@@ -71,7 +71,20 @@
         <h1 *ngIf="activeTab() === 'github'">🐙 GitHub Integration & 1-Click Importer</h1>
       </div>
 
+      <!-- Header Actions & Telemetry Widget (Stage 15) -->
+      <div class="header-center-actions">
+        <!-- Live System Architecture Telemetry Pill -->
+        <button class="system-telemetry-pill" (click)="openTelemetryModal()" title="View Real-Time System Architecture & Diagnostics">
+          <span class="status-pulse-dot"></span>
+          <span class="telemetry-pill-text">All Engines Live</span>
+          <span class="telemetry-pill-tag">AI v1.0</span>
+        </button>
 
+        <!-- Export PDF Dossier Action -->
+        <button class="btn btn-outline btn-sm export-dossier-btn" (click)="exportPortfolioPdf()" title="Export / Print Developer Dossier Report">
+          🖨️ Export PDF
+        </button>
+      </div>
 
       <div class="user-auth-bar">
         <ng-container *ngIf="currentUser(); else authButtons">
@@ -1457,5 +1470,235 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- FLOATING TOAST NOTIFICATION STACK (Stage 15) -->
+<div class="toast-container" *ngIf="toasts().length">
+  <div 
+    *ngFor="let toast of toasts()" 
+    class="toast-item" 
+    [class]="'toast-' + toast.type" 
+    (click)="dismissToast(toast.id)">
+    <span class="toast-icon">
+      <ng-container [ngSwitch]="toast.type">
+        <span *ngSwitchCase="'success'">✅</span>
+        <span *ngSwitchCase="'error'">⚠️</span>
+        <span *ngSwitchCase="'warning'">🔔</span>
+        <span *ngSwitchDefault>ℹ️</span>
+      </ng-container>
+    </span>
+    <span class="toast-msg">{{ toast.message }}</span>
+    <button class="toast-close" (click)="dismissToast(toast.id); $event.stopPropagation()">✖</button>
+  </div>
+</div>
+
+<!-- SYSTEM ARCHITECTURE & DIAGNOSTICS MODAL (Stage 15) -->
+<div class="modal-backdrop" *ngIf="showTelemetryModal()" (click)="closeTelemetryModal()">
+  <div class="modal-card telemetry-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="telemetry-modal-title-group">
+        <h2>⚡ System Architecture & Diagnostics</h2>
+        <span class="telemetry-subtitle">Real-time health telemetry across all 6 PortfolioIQ AI core microservices</span>
+      </div>
+      <div class="flex-align gap-sm">
+        <button class="btn btn-secondary btn-sm" (click)="fetchSystemTelemetry()" [disabled]="isLoadingTelemetry()">
+          {{ isLoadingTelemetry() ? 'Refreshing...' : '🔄 Refresh' }}
+        </button>
+        <button class="btn-icon" (click)="closeTelemetryModal()">✖</button>
+      </div>
+    </div>
+
+    <div class="modal-body" *ngIf="systemTelemetry()">
+      <!-- System Summary Header Strip -->
+      <div class="telemetry-summary-banner flex-between">
+        <div class="flex-align gap-md">
+          <span class="status-pulse-dot large"></span>
+          <div>
+            <h4 class="margin-none">Overall System Status: <strong class="text-success uppercase">{{ systemTelemetry()?.overall_health }}</strong></h4>
+            <span class="text-muted text-sm">Server Uptime: {{ systemTelemetry()?.uptime_seconds }}s | Last pinged: Just now</span>
+          </div>
+        </div>
+        <span class="badge badge-success">Capstone Defense Ready</span>
+      </div>
+
+      <!-- 6 Microservice Telemetry Cards Grid -->
+      <div class="telemetry-grid">
+
+        <!-- 1. FastAPI Core REST API -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-top flex-between">
+            <span class="engine-tag">Core Backend</span>
+            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.api?.status === 'online'">
+              {{ systemTelemetry()?.subsystems?.api?.status }}
+            </span>
+          </div>
+          <h4>{{ systemTelemetry()?.subsystems?.api?.name }}</h4>
+          <p class="telemetry-card-detail">Framework: <strong>{{ systemTelemetry()?.subsystems?.api?.framework }}</strong></p>
+          <p class="telemetry-card-detail">API Version: <strong>{{ systemTelemetry()?.subsystems?.api?.version }}</strong></p>
+          <div class="telemetry-chip-list">
+            <span class="chip-sm">REST Endpoints</span>
+            <span class="chip-sm">CORS Enabled</span>
+            <span class="chip-sm">Pydantic v2</span>
+          </div>
+        </div>
+
+        <!-- 2. PostgreSQL / Supabase Database -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-top flex-between">
+            <span class="engine-tag">Database Layer</span>
+            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.database?.status === 'online'">
+              {{ systemTelemetry()?.subsystems?.database?.status }}
+            </span>
+          </div>
+          <h4>{{ systemTelemetry()?.subsystems?.database?.name }}</h4>
+          <p class="telemetry-card-detail">Provider: <strong>{{ systemTelemetry()?.subsystems?.database?.provider }}</strong></p>
+          <p class="telemetry-card-detail">Active Session: <strong>{{ currentUser() ? currentUser()?.email : 'Guest / Demo' }}</strong></p>
+          <div class="telemetry-chip-list">
+            <span class="chip-sm" *ngFor="let feat of systemTelemetry()?.subsystems?.database?.features">{{ feat }}</span>
+          </div>
+        </div>
+
+        <!-- 3. Scikit-Learn ML Classifier -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-top flex-between">
+            <span class="engine-tag">Machine Learning</span>
+            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.machine_learning?.status === 'online'">
+              {{ systemTelemetry()?.subsystems?.machine_learning?.status }}
+            </span>
+          </div>
+          <h4>{{ systemTelemetry()?.subsystems?.machine_learning?.name }}</h4>
+          <p class="telemetry-card-detail">Algorithm: <strong>{{ systemTelemetry()?.subsystems?.machine_learning?.engine }}</strong></p>
+          <p class="telemetry-card-detail">Trained Model: <code>{{ systemTelemetry()?.subsystems?.machine_learning?.model_file }}</code></p>
+          <p class="telemetry-card-detail">Output Classes ({{ systemTelemetry()?.subsystems?.machine_learning?.classes_count }}):</p>
+          <div class="telemetry-chip-list">
+            <span class="chip-sm" *ngFor="let cls of systemTelemetry()?.subsystems?.machine_learning?.classes">{{ cls }}</span>
+          </div>
+        </div>
+
+        <!-- 4. Groq Cloud AI Career Coach -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-top flex-between">
+            <span class="engine-tag">Generative AI</span>
+            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.ai_coach?.live">
+              {{ systemTelemetry()?.subsystems?.ai_coach?.live ? 'LIVE' : 'DEMO' }}
+            </span>
+          </div>
+          <h4>{{ systemTelemetry()?.subsystems?.ai_coach?.name }}</h4>
+          <p class="telemetry-card-detail">Cloud Engine: <strong>{{ systemTelemetry()?.subsystems?.ai_coach?.provider }}</strong></p>
+          <p class="telemetry-card-detail">Active Model: <strong>{{ systemTelemetry()?.subsystems?.ai_coach?.model }}</strong></p>
+          <p class="telemetry-card-detail text-muted text-xs">{{ systemTelemetry()?.subsystems?.ai_coach?.message }}</p>
+        </div>
+
+        <!-- 5. Knowledge Graph Engine -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-top flex-between">
+            <span class="engine-tag">Knowledge Engine</span>
+            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.knowledge_graph?.status === 'online'">
+              {{ systemTelemetry()?.subsystems?.knowledge_graph?.status }}
+            </span>
+          </div>
+          <h4>{{ systemTelemetry()?.subsystems?.knowledge_graph?.name }}</h4>
+          <p class="telemetry-card-detail">Skill Nodes: <strong>{{ systemTelemetry()?.subsystems?.knowledge_graph?.nodes_count }}</strong></p>
+          <p class="telemetry-card-detail">Graph Relationships: <strong>{{ systemTelemetry()?.subsystems?.knowledge_graph?.relationships_count }}</strong></p>
+          <p class="telemetry-card-detail">Resolution: <strong>{{ systemTelemetry()?.subsystems?.knowledge_graph?.engine }}</strong></p>
+        </div>
+
+        <!-- 6. GitHub Ecosystem Scanner -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-top flex-between">
+            <span class="engine-tag">VCS Ecosystem</span>
+            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.github_sync?.status === 'online'">
+              {{ systemTelemetry()?.subsystems?.github_sync?.status }}
+            </span>
+          </div>
+          <h4>{{ systemTelemetry()?.subsystems?.github_sync?.name }}</h4>
+          <p class="telemetry-card-detail">API Quota: <strong>{{ systemTelemetry()?.subsystems?.github_sync?.rate_limit_remaining }} / {{ systemTelemetry()?.subsystems?.github_sync?.rate_limit_limit }}</strong> remaining</p>
+          <p class="telemetry-card-detail">Mode: <strong>{{ systemTelemetry()?.subsystems?.github_sync?.authenticated ? 'Authenticated Token (5,000 req/hr)' : 'Public REST (60 req/hr)' }}</strong></p>
+          <div class="telemetry-chip-list">
+            <span class="chip-sm">Zero-OAuth Required</span>
+            <span class="chip-sm">Auto-NER Tech Extraction</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal-footer flex-between">
+      <span class="text-muted text-xs">PortfolioIQ AI Capstone Edition • Built with Angular & FastAPI</span>
+      <button class="btn btn-secondary" (click)="closeTelemetryModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINTABLE DEVELOPER DOSSIER SHEET (Print-only via @media print) -->
+<div class="printable-dossier-report" id="printableDossier">
+  <div class="dossier-header">
+    <div class="dossier-brand">
+      <h1>⚡ PortfolioIQ.AI — Developer Evaluation Dossier</h1>
+      <p class="dossier-tagline">Automated Capstone Portfolio Health, Skill Gap, & Architecture Assessment</p>
+    </div>
+    <div class="dossier-meta">
+      <p><strong>Candidate:</strong> {{ currentUser()?.email || 'Guest Developer' }}</p>
+      <p><strong>Evaluation Date:</strong> {{ systemTelemetry()?.timestamp ? (systemTelemetry()!.timestamp * 1000 | date:'mediumDate') : 'Today' }}</p>
+      <p><strong>Target Role:</strong> {{ selectedRole()?.title || 'Software Engineer' }}</p>
+    </div>
+  </div>
+
+  <hr class="dossier-divider" />
+
+  <!-- Score Summary Grid -->
+  <div class="dossier-scores-grid">
+    <div class="dossier-score-box">
+      <span class="dossier-score-num">{{ portfolioScore()?.overall_health_score || 0 }}/100</span>
+      <span class="dossier-score-label">Overall Health Score</span>
+    </div>
+    <div class="dossier-score-box">
+      <span class="dossier-score-num">{{ skillGap()?.match_percentage || 0 }}%</span>
+      <span class="dossier-score-label">Role Readiness Match</span>
+    </div>
+    <div class="dossier-score-box">
+      <span class="dossier-score-num">{{ projects().length }}</span>
+      <span class="dossier-score-label">Verified Projects</span>
+    </div>
+    <div class="dossier-score-box">
+      <span class="dossier-score-num">{{ getUserSkillNames().length }}</span>
+      <span class="dossier-score-label">Unique Skills</span>
+    </div>
+  </div>
+
+  <!-- Skill Gap Analysis -->
+  <div class="dossier-section">
+    <h3>🎯 Skill Gap Analysis for {{ selectedRole()?.title || 'Target Role' }}</h3>
+    <p><strong>Matching Acquired Skills:</strong> {{ skillGap()?.matching_skills?.join(', ') || 'None detected yet' }}</p>
+    <p><strong>Critical Skill Gaps (To Acquire):</strong> {{ skillGap()?.missing_skills?.join(', ') || 'All required skills acquired!' }}</p>
+  </div>
+
+  <!-- Project Portfolio Breakdown -->
+  <div class="dossier-section">
+    <h3>📁 Developer Project Portfolio</h3>
+    <table class="dossier-table">
+      <thead>
+        <tr>
+          <th>Project Name</th>
+          <th>Predicted Domain (ML)</th>
+          <th>Attached Technologies</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of projects()">
+          <td><strong>{{ p.name }}</strong><br><small>{{ p.description }}</small></td>
+          <td>{{ mlPredictions()[p.id]?.predicted_category || 'General Software' }}</td>
+          <td>
+            <span *ngFor="let ps of p.project_skills" class="dossier-skill-pill">{{ ps.skills?.name }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer Certification -->
+  <div class="dossier-footer">
+    <p>Generated by <strong>PortfolioIQ AI (Capstone v1.0)</strong> • Powered by Scikit-Learn ML, Knowledge Graph, & Groq Cloud LLM</p>
   </div>
 </div>

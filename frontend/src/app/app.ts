@@ -13,6 +13,13 @@ import { OptimizationService, OptimizationResponse, RecommendedProject } from '.
 import { KnowledgeService, KnowledgeGraphData, RoleSkillTreeResponse, LearningPathResponse } from './services/knowledge.service';
 import { CoachService, ChatMessage, PortfolioContext, CoachStatus } from './services/coach.service';
 import { GitHubService, GitHubScanResponse, GitHubRepository, GitHubStatus } from './services/github.service';
+import { SystemService, SystemTelemetryResponse } from './services/system.service';
+
+export interface ToastItem {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+}
 
 @Component({
   selector: 'app-root',
@@ -124,6 +131,13 @@ export class App implements OnInit {
   githubImportSuccessMsg = signal<string>('');
   githubError = signal<string>('');
 
+  // System Diagnostics & Toast Notifications (Stage 15)
+  systemTelemetry = signal<SystemTelemetryResponse | null>(null);
+  showTelemetryModal = signal<boolean>(false);
+  isLoadingTelemetry = signal<boolean>(false);
+  toasts = signal<ToastItem[]>([]);
+  private toastCounter = 0;
+
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
@@ -135,7 +149,8 @@ export class App implements OnInit {
     private optimizationService: OptimizationService,
     private knowledgeService: KnowledgeService,
     private coachService: CoachService,
-    private githubService: GitHubService
+    private githubService: GitHubService,
+    private systemService: SystemService
   ) {}
 
   async ngOnInit() {
@@ -146,6 +161,7 @@ export class App implements OnInit {
     this.loadInitialKnowledgeData();
     this.loadCoachStatus();
     this.loadGitHubStatus();
+    this.fetchSystemTelemetry();
   }
 
 
@@ -386,7 +402,7 @@ export class App implements OnInit {
       this.authError.set(error.message);
     } else {
       this.closeAuthModal();
-      alert('Registration Successful! You can now log in.');
+      this.showToast('Registration Successful! You can now log in.', 'success');
       await this.loadCurrentUser();
     }
   }
@@ -402,6 +418,7 @@ export class App implements OnInit {
       this.authError.set(error.message);
     } else {
       this.closeAuthModal();
+      this.showToast('Welcome back! Signed in successfully.', 'success');
       await this.loadCurrentUser();
       await this.fetchProjects();
     }
@@ -416,6 +433,7 @@ export class App implements OnInit {
     this.skillGap.set(null);
     this.strengthsList.set([]);
     this.weaknessesList.set([]);
+    this.showToast('You have been signed out.', 'info');
   }
 
   // Skills Operations
@@ -433,10 +451,12 @@ export class App implements OnInit {
       this.newSkillCategory
     );
     if (error) {
-      alert('Error creating skill: ' + error.message);
+      this.showToast('Error creating skill: ' + error.message, 'error');
     } else {
+      const added = this.newSkillName;
       this.newSkillName = '';
       await this.fetchSkills();
+      this.showToast(`Skill "${added}" added to catalog!`, 'success');
     }
   }
 
@@ -523,11 +543,13 @@ export class App implements OnInit {
       this.newProjectDesc.trim()
     );
     if (error) {
-      alert('Failed to create project: ' + error.message);
+      this.showToast('Failed to create project: ' + error.message, 'error');
     } else {
+      const proj = this.newProjectName;
       this.newProjectName = '';
       this.newProjectDesc = '';
       await this.fetchProjects();
+      this.showToast(`Project "${proj}" created successfully!`, 'success');
     }
   }
 
@@ -535,6 +557,7 @@ export class App implements OnInit {
     if (!confirm('Are you sure you want to delete this project?')) return;
     await this.projectService.deleteProject(id);
     await this.fetchProjects();
+    this.showToast('Project deleted from portfolio.', 'info');
   }
 
   async attachSkillToProject(projectId: string, skillId: string) {
@@ -1040,6 +1063,47 @@ export class App implements OnInit {
     }
     this.githubImportSuccessMsg.set(`Batch import complete! Added ${count} new repositories to your portfolio.`);
   }
+
+  // Stage 15: System Telemetry, Toasts, and Export Handlers
+  showToast(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', durationMs = 3800) {
+    const id = ++this.toastCounter;
+    this.toasts.update(current => [...current, { id, message, type }]);
+    setTimeout(() => {
+      this.dismissToast(id);
+    }, durationMs);
+  }
+
+  dismissToast(id: number) {
+    this.toasts.update(current => current.filter(t => t.id !== id));
+  }
+
+  fetchSystemTelemetry() {
+    this.isLoadingTelemetry.set(true);
+    this.systemService.getSystemStatus().subscribe({
+      next: (res) => {
+        this.systemTelemetry.set(res);
+        this.isLoadingTelemetry.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch system telemetry:', err);
+        this.isLoadingTelemetry.set(false);
+      }
+    });
+  }
+
+  openTelemetryModal() {
+    this.fetchSystemTelemetry();
+    this.showTelemetryModal.set(true);
+  }
+
+  closeTelemetryModal() {
+    this.showTelemetryModal.set(false);
+  }
+
+  exportPortfolioPdf() {
+    window.print();
+  }
 }
+
 
 
