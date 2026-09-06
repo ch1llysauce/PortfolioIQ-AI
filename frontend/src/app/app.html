@@ -36,6 +36,11 @@
         <span class="nav-icon">📄</span>
         <span>Resume Extractor</span>
       </button>
+      <button class="nav-item" [class.active]="activeTab() === 'coach'" (click)="setTab('coach')">
+        <span class="nav-icon">🤖</span>
+        <span>AI Career Coach</span>
+        <span class="nav-pill-badge" *ngIf="coachStatus()?.live">LIVE</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -57,6 +62,7 @@
         <h1 *ngIf="activeTab() === 'optimizer'">⚡ Portfolio Optimization & Recommendations</h1>
         <h1 *ngIf="activeTab() === 'knowledge'">🕸️ Developer Knowledge Graph & Skill Trees</h1>
         <h1 *ngIf="activeTab() === 'resume'">📄 AI Resume PDF Extractor</h1>
+        <h1 *ngIf="activeTab() === 'coach'">🤖 Groq AI Developer Career Coach</h1>
       </div>
 
 
@@ -864,6 +870,120 @@
 
           </div>
 
+        </div>
+
+      </div>
+
+      <!-- TAB: GROQ AI CAREER COACH (Stage 13 Spec) -->
+      <div *ngIf="activeTab() === 'coach'" class="tab-pane coach-tab-pane">
+        
+        <!-- Coach Top Telemetry & Controls Card -->
+        <div class="card coach-context-card">
+          <div class="flex-between flex-wrap gap-md">
+            <div class="coach-profile-summary">
+              <div class="coach-avatar-badge">🤖</div>
+              <div>
+                <h2>PortfolioIQ AI Developer Coach</h2>
+                <p class="coach-subtitle">
+                  Real-time career mentor powered by 
+                  <strong class="text-accent">{{ coachStatus()?.provider || 'Groq Llama-3' }}</strong>
+                  <span class="badge badge-success margin-left-xs" *ngIf="coachStatus()?.live">● Live Cloud Model ({{ coachStatus()?.model }})</span>
+                  <span class="badge badge-warning margin-left-xs" *ngIf="!coachStatus()?.live">Smart Demonstration Mode</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="coach-telemetry-pills">
+              <div class="telemetry-pill">
+                <span class="telemetry-label">Target Role:</span>
+                <span class="telemetry-value">{{ selectedRole()?.title || 'None Selected' }}</span>
+              </div>
+              <div class="telemetry-pill">
+                <span class="telemetry-label">Role Readiness:</span>
+                <span class="telemetry-value text-accent">{{ skillGap()?.match_percentage || 0 }}%</span>
+              </div>
+              <div class="telemetry-pill">
+                <span class="telemetry-label">Health Score:</span>
+                <span class="telemetry-value text-success">{{ portfolioScore()?.overall_health_score || 0 }}/100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="coach-action-bar">
+            <button class="btn btn-secondary btn-sm" (click)="requestExecutiveCritique()" [disabled]="coachLoading()">
+              📊 Request Full Portfolio Critique
+            </button>
+            <button class="btn btn-secondary btn-sm" (click)="requestProjectRecommendations()" [disabled]="coachLoading()">
+              💡 Recommend Blueprint Projects
+            </button>
+            <button class="btn btn-outline btn-sm" (click)="clearCoachChat()">
+              🗑️ Clear Chat
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Chat Container -->
+        <div class="card coach-chat-card">
+          <!-- Chat Message Feed -->
+          <div class="chat-message-stream" #chatStream>
+            <div *ngFor="let msg of coachMessages()" 
+                 class="chat-bubble-row" 
+                 [class.user-row]="msg.role === 'user'" 
+                 [class.assistant-row]="msg.role === 'assistant'">
+              
+              <div class="chat-avatar">
+                <span *ngIf="msg.role === 'user'">👤</span>
+                <span *ngIf="msg.role === 'assistant'">🤖</span>
+              </div>
+
+              <div class="chat-bubble">
+                <div class="chat-bubble-header">
+                  <span class="sender-name">{{ msg.role === 'user' ? 'You' : 'PortfolioIQ Coach' }}</span>
+                  <span class="badge badge-demo" *ngIf="msg.isDemo">Demo Mode</span>
+                  <span class="message-time" *ngIf="msg.timestamp">{{ msg.timestamp }}</span>
+                </div>
+                <div class="chat-bubble-content">
+                  <pre class="chat-text-pre">{{ msg.content }}</pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Thinking Indicator -->
+            <div class="chat-bubble-row assistant-row" *ngIf="coachLoading()">
+              <div class="chat-avatar">🤖</div>
+              <div class="chat-bubble typing-bubble">
+                <span class="typing-text">AI Coach is analyzing your portfolio telemetry...</span>
+                <div class="typing-dots">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Suggested Followup Chips -->
+          <div class="suggested-prompts-container" *ngIf="suggestedFollowups().length && !coachLoading()">
+            <span class="suggested-label">💡 Suggested Questions:</span>
+            <button class="prompt-chip" *ngFor="let prompt of suggestedFollowups()" (click)="sendQuickPrompt(prompt)">
+              {{ prompt }}
+            </button>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <div class="chat-input-bar">
+            <input 
+              type="text" 
+              class="form-input chat-input-field" 
+              placeholder="Ask your AI coach anything (e.g. 'Paano ko mapapaganda ang portfolio ko para maging AI Engineer?')" 
+              [(ngModel)]="coachInput" 
+              (keydown.enter)="sendCoachMessage()" 
+              [disabled]="coachLoading()" 
+            />
+            <button class="btn btn-primary chat-send-btn" (click)="sendCoachMessage()" [disabled]="coachLoading() || !coachInput.trim()">
+              <span *ngIf="!coachLoading()">Send ➔</span>
+              <span *ngIf="coachLoading()">Thinking...</span>
+            </button>
+          </div>
         </div>
 
       </div>

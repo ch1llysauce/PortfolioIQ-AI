@@ -11,6 +11,7 @@ import { AnalyticsService, SkillGapResponse, PortfolioScoreResponse } from './se
 import { MlService, ClassifyProjectResponse } from './services/ml.service';
 import { OptimizationService, OptimizationResponse, RecommendedProject } from './services/optimization.service';
 import { KnowledgeService, KnowledgeGraphData, RoleSkillTreeResponse, LearningPathResponse } from './services/knowledge.service';
+import { CoachService, ChatMessage, PortfolioContext, CoachStatus } from './services/coach.service';
 
 @Component({
   selector: 'app-root',
@@ -96,6 +97,23 @@ export class App implements OnInit {
   isLoadingKnowledge = signal<boolean>(false);
   knowledgeViewMode = signal<'tree' | 'inspector' | 'path'>('tree');
 
+  // Groq AI Developer Coach Operations (Stage 13)
+  coachMessages = signal<ChatMessage[]>([
+    {
+      role: 'assistant',
+      content: "👋 Hello! I'm your **PortfolioIQ AI Developer Coach** powered by Groq Llama-3.\n\nI have real-time access to your portfolio health score, verified skills, active projects, and Knowledge Graph roadmaps. Ask me anything: how to improve your projects, what skills to prioritize next, or how to break into your target role!",
+      timestamp: 'Just now'
+    }
+  ]);
+  coachLoading = signal<boolean>(false);
+  coachInput = '';
+  coachStatus = signal<CoachStatus | null>(null);
+  suggestedFollowups = signal<string[]>([
+    '📊 Critique my developer portfolio',
+    '💡 Suggest 3 projects for my skill gaps',
+    '⚡ What should I learn next?'
+  ]);
+
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
@@ -105,7 +123,8 @@ export class App implements OnInit {
     private analyticsService: AnalyticsService,
     private mlService: MlService,
     private optimizationService: OptimizationService,
-    private knowledgeService: KnowledgeService
+    private knowledgeService: KnowledgeService,
+    private coachService: CoachService
   ) {}
 
   async ngOnInit() {
@@ -114,6 +133,7 @@ export class App implements OnInit {
     await this.loadCurrentUser();
     await this.loadInitialData();
     this.loadInitialKnowledgeData();
+    this.loadCoachStatus();
   }
 
 
@@ -800,6 +820,108 @@ export class App implements OnInit {
       next: (res) => this.goalSkillRoadmap.set(res),
       error: (err) => console.error('Learning path calculation failed:', err)
     });
+  }
+
+  // AI Coach Operations (Stage 13)
+  loadCoachStatus() {
+    this.coachService.getStatus().subscribe({
+      next: (status) => this.coachStatus.set(status),
+      error: () => this.coachStatus.set({
+        live: false,
+        model: 'Offline',
+        provider: 'Local Engine',
+        message: 'Backend AI module offline'
+      })
+    });
+  }
+
+  buildPortfolioContext(): PortfolioContext {
+    const role = this.selectedRole();
+    const score = this.portfolioScore();
+    const gap = this.skillGap();
+    const currentProjects = this.projects().map(p => ({
+      name: p.title || p.name,
+      category: p.category || 'General',
+      skills: (p.project_skills || []).map((ps: any) => ps.skills?.name).filter(Boolean)
+    }));
+    const userSkillNames = this.skills().map(s => s.name);
+
+    return {
+      target_role: role?.title || 'Software Engineer',
+      match_score: gap?.match_percentage || 0,
+      health_score: score?.overall_health_score || 0,
+      missing_skills: gap?.missing_skills || [],
+      acquired_skills: userSkillNames,
+      pillars: {
+        completeness: score?.metrics?.project_volume_score || 0,
+        tech_stack: score?.metrics?.skill_diversity_score || 0,
+        quality: score?.metrics?.detail_quality_score || 0,
+        diversity: score?.metrics?.activity_status_score || 0
+      },
+      projects: currentProjects
+    };
+  }
+
+  sendCoachMessage(overrideMessage?: string) {
+    const text = (overrideMessage || this.coachInput).trim();
+    if (!text || this.coachLoading()) return;
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg: ChatMessage = { role: 'user', content: text, timestamp: time };
+
+    this.coachMessages.update(msgs => [...msgs, userMsg]);
+    if (!overrideMessage) {
+      this.coachInput = '';
+    }
+    this.coachLoading.set(true);
+
+    const context = this.buildPortfolioContext();
+    this.coachService.sendMessage(this.coachMessages(), context).subscribe({
+      next: (res) => {
+        const assistantMsg: ChatMessage = {
+          role: 'assistant',
+          content: res.message,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isDemo: res.is_demo
+        };
+        this.coachMessages.update(msgs => [...msgs, assistantMsg]);
+        if (res.suggested_followups?.length) {
+          this.suggestedFollowups.set(res.suggested_followups);
+        }
+        this.coachLoading.set(false);
+      },
+      error: (err) => {
+        const errorMsg: ChatMessage = {
+          role: 'assistant',
+          content: `⚠️ Failed to reach AI Coach: ${err.message || 'Connection error'}. Please check if the backend is running.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        this.coachMessages.update(msgs => [...msgs, errorMsg]);
+        this.coachLoading.set(false);
+      }
+    });
+  }
+
+  sendQuickPrompt(promptText: string) {
+    this.sendCoachMessage(promptText);
+  }
+
+  requestExecutiveCritique() {
+    this.sendCoachMessage("Please provide an executive critique and architectural review of my developer portfolio.");
+  }
+
+  requestProjectRecommendations() {
+    this.sendCoachMessage("Recommend 3 high-impact project blueprints tailored to fill my biggest skill gaps.");
+  }
+
+  clearCoachChat() {
+    this.coachMessages.set([
+      {
+        role: 'assistant',
+        content: "Chat cleared! How can I help you elevate your developer portfolio today?",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
   }
 }
 
