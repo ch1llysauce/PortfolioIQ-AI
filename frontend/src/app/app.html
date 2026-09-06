@@ -41,6 +41,11 @@
         <span>AI Career Coach</span>
         <span class="nav-pill-badge" *ngIf="coachStatus()?.live">LIVE</span>
       </button>
+      <button class="nav-item" [class.active]="activeTab() === 'github'" (click)="setTab('github')">
+        <span class="nav-icon">🐙</span>
+        <span>GitHub Sync</span>
+        <span class="nav-pill-badge-gh" *ngIf="githubScanData()?.repos?.length">{{ githubScanData()?.repos?.length }}</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -63,6 +68,7 @@
         <h1 *ngIf="activeTab() === 'knowledge'">🕸️ Developer Knowledge Graph & Skill Trees</h1>
         <h1 *ngIf="activeTab() === 'resume'">📄 AI Resume PDF Extractor</h1>
         <h1 *ngIf="activeTab() === 'coach'">🤖 Groq AI Developer Career Coach</h1>
+        <h1 *ngIf="activeTab() === 'github'">🐙 GitHub Integration & 1-Click Importer</h1>
       </div>
 
 
@@ -984,6 +990,234 @@
               <span *ngIf="coachLoading()">Thinking...</span>
             </button>
           </div>
+        </div>
+
+      </div>
+
+      <!-- GITHUB INTEGRATION TAB (Stage 14) -->
+      <div *ngIf="activeTab() === 'github'" class="tab-pane">
+
+        <!-- Top GitHub Scanner Controller Card -->
+        <div class="card gh-search-card">
+          <div class="gh-search-header flex-between">
+            <div>
+              <h2>🐙 GitHub Profile Scanner & Importer</h2>
+              <p class="section-subtitle">
+                Analyze public developer profiles, discover repositories, extract tech stacks via Stage 12 NER, classify project domains with Stage 9 Machine Learning, and import them with 1 click.
+              </p>
+            </div>
+            <!-- Rate Limit & API Status Badge -->
+            <div class="gh-status-badge-container">
+              <span class="badge" [class.badge-success]="githubStatus()?.authenticated" [class.badge-secondary]="!githubStatus()?.authenticated">
+                {{ githubStatus()?.authenticated ? '🔑 Authenticated API (5,000 req/hr)' : '🌐 Public API (60 req/hr)' }}
+              </span>
+              <span class="gh-rate-remaining" *ngIf="githubStatus()?.rate_limit_remaining !== undefined">
+                ⚡ Remaining: <strong>{{ githubStatus()?.rate_limit_remaining }}</strong> / {{ githubStatus()?.rate_limit_limit }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Input Bar -->
+          <div class="gh-input-bar">
+            <div class="gh-input-wrapper">
+              <span class="gh-input-icon">github.com/</span>
+              <input 
+                type="text" 
+                class="form-input gh-username-input" 
+                placeholder="Enter GitHub username (e.g. ch1llysauce, torvalds, gaearon)" 
+                [(ngModel)]="githubUsername" 
+                (keydown.enter)="scanGitHub()" 
+                [disabled]="isScanningGitHub()" 
+              />
+            </div>
+            <button class="btn btn-primary gh-scan-btn" (click)="scanGitHub()" [disabled]="isScanningGitHub() || !githubUsername.trim()">
+              <span *ngIf="!isScanningGitHub()">Scan Profile 🔍</span>
+              <span *ngIf="isScanningGitHub()">Scanning GitHub... ⏳</span>
+            </button>
+          </div>
+
+          <!-- Quick Suggestion Chips -->
+          <div class="gh-quick-chips">
+            <span class="quick-chip-label">Quick Scan:</span>
+            <button class="gh-chip" (click)="scanGitHub('ch1llysauce')">👤 ch1llysauce (My Profile)</button>
+            <button class="gh-chip" (click)="scanGitHub('tiangolo')">⚡ tiangolo (FastAPI)</button>
+            <button class="gh-chip" (click)="scanGitHub('karpathy')">🧠 karpathy (AI/ML)</button>
+            <button class="gh-chip" (click)="scanGitHub('antfu')">✨ antfu (Vue/OpenSource)</button>
+          </div>
+
+          <!-- Feedback Alerts -->
+          <div class="alert-danger" *ngIf="githubError()">
+            ⚠️ {{ githubError() }}
+          </div>
+          <div class="alert-success" *ngIf="githubImportSuccessMsg()">
+            ✅ {{ githubImportSuccessMsg() }}
+          </div>
+        </div>
+
+        <!-- Scanning State Indicator -->
+        <div class="card gh-loading-card" *ngIf="isScanningGitHub()">
+          <div class="gh-spinner"></div>
+          <h3>Scanning GitHub ecosystem for @{{ githubUsername }}...</h3>
+          <p class="text-muted">Fetching public repositories, running NLP entity extraction on tech stacks, and executing ML domain predictions...</p>
+        </div>
+
+        <!-- GitHub Profile & Insights Hero -->
+        <div *ngIf="githubScanData() && !isScanningGitHub()">
+          
+          <!-- Developer Profile Hero Banner -->
+          <div class="card gh-hero-card">
+            <div class="gh-profile-header">
+              <img [src]="githubScanData()?.profile?.avatar_url" [alt]="githubScanData()?.profile?.username" class="gh-avatar" />
+              <div class="gh-profile-info">
+                <div class="gh-name-row">
+                  <h2>{{ githubScanData()?.profile?.name || githubScanData()?.profile?.username }}</h2>
+                  <a [href]="githubScanData()?.profile?.html_url" target="_blank" rel="noopener noreferrer" class="gh-external-link">
+                    @{{ githubScanData()?.profile?.username }} ↗
+                  </a>
+                </div>
+                <p class="gh-bio">{{ githubScanData()?.profile?.bio || 'Passionate software developer building open source software.' }}</p>
+                <div class="gh-extra-meta">
+                  <span *ngIf="githubScanData()?.profile?.location">📍 {{ githubScanData()?.profile?.location }}</span>
+                  <span *ngIf="githubScanData()?.profile?.blog">🔗 <a [href]="githubScanData()?.profile?.blog" target="_blank" rel="noopener noreferrer">{{ githubScanData()?.profile?.blog }}</a></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Telemetry Counters -->
+            <div class="gh-telemetry-grid">
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ githubScanData()?.profile?.public_repos || 0 }}</span>
+                <span class="gh-stat-label">Public Repos</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ githubScanData()?.summary?.total_stars || 0 }}</span>
+                <span class="gh-stat-label">Total Stars ⭐</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ githubScanData()?.summary?.total_forks || 0 }}</span>
+                <span class="gh-stat-label">Total Forks 🍴</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ githubScanData()?.summary?.unique_skills_count || 0 }}</span>
+                <span class="gh-stat-label">Tech Skills Detected</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ githubScanData()?.profile?.followers || 0 }}</span>
+                <span class="gh-stat-label">Followers</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Language Distribution & Extracted Skills Dual Card -->
+          <div class="grid-2-col margin-bottom-lg">
+            
+            <!-- Language Distribution Card -->
+            <div class="card gh-analysis-card">
+              <h3>🌐 Languages Distribution</h3>
+              <p class="sub-text">Breakdown of primary programming languages detected across scanned repositories.</p>
+              
+              <div class="gh-lang-list" *ngIf="githubScanData()?.summary?.language_distribution">
+                <div class="gh-lang-item" *ngFor="let lang of githubScanData()?.summary?.language_distribution | keyvalue">
+                  <div class="flex-between">
+                    <span class="gh-lang-name"><strong>{{ lang.key }}</strong></span>
+                    <span class="gh-lang-count">{{ lang.value }} repo{{ lang.value > 1 ? 's' : '' }}</span>
+                  </div>
+                  <div class="progress-bar-bg small">
+                    <div class="progress-bar-fill" [style.width.%]="(lang.value / (githubScanData()?.summary?.total_scanned_repos || 1)) * 100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Detected Technologies Card -->
+            <div class="card gh-analysis-card">
+              <h3>🧠 Detected Technical Stack & Tools</h3>
+              <p class="sub-text">Discovered via PortfolioIQ Stage 12 NLP knowledge extractor on repos, topics, and codebases.</p>
+              
+              <div class="gh-detected-skills-cloud" *ngIf="githubScanData()?.summary?.top_skills?.length">
+                <span class="gh-tech-tag" *ngFor="let item of githubScanData()?.summary?.top_skills">
+                  <span class="tech-name">{{ item.skill }}</span>
+                  <span class="tech-badge">{{ item.repo_count }}</span>
+                </span>
+              </div>
+              <div *ngIf="!githubScanData()?.summary?.top_skills?.length" class="empty-state-text">
+                No technologies extracted yet.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Repositories Section Header with Batch Import -->
+          <div class="gh-repos-header flex-between margin-bottom-md">
+            <div>
+              <h3>📦 Scanned Repositories ({{ githubScanData()?.repos?.length || 0 }})</h3>
+              <p class="sub-text">Review and import individual repositories directly into your portfolio with detected skills attached.</p>
+            </div>
+            <div>
+              <button class="btn btn-secondary btn-sm" (click)="importAllScannedRepos()" [disabled]="importingRepoId() !== null">
+                📥 Import All Repositories to Portfolio
+              </button>
+            </div>
+          </div>
+
+          <!-- Repositories Grid -->
+          <div class="gh-repo-grid">
+            <div class="card gh-repo-card" *ngFor="let repo of githubScanData()?.repos">
+              
+              <div class="gh-repo-card-top flex-between">
+                <div class="gh-repo-title-row">
+                  <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer" class="gh-repo-name">
+                    {{ repo.name }}
+                  </a>
+                  <span class="gh-repo-fork-badge" *ngIf="repo.is_fork">Fork</span>
+                </div>
+                <div class="gh-repo-stats">
+                  <span class="gh-meta-pill" title="Stars">⭐ {{ repo.stars }}</span>
+                  <span class="gh-meta-pill" title="Forks">🍴 {{ repo.forks }}</span>
+                </div>
+              </div>
+
+              <p class="gh-repo-desc">
+                {{ repo.description || 'No description provided for this repository.' }}
+              </p>
+
+              <!-- ML Category & Language Badges -->
+              <div class="gh-repo-badges">
+                <span class="gh-lang-pill" *ngIf="repo.language">{{ repo.language }}</span>
+                <span class="gh-ml-category-badge" [title]="'ML Confidence: ' + repo.confidence_score + '%'">
+                  🤖 {{ repo.predicted_category }} ({{ repo.confidence_score }}%)
+                </span>
+              </div>
+
+              <!-- Detected Skills Tags -->
+              <div class="gh-repo-skills-row" *ngIf="repo.detected_skills?.length">
+                <span class="gh-repo-skill-tag" *ngFor="let skill of repo.detected_skills">
+                  {{ skill }}
+                </span>
+              </div>
+
+              <!-- Card Action Footer -->
+              <div class="gh-repo-card-footer flex-between">
+                <span class="gh-repo-updated text-muted">Updated {{ repo.updated_at | slice:0:10 }}</span>
+                
+                <div>
+                  <button 
+                    *ngIf="!isRepoAlreadyImported(repo.name)" 
+                    class="btn btn-primary btn-sm gh-import-btn" 
+                    (click)="importRepoToPortfolio(repo)" 
+                    [disabled]="importingRepoId() === repo.id">
+                    <span *ngIf="importingRepoId() !== repo.id">📥 1-Click Import</span>
+                    <span *ngIf="importingRepoId() === repo.id">Importing... ⏳</span>
+                  </button>
+                  <span *ngIf="isRepoAlreadyImported(repo.name)" class="badge badge-success gh-imported-badge">
+                    ✅ In Portfolio
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
       </div>

@@ -12,6 +12,7 @@ import { MlService, ClassifyProjectResponse } from './services/ml.service';
 import { OptimizationService, OptimizationResponse, RecommendedProject } from './services/optimization.service';
 import { KnowledgeService, KnowledgeGraphData, RoleSkillTreeResponse, LearningPathResponse } from './services/knowledge.service';
 import { CoachService, ChatMessage, PortfolioContext, CoachStatus } from './services/coach.service';
+import { GitHubService, GitHubScanResponse, GitHubRepository, GitHubStatus } from './services/github.service';
 
 @Component({
   selector: 'app-root',
@@ -114,6 +115,15 @@ export class App implements OnInit {
     '⚡ What should I learn next?'
   ]);
 
+  // GitHub Integration Operations (Stage 14)
+  githubUsername = 'ch1llysauce';
+  isScanningGitHub = signal<boolean>(false);
+  githubScanData = signal<GitHubScanResponse | null>(null);
+  githubStatus = signal<GitHubStatus | null>(null);
+  importingRepoId = signal<string | null>(null);
+  githubImportSuccessMsg = signal<string>('');
+  githubError = signal<string>('');
+
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
@@ -124,7 +134,8 @@ export class App implements OnInit {
     private mlService: MlService,
     private optimizationService: OptimizationService,
     private knowledgeService: KnowledgeService,
-    private coachService: CoachService
+    private coachService: CoachService,
+    private githubService: GitHubService
   ) {}
 
   async ngOnInit() {
@@ -134,6 +145,7 @@ export class App implements OnInit {
     await this.loadInitialData();
     this.loadInitialKnowledgeData();
     this.loadCoachStatus();
+    this.loadGitHubStatus();
   }
 
 
@@ -922,6 +934,111 @@ export class App implements OnInit {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
+  }
+
+  // GitHub Integration Handlers (Stage 14)
+  loadGitHubStatus() {
+    this.githubService.getStatus().subscribe({
+      next: (status) => this.githubStatus.set(status),
+      error: () => this.githubStatus.set({ authenticated: false, status: 'offline' })
+    });
+  }
+
+  scanGitHub(username?: string) {
+    const user = (username || this.githubUsername).trim();
+    if (!user || this.isScanningGitHub()) return;
+    this.githubUsername = user;
+    this.isScanningGitHub.set(true);
+    this.githubError.set('');
+    this.githubImportSuccessMsg.set('');
+
+    this.githubService.scanUser(user).subscribe({
+      next: (res) => {
+        this.githubScanData.set(res);
+        this.isScanningGitHub.set(false);
+      },
+      error: (err) => {
+        this.githubError.set(err.error?.detail || err.message || 'Failed to scan GitHub profile.');
+        this.isScanningGitHub.set(false);
+      }
+    });
+  }
+
+  async importRepoToPortfolio(repo: GitHubRepository) {
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+    this.importingRepoId.set(repo.id);
+    this.githubError.set('');
+    this.githubImportSuccessMsg.set('');
+
+    try {
+      const description = repo.description 
+        ? `${repo.description} (Imported from GitHub: ${repo.html_url})` 
+        : `Imported from GitHub: ${repo.html_url}`;
+
+      const { data: newProject, error: projErr } = await this.projectService.createProject(
+        repo.name,
+        description
+      );
+      if (projErr || !newProject) throw projErr || new Error('Failed to create project in portfolio.');
+
+      // Match or create skills and link them
+      const existingSkillMap = new Map<string, string>(
+        this.skills().map(s => [s.name.toLowerCase(), s.id])
+      );
+      for (const skillName of (repo.detected_skills || [])) {
+        let skillId = existingSkillMap.get(skillName.toLowerCase());
+        if (!skillId) {
+          const { data: newSkill } = await this.skillService.createSkill(skillName, 'Technology');
+          if (newSkill && (newSkill as any).id) {
+            const createdId = String((newSkill as any).id);
+            skillId = createdId;
+            existingSkillMap.set(skillName.toLowerCase(), createdId);
+          }
+        }
+        if (skillId) {
+          await this.skillService.addSkillToProject(newProject.id, skillId);
+        }
+      }
+
+      await this.fetchSkills();
+      await this.fetchProjects();
+
+      this.githubImportSuccessMsg.set(`Successfully imported "${repo.name}" with ${repo.detected_skills?.length || 0} skills into your portfolio!`);
+    } catch (err: any) {
+      this.githubError.set(err.message || 'Import failed.');
+    } finally {
+      this.importingRepoId.set(null);
+    }
+  }
+
+  isRepoAlreadyImported(repoName: string): boolean {
+    return this.projects().some(p => p.name.toLowerCase() === repoName.toLowerCase());
+  }
+
+  async importAllScannedRepos() {
+    const data = this.githubScanData();
+    if (!data || !data.repos || data.repos.length === 0) return;
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+
+    const unimported = data.repos.filter(r => !this.isRepoAlreadyImported(r.name));
+    if (unimported.length === 0) {
+      this.githubImportSuccessMsg.set('All scanned repositories are already in your portfolio!');
+      return;
+    }
+
+    this.githubImportSuccessMsg.set(`Importing ${unimported.length} repositories...`);
+    let count = 0;
+    for (const repo of unimported) {
+      await this.importRepoToPortfolio(repo);
+      count++;
+    }
+    this.githubImportSuccessMsg.set(`Batch import complete! Added ${count} new repositories to your portfolio.`);
   }
 }
 

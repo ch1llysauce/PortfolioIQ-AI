@@ -5,6 +5,7 @@ from app.routes.ml import router as ml_router
 from app.routes.optimization import router as optimization_router
 from app.routes.knowledge import router as knowledge_router
 from app.routes.coach import router as coach_router
+from app.routes.github import router as github_router
 
 app = FastAPI(
     title="PortfolioIQ AI API",
@@ -28,6 +29,7 @@ app.include_router(ml_router)
 app.include_router(optimization_router)
 app.include_router(knowledge_router)
 app.include_router(coach_router)
+app.include_router(github_router)
 
 
 
