@@ -7,3 +7,5 @@ pypdf==6.17.0
 python-multipart==0.0.32
 numpy==2.4.6
 scipy==1.17.1
+networkx==3.6.1
+

@@ -47,4 +47,22 @@ export class AuthService {
 
         return user;
     }
+
+    async resetPasswordForEmail(email: string) {
+        return await this.supabase.auth.resetPasswordForEmail(email);
+    }
+
+    async verifyRecoveryOtp(email: string, token: string) {
+        return await this.supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'recovery'
+        });
+    }
+
+    async updateUserPassword(newPassword: string) {
+        return await this.supabase.auth.updateUser({
+            password: newPassword
+        });
+    }
 }

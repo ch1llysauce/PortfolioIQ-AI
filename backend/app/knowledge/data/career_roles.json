@@ -1,0 +1,65 @@
+[
+  {
+    "id": "role-software-engineer",
+    "title": "Software Engineer",
+    "description": "Designs, develops, tests, and maintains scalable software systems and applications using core software engineering principles.",
+    "core_domains": ["Software Engineering", "Backend Development", "Algorithms & Systems"],
+    "key_focus_areas": ["System Architecture", "Object-Oriented Design", "Testing & Debugging", "Performance Optimization"]
+  },
+  {
+    "id": "role-fullstack-dev",
+    "title": "Full-Stack Developer",
+    "description": "Builds complete, production-ready web applications spanning responsive frontend user interfaces, backend APIs, and relational databases.",
+    "core_domains": ["Web Development", "Backend Development", "Databases"],
+    "key_focus_areas": ["Frontend SPAs", "REST / GraphQL APIs", "Database Modeling", "End-to-End Integration"]
+  },
+  {
+    "id": "role-ai-engineer",
+    "title": "AI Engineer",
+    "description": "Bridges the gap between data science and production systems by developing, optimizing, and deploying AI models into real-world applications.",
+    "core_domains": ["AI / ML", "Backend Development", "DevOps"],
+    "key_focus_areas": ["Model Inference & Serving", "MLOps Pipelines", "LLMs & RAG", "Vector Search"]
+  },
+  {
+    "id": "role-machine-learning-engineer",
+    "title": "Machine Learning Engineer",
+    "description": "Researches, trains, evaluates, and operationalizes machine learning and deep learning models at scale on large datasets.",
+    "core_domains": ["AI / ML", "Data Science", "Cloud & MLOps"],
+    "key_focus_areas": ["Feature Engineering", "Deep Learning Architectures", "Distributed Training", "Model Monitoring"]
+  },
+  {
+    "id": "role-data-scientist",
+    "title": "Data Scientist",
+    "description": "Applies statistical modeling, exploratory data analysis, and predictive analytics to discover actionable patterns from complex business data.",
+    "core_domains": ["Data Science", "Statistics & Analytics", "AI / ML"],
+    "key_focus_areas": ["Exploratory Data Analysis", "Hypothesis Testing", "Data Storytelling & Visualization", "Predictive Modeling"]
+  },
+  {
+    "id": "role-data-engineer",
+    "title": "Data Engineer",
+    "description": "Architects, constructs, and maintains robust data lakes, warehouses, and real-time streaming ETL pipelines for enterprise analytics.",
+    "core_domains": ["Data Engineering", "Databases", "Distributed Systems"],
+    "key_focus_areas": ["Batch & Stream Processing", "Data Warehousing", "Schema Design", "Pipeline Orchestration"]
+  },
+  {
+    "id": "role-devops-engineer",
+    "title": "DevOps Engineer",
+    "description": "Automates continuous integration and deployment (CI/CD), manages cloud infrastructure, and ensures system reliability and scalability.",
+    "core_domains": ["DevOps", "Cloud Infrastructure", "Systems Engineering"],
+    "key_focus_areas": ["CI/CD Pipelines", "Container Orchestration", "Infrastructure as Code", "Site Reliability & Monitoring"]
+  },
+  {
+    "id": "role-mobile-developer",
+    "title": "Mobile Developer",
+    "description": "Creates native or cross-platform mobile experiences for iOS and Android devices focusing on smooth UX and offline synchronization.",
+    "core_domains": ["Mobile Development", "Frontend UI", "API Integration"],
+    "key_focus_areas": ["Responsive Mobile UX", "Local Persistence", "Push Notifications", "App Store Deployment"]
+  },
+  {
+    "id": "role-backend-developer",
+    "title": "Backend Developer",
+    "description": "Specializes in server-side logic, database interactions, API security, caching mechanisms, and asynchronous worker systems.",
+    "core_domains": ["Backend Development", "Databases", "Distributed Systems"],
+    "key_focus_areas": ["High-Concurrency APIs", "Query Optimization", "Authentication & Security", "Message Queuing"]
+  }
+]

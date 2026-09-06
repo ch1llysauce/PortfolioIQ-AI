@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.analytics import router as analytics_router
 from app.routes.ml import router as ml_router
 from app.routes.optimization import router as optimization_router
+from app.routes.knowledge import router as knowledge_router
 
 app = FastAPI(
     title="PortfolioIQ AI API",
@@ -24,6 +25,8 @@ app.add_middleware(
 app.include_router(analytics_router)
 app.include_router(ml_router)
 app.include_router(optimization_router)
+app.include_router(knowledge_router)
+
 
 
 

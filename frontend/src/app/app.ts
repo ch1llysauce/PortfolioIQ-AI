@@ -10,6 +10,7 @@ import { CareerRoleService, CareerRole } from './services/career-role.service';
 import { AnalyticsService, SkillGapResponse, PortfolioScoreResponse } from './services/analytics.service';
 import { MlService, ClassifyProjectResponse } from './services/ml.service';
 import { OptimizationService, OptimizationResponse, RecommendedProject } from './services/optimization.service';
+import { KnowledgeService, KnowledgeGraphData, RoleSkillTreeResponse, LearningPathResponse } from './services/knowledge.service';
 
 @Component({
   selector: 'app-root',
@@ -48,8 +49,17 @@ export class App implements OnInit {
 
   // Auth Modal State
   showAuthModal = signal<boolean>(false);
-  authMode = signal<'login' | 'register'>('login');
+  authMode = signal<'login' | 'register' | 'forgot'>('login');
   authError = signal<string>('');
+
+  // Forgot Password 3-Step State
+  forgotStep = signal<1 | 2 | 3>(1);
+  forgotEmail = '';
+  forgotOtp = '';
+  forgotNewPassword = '';
+  forgotConfirmPassword = '';
+  forgotLoading = signal<boolean>(false);
+  forgotSuccessMsg = signal<string>('');
 
   // Form Inputs
   authEmail = '';
@@ -72,6 +82,19 @@ export class App implements OnInit {
   isOptimizing = signal<boolean>(false);
   effortBudgetHours = signal<number>(80);
 
+  // Knowledge Graph & Representation Operations (Stage 12)
+  knowledgeGraphData = signal<KnowledgeGraphData | null>(null);
+  selectedKnowledgeRole = signal<string>('AI Engineer');
+  roleSkillTree = signal<RoleSkillTreeResponse | null>(null);
+  inspectedNodeName = signal<string>('');
+  inspectedNodePrereqs = signal<any[]>([]);
+  inspectedNodeUnlocked = signal<any[]>([]);
+  inspectedNodeComplements = signal<any[]>([]);
+  goalSkillInput = signal<string>('Kubernetes');
+  goalSkillRoadmap = signal<LearningPathResponse | null>(null);
+  isLoadingKnowledge = signal<boolean>(false);
+  knowledgeViewMode = signal<'tree' | 'inspector' | 'path'>('tree');
+
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
@@ -80,14 +103,17 @@ export class App implements OnInit {
     private careerRoleService: CareerRoleService,
     private analyticsService: AnalyticsService,
     private mlService: MlService,
-    private optimizationService: OptimizationService
+    private optimizationService: OptimizationService,
+    private knowledgeService: KnowledgeService
   ) {}
 
   async ngOnInit() {
     this.checkBackendHealth();
     await this.loadCurrentUser();
     await this.loadInitialData();
+    this.loadInitialKnowledgeData();
   }
+
 
   setTab(tabName: string) {
     this.activeTab.set(tabName);
@@ -122,20 +148,154 @@ export class App implements OnInit {
   }
 
   // Auth Modal Controls
-  openAuthModal(mode: 'login' | 'register' = 'login') {
+  openAuthModal(mode: 'login' | 'register' | 'forgot' = 'login') {
     this.authMode.set(mode);
     this.authError.set('');
+    this.forgotSuccessMsg.set('');
+    if (mode === 'forgot') {
+      this.resetForgotFlow();
+    }
     this.showAuthModal.set(true);
   }
 
   closeAuthModal() {
     this.showAuthModal.set(false);
     this.authError.set('');
+    this.forgotSuccessMsg.set('');
   }
 
-  switchAuthMode(mode: 'login' | 'register') {
+  switchAuthMode(mode: 'login' | 'register' | 'forgot') {
     this.authMode.set(mode);
     this.authError.set('');
+    this.forgotSuccessMsg.set('');
+    if (mode === 'forgot') {
+      this.resetForgotFlow();
+    }
+  }
+
+  resetForgotFlow() {
+    this.forgotStep.set(1);
+    this.forgotEmail = this.authEmail || '';
+    this.forgotOtp = '';
+    this.forgotNewPassword = '';
+    this.forgotConfirmPassword = '';
+    this.forgotLoading.set(false);
+    this.forgotSuccessMsg.set('');
+    this.authError.set('');
+  }
+
+  setForgotStep(step: 1 | 2 | 3) {
+    this.forgotStep.set(step);
+    this.authError.set('');
+  }
+
+  // 3-Step Forgot Password Flow
+  async sendForgotOtp() {
+    const email = this.forgotEmail.trim();
+    if (!email) {
+      this.authError.set('Please enter your email address.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.authError.set('Please enter a valid email address.');
+      return;
+    }
+
+    this.authError.set('');
+    this.forgotLoading.set(true);
+    try {
+      const { error } = await this.authService.resetPasswordForEmail(email);
+      if (error) {
+        this.authError.set(error.message);
+      } else {
+        this.forgotSuccessMsg.set(`A 6-digit OTP code was sent to ${email}`);
+        this.forgotStep.set(2);
+      }
+    } catch (err: any) {
+      this.authError.set(err.message || 'Failed to send recovery code.');
+    } finally {
+      this.forgotLoading.set(false);
+    }
+  }
+
+  async verifyForgotOtp() {
+    const email = this.forgotEmail.trim();
+    const token = this.forgotOtp.trim();
+    if (!token || token.length < 6) {
+      this.authError.set('Please enter the valid 6-digit verification code.');
+      return;
+    }
+
+    this.authError.set('');
+    this.forgotLoading.set(true);
+    try {
+      const { error } = await this.authService.verifyRecoveryOtp(email, token);
+      if (error) {
+        this.authError.set(error.message);
+      } else {
+        this.forgotSuccessMsg.set('OTP verified successfully! Now set your new password.');
+        this.forgotStep.set(3);
+      }
+    } catch (err: any) {
+      this.authError.set(err.message || 'Verification failed.');
+    } finally {
+      this.forgotLoading.set(false);
+    }
+  }
+
+  async resendForgotOtp() {
+    if (this.forgotLoading()) return;
+    const email = this.forgotEmail.trim();
+    if (!email) return;
+
+    this.authError.set('');
+    this.forgotLoading.set(true);
+    try {
+      const { error } = await this.authService.resetPasswordForEmail(email);
+      if (error) {
+        this.authError.set(error.message);
+      } else {
+        this.forgotSuccessMsg.set('A new OTP code has been sent to your email.');
+      }
+    } catch (err: any) {
+      this.authError.set(err.message || 'Failed to resend code.');
+    } finally {
+      this.forgotLoading.set(false);
+    }
+  }
+
+  async submitNewPassword() {
+    if (!this.forgotNewPassword || this.forgotNewPassword.length < 6) {
+      this.authError.set('Password must be at least 6 characters long.');
+      return;
+    }
+    if (this.forgotNewPassword !== this.forgotConfirmPassword) {
+      this.authError.set('Passwords do not match. Please re-enter.');
+      return;
+    }
+
+    this.authError.set('');
+    this.forgotLoading.set(true);
+    try {
+      const { error } = await this.authService.updateUserPassword(this.forgotNewPassword);
+      if (error) {
+        this.authError.set(error.message);
+      } else {
+        this.forgotSuccessMsg.set('Password updated successfully! Logging you in...');
+        await this.loadCurrentUser();
+        if (this.currentUser()) {
+          await this.fetchProjects();
+        }
+        setTimeout(() => {
+          this.closeAuthModal();
+        }, 1200);
+      }
+    } catch (err: any) {
+      this.authError.set(err.message || 'Failed to update password.');
+    } finally {
+      this.forgotLoading.set(false);
+    }
   }
 
   // Auth Operations
@@ -519,5 +679,88 @@ export class App implements OnInit {
     await this.fetchProjects();
     alert(`🎉 Successfully added "${rec.title}" to your active projects! Check the Projects tab.`);
   }
+
+  // =========================================================================
+  // KNOWLEDGE GRAPH OPERATIONS (STAGE 12)
+  // =========================================================================
+  setKnowledgeViewMode(mode: 'tree' | 'inspector' | 'path') {
+    this.knowledgeViewMode.set(mode);
+    if (mode === 'inspector' && !this.inspectedNodeName()) {
+      this.inspectNode('Docker');
+    }
+    if (mode === 'path' && !this.goalSkillRoadmap()) {
+      this.calculateGoalSkillPath();
+    }
+  }
+
+  loadInitialKnowledgeData() {
+    this.selectRoleTree('AI Engineer');
+    this.loadKnowledgeGraphData();
+  }
+
+  loadKnowledgeGraphData() {
+    this.knowledgeService.getGraph().subscribe({
+      next: (res) => this.knowledgeGraphData.set(res),
+      error: (err) => console.warn('Knowledge graph load failed:', err)
+    });
+  }
+
+  selectRoleTree(roleTitle: string) {
+    this.selectedKnowledgeRole.set(roleTitle);
+    this.isLoadingKnowledge.set(true);
+
+    this.knowledgeService.getRoleTree(roleTitle).subscribe({
+      next: (res) => {
+        this.isLoadingKnowledge.set(false);
+        this.roleSkillTree.set(res);
+      },
+      error: (err) => {
+        this.isLoadingKnowledge.set(false);
+        console.error('Failed to load role tree:', err);
+      }
+    });
+  }
+
+  inspectNode(nodeName: string) {
+    if (!nodeName) return;
+    this.inspectedNodeName.set(nodeName);
+    this.inspectedNodePrereqs.set([]);
+    this.inspectedNodeUnlocked.set([]);
+    this.inspectedNodeComplements.set([]);
+
+    // Fetch prerequisites
+    this.knowledgeService.getPrerequisites(nodeName).subscribe({
+      next: (res) => this.inspectedNodePrereqs.set(res.prerequisites || [])
+    });
+
+    // Fetch unlocked skills
+    this.knowledgeService.getUnlockedSkills(nodeName).subscribe({
+      next: (res) => this.inspectedNodeUnlocked.set(res.unlocked_skills || [])
+    });
+
+    // Fetch complementary tech
+    this.knowledgeService.getComplements(nodeName).subscribe({
+      next: (res) => this.inspectedNodeComplements.set(res.complements || [])
+    });
+  }
+
+  closeNodeInspector() {
+    this.inspectedNodeName.set('');
+    this.inspectedNodePrereqs.set([]);
+    this.inspectedNodeUnlocked.set([]);
+    this.inspectedNodeComplements.set([]);
+  }
+
+  calculateGoalSkillPath(goalSkill?: string) {
+    const target = goalSkill || this.goalSkillInput() || 'Kubernetes';
+    this.goalSkillInput.set(target);
+
+    const userSkills = this.getUserSkillNames();
+    this.knowledgeService.getLearningPath(target, userSkills).subscribe({
+      next: (res) => this.goalSkillRoadmap.set(res),
+      error: (err) => console.error('Learning path calculation failed:', err)
+    });
+  }
 }
+
 

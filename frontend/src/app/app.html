@@ -28,6 +28,10 @@
         <span class="nav-icon">⚡</span>
         <span>Optimization</span>
       </button>
+      <button class="nav-item" [class.active]="activeTab() === 'knowledge'" (click)="setTab('knowledge')">
+        <span class="nav-icon">🕸️</span>
+        <span>Knowledge Graph</span>
+      </button>
       <button class="nav-item" [class.active]="activeTab() === 'resume'" (click)="setTab('resume')">
         <span class="nav-icon">📄</span>
         <span>Resume Extractor</span>
@@ -51,8 +55,10 @@
         <h1 *ngIf="activeTab() === 'skills'">💡 Technical Skills Catalog</h1>
         <h1 *ngIf="activeTab() === 'career'">🎯 Career Goal & Skill Gap Analysis</h1>
         <h1 *ngIf="activeTab() === 'optimizer'">⚡ Portfolio Optimization & Recommendations</h1>
+        <h1 *ngIf="activeTab() === 'knowledge'">🕸️ Developer Knowledge Graph & Skill Trees</h1>
         <h1 *ngIf="activeTab() === 'resume'">📄 AI Resume PDF Extractor</h1>
       </div>
+
 
 
       <div class="user-auth-bar">
@@ -385,6 +391,9 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
       <!-- TAB 6: PORTFOLIO OPTIMIZATION & RECOMMENDATIONS (STAGE 11) -->
       <div *ngIf="activeTab() === 'optimizer'" class="tab-pane">
         
@@ -564,6 +573,301 @@
         </div>
       </div>
 
+      <!-- TAB 7: KNOWLEDGE GRAPH & SKILL TREES (STAGE 12) -->
+      <div *ngIf="activeTab() === 'knowledge'" class="tab-pane">
+        
+        <!-- Knowledge Header Card & Mode Switcher -->
+        <div class="card knowledge-header-card">
+          <div class="card-header flex-between">
+            <div>
+              <h2>🕸️ Developer Knowledge Graph & Skill Trees</h2>
+              <p class="section-subtitle">
+                In-memory ontology connecting <strong>{{ knowledgeGraphData()?.total_nodes || 76 }} Technologies & Skills</strong> 
+                across <strong>{{ knowledgeGraphData()?.total_edges || 148 }} Relationships</strong>.
+              </p>
+            </div>
+            
+            <div class="view-mode-tabs">
+              <button 
+                type="button" 
+                class="view-mode-btn" 
+                [class.active]="knowledgeViewMode() === 'tree'" 
+                (click)="setKnowledgeViewMode('tree')">
+                🌳 Role Roadmaps
+              </button>
+              <button 
+                type="button" 
+                class="view-mode-btn" 
+                [class.active]="knowledgeViewMode() === 'inspector'" 
+                (click)="setKnowledgeViewMode('inspector')">
+                🔍 Entity Inspector
+              </button>
+              <button 
+                type="button" 
+                class="view-mode-btn" 
+                [class.active]="knowledgeViewMode() === 'path'" 
+                (click)="setKnowledgeViewMode('path')">
+                🧭 Path Solver
+              </button>
+            </div>
+          </div>
+
+          <!-- Role Selector Bar (for Role Tree View) -->
+          <div class="role-selector-bar" *ngIf="knowledgeViewMode() === 'tree'">
+            <span class="bar-label">Explore Career Skill Tree:</span>
+            <div class="role-pill-scroll">
+              <button 
+                type="button" 
+                class="role-pill" 
+                *ngFor="let r of careerRoles()" 
+                [class.active]="selectedKnowledgeRole() === r.title" 
+                (click)="selectRoleTree(r.title)">
+                {{ r.title }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW MODE 1: ROLE SKILL TREE TIERS -->
+        <div class="role-tree-container" *ngIf="knowledgeViewMode() === 'tree'">
+          
+          <!-- Role Header Overview Card -->
+          <div class="card role-overview-hero" *ngIf="roleSkillTree()">
+            <div class="flex-between">
+              <div>
+                <h3 class="role-hero-title">{{ roleSkillTree()?.role }}</h3>
+                <p class="role-hero-desc">{{ roleSkillTree()?.description }}</p>
+              </div>
+              <div class="role-domains-badges">
+                <span class="badge badge-primary" *ngFor="let d of roleSkillTree()?.core_domains">{{ d }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Tier Grid: Foundational, Intermediate, Advanced -->
+          <div class="tree-tiers-grid" *ngIf="roleSkillTree()">
+            
+            <!-- TIER 1: FOUNDATIONAL -->
+            <div class="tier-column tier-foundational">
+              <div class="tier-header">
+                <div class="tier-badge foundational">Tier 1 • Foundational</div>
+                <h4>Core Basics & Languages</h4>
+                <p class="tier-subtitle">Prerequisites needed before building complex projects.</p>
+              </div>
+
+              <div class="tier-cards-list">
+                <div class="card tier-node-card" *ngFor="let node of roleSkillTree()?.foundational">
+                  <div class="flex-between">
+                    <strong class="node-name">{{ node.name }}</strong>
+                    <button class="btn btn-outline btn-xs" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">🔍</button>
+                  </div>
+                  <span class="node-cat">{{ node.category }}</span>
+                  <div class="prereqs-box" *ngIf="node.prerequisites?.length">
+                    <span class="prereq-label">Prerequisites:</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites">{{ p }}</span>
+                  </div>
+                </div>
+                <div class="empty-hint" *ngIf="!roleSkillTree()?.foundational?.length">No foundational skills classified.</div>
+              </div>
+            </div>
+
+            <!-- TIER 2: INTERMEDIATE / CORE -->
+            <div class="tier-column tier-intermediate">
+              <div class="tier-header">
+                <div class="tier-badge intermediate">Tier 2 • Core Tech</div>
+                <h4>Frameworks & Tools</h4>
+                <p class="tier-subtitle">Day-to-day technologies and practical tooling.</p>
+              </div>
+
+              <div class="tier-cards-list">
+                <div class="card tier-node-card" *ngFor="let node of roleSkillTree()?.intermediate">
+                  <div class="flex-between">
+                    <strong class="node-name">{{ node.name }}</strong>
+                    <button class="btn btn-outline btn-xs" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">🔍</button>
+                  </div>
+                  <span class="node-cat">{{ node.category }}</span>
+                  <div class="prereqs-box" *ngIf="node.prerequisites?.length">
+                    <span class="prereq-label">Prerequisites:</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites">{{ p }}</span>
+                  </div>
+                </div>
+                <div class="empty-hint" *ngIf="!roleSkillTree()?.intermediate?.length">No intermediate skills listed.</div>
+              </div>
+            </div>
+
+            <!-- TIER 3: ADVANCED -->
+            <div class="tier-column tier-advanced">
+              <div class="tier-header">
+                <div class="tier-badge advanced">Tier 3 • Advanced</div>
+                <h4>Architecture & Systems</h4>
+                <p class="tier-subtitle">High-impact specialization & scalability skills.</p>
+              </div>
+
+              <div class="tier-cards-list">
+                <div class="card tier-node-card" *ngFor="let node of roleSkillTree()?.advanced">
+                  <div class="flex-between">
+                    <strong class="node-name">{{ node.name }}</strong>
+                    <button class="btn btn-outline btn-xs" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">🔍</button>
+                  </div>
+                  <span class="node-cat">{{ node.category }}</span>
+                  <div class="prereqs-box" *ngIf="node.prerequisites?.length">
+                    <span class="prereq-label">Prerequisites:</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites">{{ p }}</span>
+                  </div>
+                </div>
+                <div class="empty-hint" *ngIf="!roleSkillTree()?.advanced?.length">No advanced skills listed.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- VIEW MODE 2: ENTITY INSPECTOR -->
+        <div class="entity-inspector-view" *ngIf="knowledgeViewMode() === 'inspector'">
+          
+          <div class="card inspector-search-card">
+            <div class="form-row flex-align">
+              <label class="control-label">Select Technology or Skill to Inspect:</label>
+              <select #nodeSelect class="form-select" [value]="inspectedNodeName()" (change)="inspectNode(nodeSelect.value)">
+                <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card inspector-details-hero" *ngIf="inspectedNodeName()">
+            <div class="flex-between">
+              <div>
+                <span class="inspector-badge">Selected Entity</span>
+                <h2>{{ inspectedNodeName() }}</h2>
+              </div>
+              <button class="btn btn-primary btn-sm" (click)="calculateGoalSkillPath(inspectedNodeName()); setKnowledgeViewMode('path')">
+                🧭 Calculate Roadmap to {{ inspectedNodeName() }}
+              </button>
+            </div>
+
+            <!-- 3 Inspection Panels -->
+            <div class="inspector-grid">
+              
+              <!-- Prerequisites Panel -->
+              <div class="inspector-panel">
+                <h4 class="panel-title text-warning">⬅ What to Learn First (Prerequisites)</h4>
+                <p class="panel-desc">Technologies and concepts that should precede {{ inspectedNodeName() }}:</p>
+                <div class="panel-items-list" *ngIf="inspectedNodePrereqs().length; else noPrereqs">
+                  <div class="panel-item-card" *ngFor="let p of inspectedNodePrereqs()" (click)="inspectNode(p.name)">
+                    <strong>{{ p.name }}</strong>
+                    <span class="item-sub">{{ p.level }} • {{ p.category }}</span>
+                  </div>
+                </div>
+                <ng-template #noPrereqs>
+                  <p class="empty-hint">Foundational entity — No prior technical prerequisites required.</p>
+                </ng-template>
+              </div>
+
+              <!-- Unlocked Skills Panel -->
+              <div class="inspector-panel">
+                <h4 class="panel-title text-success">➡ What It Unlocks</h4>
+                <p class="panel-desc">Advanced technologies unlocked once you master {{ inspectedNodeName() }}:</p>
+                <div class="panel-items-list" *ngIf="inspectedNodeUnlocked().length; else noUnlocked">
+                  <div class="panel-item-card" *ngFor="let u of inspectedNodeUnlocked()" (click)="inspectNode(u.name)">
+                    <strong>{{ u.name }}</strong>
+                    <span class="item-sub">{{ u.level }} • {{ u.category }}</span>
+                  </div>
+                </div>
+                <ng-template #noUnlocked>
+                  <p class="empty-hint">Terminal specialization node — unlocks architectural depth.</p>
+                </ng-template>
+              </div>
+
+              <!-- Complementary Tech Panel -->
+              <div class="inspector-panel">
+                <h4 class="panel-title text-primary">🔄 Commonly Paired With</h4>
+                <p class="panel-desc">Ecosystem tools and libraries that complement {{ inspectedNodeName() }}:</p>
+                <div class="panel-items-list" *ngIf="inspectedNodeComplements().length; else noComplements">
+                  <div class="panel-item-card" *ngFor="let c of inspectedNodeComplements()" (click)="inspectNode(c.name)">
+                    <strong>{{ c.name }}</strong>
+                    <span class="item-sub">{{ c.category }}</span>
+                  </div>
+                </div>
+                <ng-template #noComplements>
+                  <p class="empty-hint">Standard standalone component.</p>
+                </ng-template>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW MODE 3: PREREQUISITE PATH SOLVER -->
+        <div class="path-solver-view" *ngIf="knowledgeViewMode() === 'path'">
+          
+          <div class="card path-search-card">
+            <div class="flex-between flex-wrap gap-md">
+              <div class="flex-align flex-1">
+                <label class="control-label">Target Skill to Acquire:</label>
+                <select #goalSelect class="form-select" [value]="goalSkillInput()" (change)="calculateGoalSkillPath(goalSelect.value)">
+                  <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }}</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" (click)="calculateGoalSkillPath(goalSelect.value)">
+                🧭 Evaluate Learning Readiness
+              </button>
+            </div>
+          </div>
+
+          <div class="card path-results-card" *ngIf="goalSkillRoadmap()">
+            
+            <!-- Readiness Status Banner -->
+            <div class="readiness-banner" [class.ready]="goalSkillRoadmap()?.is_ready_to_learn" [class.not-ready]="!goalSkillRoadmap()?.is_ready_to_learn">
+              <span class="readiness-icon">{{ goalSkillRoadmap()?.is_ready_to_learn ? '✅' : '⚠️' }}</span>
+              <div>
+                <h3 *ngIf="goalSkillRoadmap()?.is_ready_to_learn">You Are Ready to Learn {{ goalSkillRoadmap()?.goal_skill }}!</h3>
+                <h3 *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">Prerequisites Needed Before Learning {{ goalSkillRoadmap()?.goal_skill }}</h3>
+                <p *ngIf="goalSkillRoadmap()?.is_ready_to_learn">
+                  Your portfolio projects already demonstrate all foundational prerequisites needed.
+                </p>
+                <p *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">
+                  You are missing {{ goalSkillRoadmap()?.missing_prerequisites_in_order?.length }} prerequisite(s). Learning them in sequence will maximize your retention.
+                </p>
+              </div>
+            </div>
+
+            <!-- 2-Column Comparison -->
+            <div class="path-columns-grid">
+              
+              <div class="path-col">
+                <h4 class="text-success">✓ Already Acquired Prerequisites</h4>
+                <div class="path-list" *ngIf="goalSkillRoadmap()?.already_acquired_prereqs?.length; else noneAcquired">
+                  <div class="path-item acquired" *ngFor="let p of goalSkillRoadmap()?.already_acquired_prereqs">
+                    <span>✓ {{ p }}</span>
+                    <span class="badge badge-success">Mastered</span>
+                  </div>
+                </div>
+                <ng-template #noneAcquired>
+                  <p class="empty-hint">None of the prerequisites are currently in your active portfolio.</p>
+                </ng-template>
+              </div>
+
+              <div class="path-col">
+                <h4 class="text-danger">! Missing Prerequisites (In Sequence)</h4>
+                <div class="path-list" *ngIf="goalSkillRoadmap()?.missing_prerequisites_in_order?.length; else noneMissing">
+                  <div class="path-item missing" *ngFor="let m of goalSkillRoadmap()?.missing_prerequisites_in_order; let i = index">
+                    <span><strong>Step {{ i + 1 }}:</strong> {{ m }}</span>
+                    <span class="badge badge-warning">Required First</span>
+                  </div>
+                </div>
+                <ng-template #noneMissing>
+                  <p class="empty-hint text-success">No missing prerequisites! You can start directly with {{ goalSkillRoadmap()?.goal_skill }}.</p>
+                </ng-template>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </main>
   </div>
 </div>
@@ -614,12 +918,32 @@
 <div class="modal-backdrop" *ngIf="showAuthModal()" (click)="closeAuthModal()">
   <div class="modal-card auth-modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header flex-between">
-      <h2>{{ authMode() === 'login' ? '🔑 Sign In to PortfolioIQ' : '✨ Create Developer Account' }}</h2>
+      <h2>
+        {{ authMode() === 'login' ? '🔑 Sign In to PortfolioIQ' : (authMode() === 'register' ? '✨ Create Developer Account' : '🔄 Reset Password') }}
+      </h2>
       <button class="btn-icon" (click)="closeAuthModal()">✖</button>
     </div>
 
-    <!-- Mode Switcher Tabs -->
-    <div class="auth-tabs">
+    <!-- Stepper Bar for Forgot Password -->
+    <div class="auth-stepper" *ngIf="authMode() === 'forgot'">
+      <div class="stepper-item" [class.active]="forgotStep() === 1" [class.completed]="forgotStep() > 1">
+        <div class="stepper-bubble">1</div>
+        <span class="stepper-label">Email</span>
+      </div>
+      <div class="stepper-divider" [class.active]="forgotStep() > 1"></div>
+      <div class="stepper-item" [class.active]="forgotStep() === 2" [class.completed]="forgotStep() > 2">
+        <div class="stepper-bubble">2</div>
+        <span class="stepper-label">OTP Code</span>
+      </div>
+      <div class="stepper-divider" [class.active]="forgotStep() > 2"></div>
+      <div class="stepper-item" [class.active]="forgotStep() === 3">
+        <div class="stepper-bubble">3</div>
+        <span class="stepper-label">New Password</span>
+      </div>
+    </div>
+
+    <!-- Mode Switcher Tabs (Login/Register) -->
+    <div class="auth-tabs" *ngIf="authMode() !== 'forgot'">
       <button class="auth-tab-btn" [class.active]="authMode() === 'login'" (click)="switchAuthMode('login')">
         Sign In
       </button>
@@ -628,12 +952,16 @@
       </button>
     </div>
 
-    <!-- Error Banner -->
+    <!-- Feedback Banners -->
     <div class="alert-danger" *ngIf="authError()">
       ⚠️ {{ authError() }}
     </div>
+    <div class="alert-success" *ngIf="forgotSuccessMsg()">
+      ✅ {{ forgotSuccessMsg() }}
+    </div>
 
-    <div class="auth-form-body">
+    <!-- STANDARD LOGIN / REGISTER FORMS -->
+    <div class="auth-form-body" *ngIf="authMode() !== 'forgot'">
       <div class="form-group" *ngIf="authMode() === 'register'">
         <label>Display Name</label>
         <input type="text" placeholder="e.g. John Doe" [(ngModel)]="authDisplayName" class="form-input" />
@@ -645,8 +973,13 @@
       </div>
 
       <div class="form-group">
-        <label>Password</label>
-        <input type="password" placeholder="••••••••" [(ngModel)]="authPassword" class="form-input" />
+        <div class="flex-between">
+          <label>Password</label>
+          <a href="javascript:void(0)" *ngIf="authMode() === 'login'" (click)="switchAuthMode('forgot')" class="auth-link-subtle">
+            Forgot Password?
+          </a>
+        </div>
+        <input type="password" placeholder="••••••••" [(ngModel)]="authPassword" class="form-input" (keydown.enter)="authMode() === 'login' ? login() : register()" />
       </div>
 
       <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'login'" (click)="login()">
@@ -657,7 +990,7 @@
       </button>
     </div>
 
-    <div class="auth-modal-footer">
+    <div class="auth-modal-footer" *ngIf="authMode() !== 'forgot'">
       <p *ngIf="authMode() === 'login'">
         Don't have an account yet? 
         <a href="javascript:void(0)" (click)="switchAuthMode('register')" class="auth-link">Create one</a>
@@ -667,5 +1000,75 @@
         <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">Sign in here</a>
       </p>
     </div>
+
+    <!-- 3-STEP FORGOT PASSWORD FLOW -->
+    <!-- Step 1: Email Input -->
+    <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 1">
+      <p class="forgot-instructions">
+        Enter your registered email address and we'll send a 6-digit verification code to reset your password.
+      </p>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="developer@example.com" [(ngModel)]="forgotEmail" class="form-input" (keydown.enter)="sendForgotOtp()" [disabled]="forgotLoading()" />
+      </div>
+
+      <button class="btn btn-primary full-width-btn" (click)="sendForgotOtp()" [disabled]="forgotLoading()">
+        {{ forgotLoading() ? 'Sending Code...' : 'Send Verification Code ➔' }}
+      </button>
+
+      <div class="auth-modal-footer">
+        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">← Back to Sign In</a>
+      </div>
+    </div>
+
+    <!-- Step 2: 6-digit OTP Code Input -->
+    <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 2">
+      <p class="forgot-instructions">
+        We sent a 6-digit verification code to <strong>{{ forgotEmail }}</strong>. Enter it below:
+      </p>
+      <div class="form-group">
+        <label>6-Digit OTP Code</label>
+        <input type="text" maxlength="8" placeholder="123456" [(ngModel)]="forgotOtp" class="form-input otp-code-input" (keydown.enter)="verifyForgotOtp()" [disabled]="forgotLoading()" />
+      </div>
+
+      <button class="btn btn-primary full-width-btn" (click)="verifyForgotOtp()" [disabled]="forgotLoading()">
+        {{ forgotLoading() ? 'Verifying...' : 'Verify Code ➔' }}
+      </button>
+
+      <div class="forgot-step-actions flex-between">
+        <a href="javascript:void(0)" (click)="setForgotStep(1)" class="auth-link-subtle">← Change email</a>
+        <button class="btn-text-link" (click)="resendForgotOtp()" [disabled]="forgotLoading()">
+          Resend code
+        </button>
+      </div>
+
+      <div class="auth-modal-footer">
+        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">← Back to Sign In</a>
+      </div>
+    </div>
+
+    <!-- Step 3: Set New Password -->
+    <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 3">
+      <p class="forgot-instructions">
+        Code verified! Please enter your new password below.
+      </p>
+      <div class="form-group">
+        <label>New Password (min 6 characters)</label>
+        <input type="password" placeholder="••••••••" [(ngModel)]="forgotNewPassword" class="form-input" [disabled]="forgotLoading()" />
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" placeholder="••••••••" [(ngModel)]="forgotConfirmPassword" class="form-input" (keydown.enter)="submitNewPassword()" [disabled]="forgotLoading()" />
+      </div>
+
+      <button class="btn btn-primary full-width-btn" (click)="submitNewPassword()" [disabled]="forgotLoading()">
+        {{ forgotLoading() ? 'Updating Password...' : 'Save New Password & Sign In' }}
+      </button>
+
+      <div class="auth-modal-footer">
+        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">← Back to Sign In</a>
+      </div>
+    </div>
+
   </div>
 </div>

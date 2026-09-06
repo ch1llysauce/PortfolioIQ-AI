@@ -1,0 +1,303 @@
+[
+  {
+    "name": "PostgreSQL",
+    "type": "Relational Database Management System",
+    "ecosystem": "Backend / Data",
+    "use_cases": ["Transactional ACID Workloads", "Complex Relational Queries", "JSONB Document Storage"],
+    "pairs_well_with": ["FastAPI", "Django", "Node.js", "Docker"]
+  },
+  {
+    "name": "MySQL",
+    "type": "Relational Database Management System",
+    "ecosystem": "Backend / Web",
+    "use_cases": ["Web Application Relational Storage", "High-Read Performance", "Standard SQL CRUD"],
+    "pairs_well_with": ["Express.js", "Django", "Spring Boot", "PHP"]
+  },
+  {
+    "name": "SQLite",
+    "type": "Embedded Relational Database",
+    "ecosystem": "Mobile / Desktop / Embedded",
+    "use_cases": ["Local Client Storage", "Prototyping & Unit Testing", "Mobile Offline Cache"],
+    "pairs_well_with": ["Python", "Flutter", "React Native"]
+  },
+  {
+    "name": "MongoDB",
+    "type": "NoSQL Document Database",
+    "ecosystem": "Full-Stack / Web",
+    "use_cases": ["Dynamic Schema Storage", "Catalogs & CMS", "Rapid MVP Prototyping"],
+    "pairs_well_with": ["Node.js", "Express.js", "NestJS", "React"]
+  },
+  {
+    "name": "Redis",
+    "type": "In-Memory Key-Value Data Store",
+    "ecosystem": "Backend / Caching",
+    "use_cases": ["High-Speed API Caching", "Session Store", "Pub/Sub Messaging", "Rate Limiting"],
+    "pairs_well_with": ["FastAPI", "PostgreSQL", "Node.js", "Django"]
+  },
+  {
+    "name": "Supabase",
+    "type": "Open-Source Backend as a Service",
+    "ecosystem": "Full-Stack / Web",
+    "use_cases": ["Serverless Postgres", "Built-in Row Level Security Auth", "Real-Time Subscriptions"],
+    "pairs_well_with": ["Angular", "React", "Next.js", "TypeScript"]
+  },
+  {
+    "name": "Firebase Firestore",
+    "type": "Cloud NoSQL Document Database",
+    "ecosystem": "Mobile / Web",
+    "use_cases": ["Real-time Data Synchronization", "Mobile Cloud Backend", "Serverless Auth"],
+    "pairs_well_with": ["Flutter", "React Native", "Angular"]
+  },
+  {
+    "name": "ChromaDB",
+    "type": "Open-Source Vector Database",
+    "ecosystem": "AI / LLM",
+    "use_cases": ["Dense Semantic Embeddings", "RAG Document Indexing", "Nearest-Neighbor Search"],
+    "pairs_well_with": ["Python", "LangChain", "FastAPI", "PyTorch"]
+  },
+  {
+    "name": "Pinecone",
+    "type": "Managed Cloud Vector Database",
+    "ecosystem": "AI / LLM",
+    "use_cases": ["Enterprise Vector Search", "Ultra-Low Latency Similarity", "Large-Scale RAG"],
+    "pairs_well_with": ["LangChain", "FastAPI", "OpenAI", "Python"]
+  },
+  {
+    "name": "Elasticsearch",
+    "type": "Distributed Search and Analytics Engine",
+    "ecosystem": "Backend / Data",
+    "use_cases": ["Full-Text Search", "Log Aggregation & Monitoring", "Real-Time Big Data Analytics"],
+    "pairs_well_with": ["Python", "Node.js", "Docker", "PostgreSQL"]
+  },
+  {
+    "name": "FastAPI",
+    "type": "Asynchronous Python Web Framework",
+    "ecosystem": "Backend / AI Serving",
+    "use_cases": ["High-Performance REST APIs", "Machine Learning Model Serving", "Microservices"],
+    "pairs_well_with": ["Python", "Docker", "PostgreSQL", "Redis", "PyTorch"]
+  },
+  {
+    "name": "Django",
+    "type": "Full-Featured Python Web Framework",
+    "ecosystem": "Backend / Web",
+    "use_cases": ["Batteries-Included Web Apps", "ORM Database Management", "Built-in Admin Dashboards"],
+    "pairs_well_with": ["Python", "PostgreSQL", "Redis", "Docker"]
+  },
+  {
+    "name": "Flask",
+    "type": "Lightweight Python Microframework",
+    "ecosystem": "Backend / Microservices",
+    "use_cases": ["Quick API Prototyping", "Simple Web Services", "Small Tool Integrations"],
+    "pairs_well_with": ["Python", "SQLite", "Docker"]
+  },
+  {
+    "name": "Express.js",
+    "type": "Node.js Micro Web Framework",
+    "ecosystem": "Backend / Full-Stack",
+    "use_cases": ["Node.js REST APIs", "Server-Side Middleware", "JSON Microservices"],
+    "pairs_well_with": ["Node.js", "MongoDB", "PostgreSQL", "TypeScript"]
+  },
+  {
+    "name": "NestJS",
+    "type": "Enterprise TypeScript Backend Framework",
+    "ecosystem": "Backend / Enterprise",
+    "use_cases": ["Scalable Server-Side Apps", "Modular Dependency Injection", "Microservice Architectures"],
+    "pairs_well_with": ["TypeScript", "PostgreSQL", "Docker", "GraphQL"]
+  },
+  {
+    "name": "Spring Boot",
+    "type": "Enterprise Java Framework",
+    "ecosystem": "Enterprise Backend",
+    "use_cases": ["Mission-Critical Microservices", "High-Concurrency Enterprise Applications", "Robust Security"],
+    "pairs_well_with": ["Java", "PostgreSQL", "Docker", "Kubernetes"]
+  },
+  {
+    "name": "ASP.NET Core",
+    "type": "Cross-Platform C# Web Framework",
+    "ecosystem": "Enterprise Backend",
+    "use_cases": ["High-Throughput Cloud APIs", "Enterprise Microservices", "Modern Windows/Linux Services"],
+    "pairs_well_with": ["C#", "SQL Server", "Docker", "Azure"]
+  },
+  {
+    "name": "Angular",
+    "type": "Enterprise Frontend Application Framework",
+    "ecosystem": "Frontend / Web",
+    "use_cases": ["Complex Single Page Applications", "Modular Enterprise Portals", "Reactive State Management"],
+    "pairs_well_with": ["TypeScript", "Tailwind CSS", "FastAPI", "Supabase"]
+  },
+  {
+    "name": "React",
+    "type": "Component-Based UI Library",
+    "ecosystem": "Frontend / Web",
+    "use_cases": ["Interactive Web UIs", "Virtual DOM Rendering", "Rich Ecosystem Component Integration"],
+    "pairs_well_with": ["JavaScript", "TypeScript", "Tailwind CSS", "Next.js"]
+  },
+  {
+    "name": "Next.js",
+    "type": "React Production Framework",
+    "ecosystem": "Full-Stack Web",
+    "use_cases": ["Server-Side Rendering (SSR)", "Static Site Generation (SSG)", "SEO-Optimized Web Applications"],
+    "pairs_well_with": ["React", "TypeScript", "Tailwind CSS", "Vercel"]
+  },
+  {
+    "name": "Vue.js",
+    "type": "Progressive Frontend Framework",
+    "ecosystem": "Frontend / Web",
+    "use_cases": ["Approachable Single Page Apps", "Two-Way Data Binding", "Lightweight Frontend Architecture"],
+    "pairs_well_with": ["JavaScript", "TypeScript", "Tailwind CSS"]
+  },
+  {
+    "name": "Tailwind CSS",
+    "type": "Utility-First CSS Framework",
+    "ecosystem": "Frontend / Styling",
+    "use_cases": ["Rapid UI Development", "Consistent Design Systems", "Responsive Mobile-First Layouts"],
+    "pairs_well_with": ["Angular", "React", "Next.js", "Vue.js"]
+  },
+  {
+    "name": "Flutter",
+    "type": "Cross-Platform Mobile & Desktop SDK",
+    "ecosystem": "Mobile Development",
+    "use_cases": ["High-Performance Cross-Platform Apps", "Custom Native UIs", "Offline-First Mobile Apps"],
+    "pairs_well_with": ["Dart", "Firebase Firestore", "REST API"]
+  },
+  {
+    "name": "React Native",
+    "type": "Cross-Platform Native Framework",
+    "ecosystem": "Mobile Development",
+    "use_cases": ["Native iOS/Android from React", "Code Reusability Across Web/Mobile", "JavaScript Mobile Engine"],
+    "pairs_well_with": ["React", "TypeScript", "Node.js"]
+  },
+  {
+    "name": "PyTorch",
+    "type": "Deep Learning Tensor Framework",
+    "ecosystem": "AI / ML",
+    "use_cases": ["Neural Network Training & Research", "Computer Vision Models", "Transformers & LLMs"],
+    "pairs_well_with": ["Python", "CUDA", "FastAPI", "Docker"]
+  },
+  {
+    "name": "TensorFlow",
+    "type": "End-to-End Machine Learning Platform",
+    "ecosystem": "AI / ML",
+    "use_cases": ["Production Model Training", "Edge Deployment (TF Lite)", "Distributed Deep Learning"],
+    "pairs_well_with": ["Python", "Keras", "Docker"]
+  },
+  {
+    "name": "Scikit-Learn",
+    "type": "Classical Machine Learning Library",
+    "ecosystem": "AI / Data Science",
+    "use_cases": ["Classification & Regression", "Clustering & Dimensionality Reduction", "Model Evaluation Pipelines"],
+    "pairs_well_with": ["Python", "Pandas", "NumPy", "Joblib"]
+  },
+  {
+    "name": "Pandas",
+    "type": "Data Analysis & Manipulation Library",
+    "ecosystem": "Data Science",
+    "use_cases": ["Data Cleaning & Preprocessing", "Tabular Data Analytics", "Time-Series Processing"],
+    "pairs_well_with": ["Python", "NumPy", "SQL", "Scikit-Learn"]
+  },
+  {
+    "name": "NumPy",
+    "type": "High-Performance Numerical Array Computing",
+    "ecosystem": "Data Science / Scientific",
+    "use_cases": ["N-Dimensional Array Operations", "Linear Algebra & Matrices", "Vectorized Calculations"],
+    "pairs_well_with": ["Python", "Pandas", "Scikit-Learn", "PyTorch"]
+  },
+  {
+    "name": "LangChain",
+    "type": "LLM Application Framework",
+    "ecosystem": "AI / LLM",
+    "use_cases": ["Chaining LLM Prompts", "RAG Pipeline Orchestration", "Autonomous AI Agents"],
+    "pairs_well_with": ["Python", "ChromaDB", "Pinecone", "FastAPI"]
+  },
+  {
+    "name": "Hugging Face Transformers",
+    "type": "State-of-the-Art NLP & Pretrained Model Hub",
+    "ecosystem": "AI / NLP",
+    "use_cases": ["Pretrained Language Models", "Text Classification & Summarization", "Embedding Generation"],
+    "pairs_well_with": ["Python", "PyTorch", "LangChain"]
+  },
+  {
+    "name": "MLflow",
+    "type": "Open-Source MLOps Platform",
+    "ecosystem": "MLOps / Data",
+    "use_cases": ["Experiment Tracking", "Model Registry & Versioning", "Reproducible ML Pipelines"],
+    "pairs_well_with": ["Python", "PyTorch", "Scikit-Learn", "Docker"]
+  },
+  {
+    "name": "Apache Spark",
+    "type": "Unified Distributed Big Data Analytics Engine",
+    "ecosystem": "Data Engineering",
+    "use_cases": ["Large-Scale Distributed ETL", "Batch & Streaming Big Data", "Cluster Computation"],
+    "pairs_well_with": ["Python (PySpark)", "SQL", "Hadoop", "AWS S3"]
+  },
+  {
+    "name": "Apache Kafka",
+    "type": "Distributed Event Streaming Platform",
+    "ecosystem": "Data / Distributed Systems",
+    "use_cases": ["Real-Time Event Ingestion", "Decoupled Pub/Sub Pipelines", "Stream Processing"],
+    "pairs_well_with": ["Docker", "Python", "Java", "Microservices"]
+  },
+  {
+    "name": "Docker",
+    "type": "Containerization Platform",
+    "ecosystem": "DevOps / Deployment",
+    "use_cases": ["Containerized App Packaging", "Reproducible Environments", "Isolated Microservices"],
+    "pairs_well_with": ["Kubernetes", "Linux", "FastAPI", "GitHub Actions"]
+  },
+  {
+    "name": "Kubernetes",
+    "type": "Container Orchestration Engine",
+    "ecosystem": "Cloud & DevOps",
+    "use_cases": ["Automated Container Scaling", "Rolling Zero-Downtime Deployments", "Cluster Health Management"],
+    "pairs_well_with": ["Docker", "Cloud Computing", "Helm"]
+  },
+  {
+    "name": "GitHub Actions",
+    "type": "CI/CD Automation Engine",
+    "ecosystem": "DevOps",
+    "use_cases": ["Automated Test Running", "Container Image Building", "Automated Production Deployments"],
+    "pairs_well_with": ["Git", "Docker", "AWS", "Kubernetes"]
+  },
+  {
+    "name": "AWS (Amazon Web Services)",
+    "type": "Comprehensive Public Cloud Platform",
+    "ecosystem": "Cloud Infrastructure",
+    "use_cases": ["Scalable Compute (EC2)", "Object Storage (S3)", "Serverless (Lambda)", "Managed Relational DBs (RDS)"],
+    "pairs_well_with": ["Docker", "Terraform", "Kubernetes"]
+  },
+  {
+    "name": "Google Cloud Platform (GCP)",
+    "type": "Public Cloud & AI Infrastructure Provider",
+    "ecosystem": "Cloud / AI Infrastructure",
+    "use_cases": ["Vertex AI Workloads", "Google Kubernetes Engine (GKE)", "BigQuery Analytics"],
+    "pairs_well_with": ["Kubernetes", "Docker", "Python", "TensorFlow"]
+  },
+  {
+    "name": "Microsoft Azure",
+    "type": "Enterprise Cloud Platform",
+    "ecosystem": "Enterprise Cloud",
+    "use_cases": ["Azure OpenAI Services", "Enterprise Identity Active Directory", "AKS Container Orchestration"],
+    "pairs_well_with": ["Docker", "Kubernetes", "ASP.NET Core"]
+  },
+  {
+    "name": "Terraform",
+    "type": "Infrastructure as Code (IaC) Tool",
+    "ecosystem": "DevOps / Cloud",
+    "use_cases": ["Declarative Cloud Provisioning", "Multi-Cloud Infrastructure Automation", "Stateful Architecture Management"],
+    "pairs_well_with": ["AWS", "GCP", "Azure", "Docker"]
+  },
+  {
+    "name": "Nginx",
+    "type": "High-Performance Web Server & Reverse Proxy",
+    "ecosystem": "DevOps / Networking",
+    "use_cases": ["Reverse Proxy & SSL Termination", "Load Balancing Traffic", "Static Asset Delivery"],
+    "pairs_well_with": ["Docker", "FastAPI", "Angular", "Linux"]
+  },
+  {
+    "name": "Vercel",
+    "type": "Frontend & Edge Cloud Deployment Platform",
+    "ecosystem": "Web / Frontend",
+    "use_cases": ["Instant Edge Deployments", "Global CDN Hosting", "Serverless API Endpoints"],
+    "pairs_well_with": ["Next.js", "React", "Angular"]
+  }
+]
