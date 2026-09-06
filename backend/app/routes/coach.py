@@ -89,3 +89,4 @@ def generate_project_ideas(req: ProjectIdeasRequest):
         return coach_engine.generate_project_ideas(ctx)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Project idea generation failed: {str(e)}")
+

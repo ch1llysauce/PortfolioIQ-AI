@@ -20,14 +20,23 @@ class GroqCoachEngine:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY", "").strip()
         self.client = None
-        if GROQ_AVAILABLE and self.api_key:
-            try:
-                self.client = Groq(api_key=self.api_key)
-            except Exception as e:
-                print(f"[GroqCoachEngine] Initialization error: {e}")
-                self.client = None
+        self._refresh_client()
+
+    def _refresh_client(self):
+        load_dotenv(override=True)
+        key = os.getenv("GROQ_API_KEY", "").strip()
+        if key and (key != self.api_key or self.client is None):
+            self.api_key = key
+            if GROQ_AVAILABLE:
+                try:
+                    self.client = Groq(api_key=self.api_key)
+                except Exception as e:
+                    print(f"[GroqCoachEngine] Initialization error: {e}")
+                    self.client = None
 
     def is_live(self) -> bool:
+        if self.client is None or not self.api_key:
+            self._refresh_client()
         return self.client is not None and bool(self.api_key)
 
     def get_status(self) -> Dict[str, Any]:
@@ -309,3 +318,4 @@ I've analyzed your portfolio telemetry for **{target_role}**:
 
 # Global singleton instance
 coach_engine = GroqCoachEngine()
+
