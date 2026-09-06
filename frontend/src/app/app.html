@@ -1024,7 +1024,7 @@
     <!-- Step 2: 6-digit OTP Code Input -->
     <div class="auth-form-body" *ngIf="authMode() === 'forgot' && forgotStep() === 2">
       <p class="forgot-instructions">
-        We sent a 6-digit verification code to <strong>{{ forgotEmail }}</strong>. Enter it below:
+        We sent an email to <strong>{{ forgotEmail }}</strong>. Click the <strong>Reset password</strong> link in the email, or enter the 6-digit code below:
       </p>
       <div class="form-group">
         <label>6-Digit OTP Code</label>
@@ -1038,7 +1038,7 @@
       <div class="forgot-step-actions flex-between">
         <a href="javascript:void(0)" (click)="setForgotStep(1)" class="auth-link-subtle">← Change email</a>
         <button class="btn-text-link" (click)="resendForgotOtp()" [disabled]="forgotLoading()">
-          Resend code
+          Resend email
         </button>
       </div>
 

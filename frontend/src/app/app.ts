@@ -109,6 +109,7 @@ export class App implements OnInit {
 
   async ngOnInit() {
     this.checkBackendHealth();
+    this.setupAuthRecoveryListener();
     await this.loadCurrentUser();
     await this.loadInitialData();
     this.loadInitialKnowledgeData();
@@ -283,6 +284,9 @@ export class App implements OnInit {
         this.authError.set(error.message);
       } else {
         this.forgotSuccessMsg.set('Password updated successfully! Logging you in...');
+        if (typeof window !== 'undefined' && window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
         await this.loadCurrentUser();
         if (this.currentUser()) {
           await this.fetchProjects();
@@ -295,6 +299,35 @@ export class App implements OnInit {
       this.authError.set(err.message || 'Failed to update password.');
     } finally {
       this.forgotLoading.set(false);
+    }
+  }
+
+  setupAuthRecoveryListener() {
+    // 1. Listen for Supabase recovery auth state change event
+    this.authService.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        this.currentUser.set(session?.user ?? null);
+        this.authMode.set('forgot');
+        this.forgotStep.set(3);
+        this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
+        this.authError.set('');
+        this.showAuthModal.set(true);
+      }
+    });
+
+    // 2. Direct check on initial URL hash for type=recovery
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash;
+      if (hash.includes('type=recovery')) {
+        setTimeout(async () => {
+          await this.loadCurrentUser();
+          this.authMode.set('forgot');
+          this.forgotStep.set(3);
+          this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
+          this.authError.set('');
+          this.showAuthModal.set(true);
+        }, 400);
+      }
     }
   }
 

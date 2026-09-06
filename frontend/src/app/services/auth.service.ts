@@ -49,7 +49,9 @@ export class AuthService {
     }
 
     async resetPasswordForEmail(email: string) {
-        return await this.supabase.auth.resetPasswordForEmail(email);
+        return await this.supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin
+        });
     }
 
     async verifyRecoveryOtp(email: string, token: string) {
@@ -63,6 +65,12 @@ export class AuthService {
     async updateUserPassword(newPassword: string) {
         return await this.supabase.auth.updateUser({
             password: newPassword
+        });
+    }
+
+    onAuthStateChange(callback: (event: string, session: any) => void) {
+        return this.supabase.auth.onAuthStateChange((event, session) => {
+            callback(event, session);
         });
     }
 }
