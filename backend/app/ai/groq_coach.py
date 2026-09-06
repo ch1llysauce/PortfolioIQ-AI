@@ -14,13 +14,36 @@ except ImportError:
 
 
 class GroqCoachEngine:
-    PRIMARY_MODEL = "llama-3.3-70b-versatile"
-    FALLBACK_MODEL = "llama-3.1-8b-instant"
+    CANDIDATE_MODELS = [
+        "qwen/qwen3.8-27b",
+        "groq/compound-mini",
+        "qwen/qwen3.6-27b",
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant"
+    ]
 
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY", "").strip()
         self.client = None
+        self.active_model = "qwen/qwen3.8-27b"
         self._refresh_client()
+
+    def _detect_best_model(self) -> str:
+        if not self.client:
+            return "qwen/qwen3.8-27b"
+        try:
+            available = self.client.models.list()
+            available_ids = {m.id for m in available.data}
+            for candidate in self.CANDIDATE_MODELS:
+                if candidate in available_ids:
+                    return candidate
+            if available.data:
+                return available.data[0].id
+        except Exception as e:
+            print(f"[GroqCoachEngine] Model list query error: {e}")
+        return "qwen/qwen3.8-27b"
 
     def _refresh_client(self):
         load_dotenv(override=True)
@@ -30,6 +53,7 @@ class GroqCoachEngine:
             if GROQ_AVAILABLE:
                 try:
                     self.client = Groq(api_key=self.api_key)
+                    self.active_model = self._detect_best_model()
                 except Exception as e:
                     print(f"[GroqCoachEngine] Initialization error: {e}")
                     self.client = None
@@ -42,9 +66,9 @@ class GroqCoachEngine:
     def get_status(self) -> Dict[str, Any]:
         return {
             "live": self.is_live(),
-            "model": self.PRIMARY_MODEL if self.is_live() else "Demonstration / Offline Mode",
-            "provider": "Groq Llama-3" if self.is_live() else "PortfolioIQ Built-in Engine",
-            "message": "Connected to Groq Cloud" if self.is_live() else "Groq API key not set. Set GROQ_API_KEY in backend/.env for live LLM inference."
+            "model": self.active_model if self.is_live() else "Demonstration / Offline Mode",
+            "provider": "Groq Cloud" if self.is_live() else "PortfolioIQ Built-in Engine",
+            "message": f"Connected to Groq Cloud ({self.active_model})" if self.is_live() else "Groq API key not set. Set GROQ_API_KEY in backend/.env for live LLM inference."
         }
 
     def _build_system_prompt(self, context: Optional[Dict[str, Any]] = None) -> str:
@@ -106,48 +130,44 @@ Your mission is to provide rigorous, actionable, high-signal advice to help deve
         
         # If live Groq client is configured:
         if self.is_live():
-            try:
-                groq_messages = [{"role": "system", "content": system_prompt}]
-                # Keep last 10 messages for context window management
-                for m in messages[-10:]:
-                    groq_messages.append({
-                        "role": m.get("role", "user"),
-                        "content": m.get("content", "")
-                    })
+            groq_messages = [{"role": "system", "content": system_prompt}]
+            # Keep last 10 messages for context window management
+            for m in messages[-10:]:
+                groq_messages.append({
+                    "role": m.get("role", "user"),
+                    "content": m.get("content", "")
+                })
 
+            models_to_try = [self.active_model] + [m for m in self.CANDIDATE_MODELS if m != self.active_model]
+            last_err = None
+
+            for model_id in models_to_try:
                 try:
                     chat_completion = self.client.chat.completions.create(
                         messages=groq_messages,
-                        model=self.PRIMARY_MODEL,
+                        model=model_id,
                         temperature=0.7,
                         max_tokens=1024,
                     )
                     reply = chat_completion.choices[0].message.content
-                    model_used = self.PRIMARY_MODEL
+                    if reply and reply.strip():
+                        self.active_model = model_id
+                        suggested = self._generate_suggested_followups(reply, context)
+                        return {
+                            "message": reply,
+                            "model": model_id,
+                            "is_demo": False,
+                            "suggested_followups": suggested
+                        }
                 except Exception as model_err:
-                    print(f"[GroqCoachEngine] Primary model failed, trying fallback: {model_err}")
-                    chat_completion = self.client.chat.completions.create(
-                        messages=groq_messages,
-                        model=self.FALLBACK_MODEL,
-                        temperature=0.7,
-                        max_tokens=1024,
-                    )
-                    reply = chat_completion.choices[0].message.content
-                    model_used = self.FALLBACK_MODEL
+                    print(f"[GroqCoachEngine] Model {model_id} failed: {model_err}")
+                    last_err = model_err
+                    continue
 
-                suggested = self._generate_suggested_followups(reply, context)
-                return {
-                    "message": reply,
-                    "model": model_used,
-                    "is_demo": False,
-                    "suggested_followups": suggested
-                }
-            except Exception as e:
-                print(f"[GroqCoachEngine] Groq API call error: {e}")
-                # Fall back to demonstration engine on API error
-                fallback = self._generate_smart_fallback(messages[-1].get("content", ""), context)
-                fallback["message"] += f"\n\n*(Note: Groq live API encountered an issue: {str(e)[:100]}. Rendered via PortfolioIQ local fallback.)*"
-                return fallback
+            # Fall back to demonstration engine if all Groq models encounter errors
+            fallback = self._generate_smart_fallback(messages[-1].get("content", ""), context)
+            fallback["message"] += f"\n\n*(Note: Groq live API encountered an issue: {str(last_err)[:100]}. Rendered via PortfolioIQ local fallback.)*"
+            return fallback
         else:
             # Smart Offline / Demonstration Mode
             user_msg = messages[-1].get("content", "") if messages else "Hello"
