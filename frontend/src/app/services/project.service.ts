@@ -14,7 +14,8 @@ export class ProjectService {
 
   async createProject(
     name: string,
-    description: string
+    description: string,
+    status: string = 'active'
   ) {
 
     const {
@@ -34,29 +35,65 @@ export class ProjectService {
       .insert({
         user_id: user.id,
         name,
-        description
+        description,
+        status
       })
       .select()
       .single();
   }
 
   async getProjects() {
-    return await this.supabase
+    // 1. Fetch user projects
+    const { data: projects, error: projectsError } = await this.supabase
       .from('projects')
-      .select(`
-        *,
-        project_skills (
-          skill_id,
-          skills (
-            id,
-            name,
-            category
-          )
-        )
-      `)
+      .select('*')
       .order('created_at', {
         ascending: false
       });
+
+    if (projectsError) {
+      console.error('Error fetching projects:', projectsError);
+      return { data: null, error: projectsError };
+    }
+
+    if (!projects || projects.length === 0) {
+      return { data: [], error: null };
+    }
+
+    // 2. Fetch project skills with skills relation
+    const projectIds = projects.map(p => p.id);
+    const { data: projectSkills, error: skillsError } = await this.supabase
+      .from('project_skills')
+      .select(`
+        project_id,
+        skill_id,
+        skills (
+          id,
+          name,
+          category
+        )
+      `)
+      .in('project_id', projectIds);
+
+    if (skillsError) {
+      console.warn('Could not load project skills (will return projects without skills):', skillsError);
+    }
+
+    // 3. Map skills into each project
+    const skillsByProject = new Map<string, any[]>();
+    (projectSkills || []).forEach((ps: any) => {
+      if (!skillsByProject.has(ps.project_id)) {
+        skillsByProject.set(ps.project_id, []);
+      }
+      skillsByProject.get(ps.project_id)!.push(ps);
+    });
+
+    const enrichedProjects = projects.map(p => ({
+      ...p,
+      project_skills: skillsByProject.get(p.id) || []
+    }));
+
+    return { data: enrichedProjects, error: null };
   }
 
 

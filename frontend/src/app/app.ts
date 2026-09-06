@@ -517,7 +517,11 @@ export class App implements OnInit {
   // Project Operations
   async fetchProjects() {
     const { data, error } = await this.projectService.getProjects();
-    if (!error && data) {
+    if (error) {
+      console.error('Failed to fetch projects:', error);
+      return;
+    }
+    if (data) {
       this.projects.set(data);
       await this.recalculatePortfolioScore();
       await this.recalculateSkillGap();
@@ -540,10 +544,14 @@ export class App implements OnInit {
   }
 
   async createProject() {
-    if (!this.newProjectName.trim()) return;
+    if (!this.newProjectName.trim()) {
+      this.showToast('Please enter a project name.', 'warning');
+      return;
+    }
     const { data, error } = await this.projectService.createProject(
       this.newProjectName.trim(),
-      this.newProjectDesc.trim()
+      this.newProjectDesc.trim(),
+      this.newProjectStatus || 'active'
     );
     if (error) {
       this.showToast('Failed to create project: ' + error.message, 'error');
@@ -551,6 +559,7 @@ export class App implements OnInit {
       const proj = this.newProjectName;
       this.newProjectName = '';
       this.newProjectDesc = '';
+      this.newProjectStatus = 'active';
       await this.fetchProjects();
       this.showToast(`Project "${proj}" created successfully!`, 'success');
     }
