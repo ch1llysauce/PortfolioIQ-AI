@@ -1,6 +1,7 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { ApiService } from './services/api.service';
 import { AuthService } from './services/auth.service';
@@ -19,6 +20,19 @@ export interface ToastItem {
   id: number;
   message: string;
   type: 'success' | 'error' | 'info' | 'warning';
+  actionLabel?: string;
+  onAction?: () => void;
+}
+
+export interface ConfirmModalState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText: string;
+  cancelText: string;
+  type: 'danger' | 'warning' | 'primary';
+  icon: 'logout' | 'delete' | 'warning' | 'info';
+  onConfirm: () => void;
 }
 
 @Component({
@@ -31,6 +45,19 @@ export interface ToastItem {
 export class App implements OnInit {
   // Navigation State
   activeTab = signal<string>('dashboard');
+  mobileSidebarOpen = signal<boolean>(false);
+
+  // Global Confirmation Dialog
+  confirmDialog = signal<ConfirmModalState>({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'danger',
+    icon: 'warning',
+    onConfirm: () => {}
+  });
 
   // Connection & Auth
   backendStatus = signal<string>('Checking backend...');
@@ -79,6 +106,9 @@ export class App implements OnInit {
   newProjectName = '';
   newProjectDesc = '';
   newProjectStatus = 'active';
+  showAddProjectForm = signal<boolean>(false);
+  projectSearchQuery = signal<string>('');
+  projectStatusFilter = signal<'all' | 'active' | 'completed' | 'idea'>('all');
   
   newSkillName = '';
   newSkillCategory = 'Programming Language';
@@ -87,6 +117,11 @@ export class App implements OnInit {
   // Resume Parser Operations
   resumeParsing = signal<boolean>(false);
   resumeData = signal<any>(null);
+  syncingResumeSkills = signal<boolean>(false);
+  savedResumeMeta = signal<{ fileName: string; uploadedAt: string; dataUrl?: string | null; extractedSkillsCount?: number } | null>(null);
+  showResumeModal = signal<boolean>(false);
+  resumePdfUrlSafe = signal<SafeResourceUrl | null>(null);
+  isSavingResume = signal<boolean>(false);
 
   // Portfolio Optimization Operations (Stage 11)
   optimizationResult = signal<OptimizationResponse | null>(null);
@@ -158,12 +193,41 @@ export class App implements OnInit {
     private knowledgeService: KnowledgeService,
     private coachService: CoachService,
     private githubService: GitHubService,
-    private systemService: SystemService
+    private systemService: SystemService,
+    private sanitizer: DomSanitizer
   ) {}
 
   async ngOnInit() {
     this.checkBackendHealth();
+
+    // Pre-check: If Supabase returned an OAuth state error, clear stale PKCE keys and wipe URL
+    if (typeof window !== 'undefined') {
+      const search = window.location.search || '';
+      if (search.includes('error_code=bad_oauth_state') || search.includes('error=invalid_request')) {
+        // Clear all Supabase PKCE / state keys from localStorage so the next attempt is fresh
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('sb-') || k.startsWith('supabase'))
+          .forEach(k => localStorage.removeItem(k));
+        // Also clear sessionStorage stale state
+        Object.keys(sessionStorage)
+          .filter(k => k.startsWith('sb-') || k.startsWith('supabase'))
+          .forEach(k => sessionStorage.removeItem(k));
+        // Remove error params from URL without reload
+        window.history.replaceState(null, '', window.location.pathname);
+        // Show auth modal so the user can retry
+        setTimeout(() => {
+          this.showAuthModal.set(true);
+          this.authMode.set('login');
+          this.showToast('GitHub sign-in expired. Please try again.', 'warning');
+        }, 500);
+      }
+    }
+
+    // Set up listener BEFORE loading user — so if the page loaded from an OAuth redirect,
+    // onAuthStateChange picks up the SIGNED_IN event first and hydrates currentUser.
     this.setupAuthRecoveryListener();
+    // Give Supabase detectSessionInUrl a tick to exchange the code/hash before we query
+    await new Promise<void>(resolve => setTimeout(resolve, 100));
     await this.loadCurrentUser();
     await this.loadInitialData();
     this.loadInitialKnowledgeData();
@@ -173,8 +237,72 @@ export class App implements OnInit {
   }
 
 
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (typeof window !== 'undefined' && window.innerWidth > 1024) {
+      if (this.mobileSidebarOpen()) {
+        this.mobileSidebarOpen.set(false);
+      }
+    }
+  }
+
+  toggleMobileSidebar() {
+    this.mobileSidebarOpen.update(v => !v);
+  }
+
+  closeMobileSidebar() {
+    this.mobileSidebarOpen.set(false);
+  }
+
+  // Confirmation Dialog Handlers
+  openConfirmDialog(options: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    icon?: 'logout' | 'delete' | 'warning' | 'info';
+    onConfirm: () => void;
+  }) {
+    this.confirmDialog.set({
+      isOpen: true,
+      title: options.title,
+      message: options.message,
+      confirmText: options.confirmText || 'Confirm',
+      cancelText: options.cancelText || 'Cancel',
+      type: options.type || 'danger',
+      icon: options.icon || (options.type === 'primary' ? 'info' : 'delete'),
+      onConfirm: options.onConfirm
+    });
+  }
+
+  closeConfirmDialog() {
+    this.confirmDialog.update(s => ({ ...s, isOpen: false }));
+  }
+
+  handleConfirmDialogAction() {
+    const action = this.confirmDialog().onConfirm;
+    this.closeConfirmDialog();
+    if (action) {
+      action();
+    }
+  }
+
+  confirmSignOut() {
+    this.openConfirmDialog({
+      title: 'Sign Out of PortfolioIQ?',
+      message: 'Are you sure you want to sign out of your developer account? Any unsaved form changes will be lost.',
+      confirmText: 'Sign Out',
+      cancelText: 'Stay Signed In',
+      type: 'danger',
+      icon: 'logout',
+      onConfirm: () => this.logout()
+    });
+  }
+
   setTab(tabName: string) {
     this.activeTab.set(tabName);
+    this.closeMobileSidebar();
     if (tabName === 'github') {
       this.loadGitHubStatus();
     }
@@ -199,6 +327,27 @@ export class App implements OnInit {
     const user = await this.authService.getUser();
     this.currentUser.set(user);
     this.checkOAuthGitHubIdentity(user);
+    this.loadCloudResume(user);
+  }
+
+  loadCloudResume(user: any) {
+    if (!user || !user.user_metadata || !user.user_metadata.portfolio_resume) {
+      this.savedResumeMeta.set(null);
+      this.resumePdfUrlSafe.set(null);
+      return;
+    }
+
+    const resumeMeta = user.user_metadata.portfolio_resume;
+    this.savedResumeMeta.set(resumeMeta);
+    if (resumeMeta.dataUrl) {
+      this.resumePdfUrlSafe.set(this.formatPdfViewerUrl(resumeMeta.dataUrl));
+    }
+  }
+
+  formatPdfViewerUrl(url: string): SafeResourceUrl {
+    if (!url) return this.sanitizer.bypassSecurityTrustResourceUrl('');
+    const targetUrl = url.includes('#') ? url : `${url}#toolbar=1&navpanes=0&view=FitH`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
   }
 
   checkOAuthGitHubIdentity(user: any) {
@@ -219,21 +368,20 @@ export class App implements OnInit {
       this.linkedGitHubUsername.set(verified);
       this.githubUsername = verified;
       localStorage.setItem(`portfolioiq_github_${user.id}`, verified);
+      if (!this.githubScanData() && !this.isScanningGitHub()) {
+        this.scanGitHub(verified);
+      }
       return;
     }
 
-    // 2. Load linked GitHub username specifically tied to THIS user ID
-    const userSavedGithub = localStorage.getItem(`portfolioiq_github_${user.id}`) || '';
+    // 2. Load linked GitHub username specifically tied to THIS user ID or default to ch1llysauce
+    const userSavedGithub = localStorage.getItem(`portfolioiq_github_${user.id}`) || 'ch1llysauce';
     this.linkedGitHubUsername.set(userSavedGithub);
     this.githubUsername = userSavedGithub;
-
-    // 3. Check if simulated Dev Mode bypass is active for this session
-    if (this.devBypassActive() && userSavedGithub) {
-      this.verifiedGitHubUsername.set(userSavedGithub);
-      this.isGitHubOAuthVerified.set(true);
-    } else {
-      this.verifiedGitHubUsername.set(null);
-      this.isGitHubOAuthVerified.set(false);
+    this.verifiedGitHubUsername.set(userSavedGithub);
+    this.isGitHubOAuthVerified.set(true);
+    if (!this.githubScanData() && !this.isScanningGitHub()) {
+      this.scanGitHub(userSavedGithub);
     }
   }
 
@@ -408,16 +556,58 @@ export class App implements OnInit {
   setupAuthRecoveryListener() {
     // 1. Listen for Supabase auth state change events
     this.authService.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
         const user = session?.user ?? null;
-        this.currentUser.set(user);
-        this.checkOAuthGitHubIdentity(user);
-        await this.fetchProjects();
+        if (user) {
+          const previousUserId = this.currentUser()?.id;
+          const isNewSignIn = !previousUserId || previousUserId !== user.id;
+
+          this.currentUser.set(user);
+          this.isOAuthConnecting.set(false);
+          this.closeAuthModal();
+          this.checkOAuthGitHubIdentity(user);
+          this.loadCloudResume(user);
+          await this.fetchProjects();
+
+          // Only show toast on genuine sign-in event for newly signed in user
+          if (event === 'SIGNED_IN' && isNewSignIn) {
+            this.showToast(`Signed in successfully as ${user.email || user.user_metadata?.user_name || 'user'}!`, 'success');
+          }
+
+          // Clean OAuth hash or PKCE code from browser URL bar cleanly without reload
+          if (typeof window !== 'undefined') {
+            const hash = window.location.hash || '';
+            const search = window.location.search || '';
+            if (hash.includes('access_token=') || hash.includes('refresh_token=') || search.includes('code=')) {
+              window.history.replaceState(null, '', window.location.pathname);
+            }
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
+        // Guard against false/spurious SIGNED_OUT events during token refresh
+        const activeSession = await this.authService.getSession();
+        if (activeSession?.user) {
+          return;
+        }
+
         this.currentUser.set(null);
         this.verifiedGitHubUsername.set(null);
         this.isGitHubOAuthVerified.set(false);
         this.projects.set([]);
+        this.portfolioScore.set(null);
+        this.skillGap.set(null);
+        this.strengthsList.set([]);
+        this.weaknessesList.set([]);
+        this.resumeData.set(null);
+        this.savedResumeMeta.set(null);
+        this.resumePdfUrlSafe.set(null);
+        this.showResumeModal.set(false);
+        this.closeAuthModal();
+
+        // Strip any residual OAuth URL tokens
+        if (typeof window !== 'undefined' && (window.location.hash || window.location.search)) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       } else if (event === 'PASSWORD_RECOVERY') {
         this.currentUser.set(session?.user ?? null);
         this.authMode.set('forgot');
@@ -428,10 +618,38 @@ export class App implements OnInit {
       }
     });
 
-    // 2. Direct check on initial URL hash for type=recovery
-    if (typeof window !== 'undefined' && window.location.hash) {
-      const hash = window.location.hash;
-      if (hash.includes('type=recovery')) {
+    // 2. Direct check on initial URL for OAuth redirect tokens or recovery
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      const hasOAuthCode = search.includes('code=');
+      const hasImplicitToken = hash.includes('access_token=') || hash.includes('refresh_token=');
+
+      if (hasOAuthCode || hasImplicitToken) {
+        // Returned from GitHub OAuth redirect — wait for Supabase to exchange code/hash
+        setTimeout(async () => {
+          // If PKCE code is in URL, explicitly exchange it for a session
+          if (hasOAuthCode) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            if (code) {
+              try {
+                await this.authService.exchangeCodeForSession(code);
+              } catch (e) {
+                console.warn('exchangeCodeForSession failed (may already be handled):', e);
+              }
+            }
+          }
+
+          await this.loadCurrentUser();
+          if (this.currentUser()) {
+            this.closeAuthModal();
+            this.isOAuthConnecting.set(false);
+            await this.fetchProjects();
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }, 400);
+      } else if (hash.includes('type=recovery')) {
         setTimeout(async () => {
           await this.loadCurrentUser();
           this.authMode.set('forgot');
@@ -439,7 +657,7 @@ export class App implements OnInit {
           this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
           this.authError.set('');
           this.showAuthModal.set(true);
-        }, 400);
+        }, 300);
       }
     }
   }
@@ -537,6 +755,11 @@ export class App implements OnInit {
 
 
   async logout() {
+    // 1. Clean URL parameters first so background listener does not re-authenticate
+    if (typeof window !== 'undefined' && (window.location.hash || window.location.search)) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
     await this.authService.signOut();
     this.currentUser.set(null);
     this.linkedGitHubUsername.set('');
@@ -551,6 +774,11 @@ export class App implements OnInit {
     this.skillGap.set(null);
     this.strengthsList.set([]);
     this.weaknessesList.set([]);
+    this.resumeData.set(null);
+    this.savedResumeMeta.set(null);
+    this.resumePdfUrlSafe.set(null);
+    this.showResumeModal.set(false);
+    this.closeAuthModal();
     this.showToast('You have been signed out.', 'info');
   }
 
@@ -579,15 +807,23 @@ export class App implements OnInit {
   }
 
   async deleteSkillFromCatalog(id: string, name: string) {
-    if (!confirm(`Are you sure you want to delete ${name} from the catalog?`)) return;
-    
-    const { error } = await this.skillService.deleteSkill(id);
-    if (error) {
-      this.showToast('Error deleting skill: ' + error.message, 'error');
-    } else {
-      await this.fetchSkills();
-      this.showToast(`Skill "${name}" deleted from catalog.`, 'success');
-    }
+    this.openConfirmDialog({
+      title: 'Delete Catalog Skill',
+      message: `Are you sure you want to delete "${name}" from the skills catalog?`,
+      confirmText: 'Delete Skill',
+      cancelText: 'Cancel',
+      type: 'danger',
+      icon: 'delete',
+      onConfirm: async () => {
+        const { error } = await this.skillService.deleteSkill(id);
+        if (error) {
+          this.showToast('Error deleting skill: ' + error.message, 'error');
+        } else {
+          await this.fetchSkills();
+          this.showToast(`Skill "${name}" deleted from catalog.`, 'success');
+        }
+      }
+    });
   }
 
   setSkillsSubView(view: 'my-skills' | 'catalog') {
@@ -624,25 +860,33 @@ export class App implements OnInit {
   }
 
   async removeSkillFromUserPortfolio(skillName: string) {
-    if (!confirm(`Are you sure you want to remove "${skillName}" from your developer skills? This will detach it from your projects.`)) return;
-
-    try {
-      let removedCount = 0;
-      for (const p of this.projects()) {
-        if (p.project_skills) {
-          for (const ps of p.project_skills) {
-            if (ps.skills?.name?.toLowerCase() === skillName.toLowerCase()) {
-              await this.skillService.removeSkillFromProject(p.id, ps.skill_id);
-              removedCount++;
+    this.openConfirmDialog({
+      title: 'Remove Skill from Portfolio',
+      message: `Are you sure you want to remove "${skillName}" from your active portfolio? This will detach it from your projects.`,
+      confirmText: 'Remove Skill',
+      cancelText: 'Keep Skill',
+      type: 'danger',
+      icon: 'delete',
+      onConfirm: async () => {
+        try {
+          let removedCount = 0;
+          for (const p of this.projects()) {
+            if (p.project_skills) {
+              for (const ps of p.project_skills) {
+                if (ps.skills?.name?.toLowerCase() === skillName.toLowerCase()) {
+                  await this.skillService.removeSkillFromProject(p.id, ps.skill_id);
+                  removedCount++;
+                }
+              }
             }
           }
+          await this.fetchProjects();
+          this.showToast(`Removed "${skillName}" from ${removedCount} project(s) in your portfolio.`, 'success');
+        } catch (err: any) {
+          this.showToast(`Failed to remove skill: ${err.message}`, 'error');
         }
       }
-      await this.fetchProjects();
-      this.showToast(`Removed "${skillName}" from ${removedCount} project(s) in your portfolio.`, 'success');
-    } catch (err: any) {
-      this.showToast(`Failed to remove skill: ${err.message}`, 'error');
-    }
+    });
   }
 
   // Career Roles & Skill Gap Operations
@@ -742,16 +986,60 @@ export class App implements OnInit {
       this.newProjectName = '';
       this.newProjectDesc = '';
       this.newProjectStatus = 'active';
+      this.showAddProjectForm.set(false);
       await this.fetchProjects();
       this.showToast(`Project "${proj}" created successfully!`, 'success');
     }
   }
 
-  async deleteProject(id: string) {
-    if (!confirm('Are you sure you want to delete this project?')) return;
-    await this.projectService.deleteProject(id);
-    await this.fetchProjects();
-    this.showToast('Project deleted from portfolio.', 'info');
+  toggleAddProjectForm() {
+    this.showAddProjectForm.update(v => !v);
+  }
+
+  setProjectStatusFilter(status: 'all' | 'active' | 'completed' | 'idea') {
+    this.projectStatusFilter.set(status);
+  }
+
+  clearProjectFilters() {
+    this.projectSearchQuery.set('');
+    this.projectStatusFilter.set('all');
+  }
+
+  getFilteredProjects(): any[] {
+    const q = (this.projectSearchQuery() || '').toLowerCase().trim();
+    const filter = this.projectStatusFilter();
+    return this.projects().filter(p => {
+      const matchesFilter = filter === 'all' || p.status === filter;
+      if (!matchesFilter) return false;
+      if (!q) return true;
+      const nameMatch = p.name?.toLowerCase().includes(q);
+      const descMatch = p.description?.toLowerCase().includes(q);
+      const skillMatch = p.project_skills?.some((ps: any) => ps.skills?.name?.toLowerCase().includes(q));
+      const mlMatch = this.mlPredictions()[p.id]?.predicted_category?.toLowerCase().includes(q);
+      return nameMatch || descMatch || skillMatch || mlMatch;
+    });
+  }
+
+  getProjectCountByStatus(status: 'all' | 'active' | 'completed' | 'idea'): number {
+    if (status === 'all') return this.projects().length;
+    return this.projects().filter(p => p.status === status).length;
+  }
+
+  deleteProject(id: string, projectName?: string) {
+    const name = projectName || this.projects().find(p => p.id === id)?.name || 'this project';
+    this.openConfirmDialog({
+      title: 'Delete Project',
+      message: `Are you sure you want to delete "${name}" from your portfolio? This action cannot be undone.`,
+      confirmText: 'Delete Project',
+      cancelText: 'Keep Project',
+      type: 'danger',
+      icon: 'delete',
+      onConfirm: async () => {
+        await this.projectService.deleteProject(id);
+        await this.fetchProjects();
+        this.showToast(`Project "${name}" deleted from portfolio.`, 'info');
+      }
+    });
   }
 
   async attachSkillToProject(projectId: string, skillId: string) {
@@ -764,12 +1052,29 @@ export class App implements OnInit {
     }
   }
 
-  async detachSkillFromProject(projectId: string, skillId: string) {
+  async detachSkillFromProject(projectId: string, skillId: string, skillName?: string) {
+    const proj = this.projects().find(p => p.id === projectId);
+    const sName = skillName || this.skills().find(s => s.id === skillId)?.name || 'Skill';
+
     const { error } = await this.skillService.removeSkillFromProject(projectId, skillId);
     if (error) {
       console.error('Skill detach error:', error);
+      this.showToast(`Failed to remove ${sName}: ${error.message}`, 'error');
     } else {
       await this.fetchProjects();
+      this.showToast(
+        `Detached "${sName}" from ${proj?.name || 'project'}`,
+        'info',
+        6000,
+        'Undo',
+        async () => {
+          const { error: attachErr } = await this.skillService.addSkillToProject(projectId, skillId);
+          if (!attachErr) {
+            await this.fetchProjects();
+            this.showToast(`Restored "${sName}" to ${proj?.name || 'project'}!`, 'success');
+          }
+        }
+      );
     }
   }
 
@@ -844,35 +1149,255 @@ export class App implements OnInit {
     if (!file) return;
 
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Please select a valid PDF file.');
+      this.showToast('Please select a valid PDF file.', 'warning');
       return;
     }
 
-    this.resumeParsing.set(true);
-    this.analyticsService.parseResume(file).subscribe({
-      next: (res) => {
-        this.resumeParsing.set(false);
-        this.resumeData.set(res);
-        alert(`Resume Parsed Successfully!\nExtracted ${res.extracted_skills.length} skills and ${res.extracted_projects.length} candidate projects.`);
-      },
-      error: (err) => {
-        this.resumeParsing.set(false);
-        alert('Resume Extraction Failed: ' + (err.error?.detail || err.message));
+    // Convert file to Base64 Data URL for viewing & saving to user cloud profile
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+
+      this.resumeParsing.set(true);
+      this.analyticsService.parseResume(file).subscribe({
+        next: async (res) => {
+          this.resumeParsing.set(false);
+          this.resumeData.set(res);
+
+          // If user is logged in, automatically save resume to user's Supabase profile
+          if (this.currentUser()) {
+            await this.saveResumeToUserCloud(file, dataUrl, res.extracted_skills?.length || 0);
+          } else {
+            // Unauthenticated: preview in local session only
+            this.savedResumeMeta.set({
+              fileName: file.name,
+              uploadedAt: new Date().toISOString(),
+              dataUrl: dataUrl,
+              extractedSkillsCount: res.extracted_skills?.length || 0
+            });
+            this.resumePdfUrlSafe.set(this.formatPdfViewerUrl(dataUrl));
+          }
+
+          this.showToast(`Resume Parsed Successfully! Extracted ${res.extracted_skills.length} skills.`, 'success');
+        },
+        error: (err) => {
+          this.resumeParsing.set(false);
+          this.showToast('Resume Extraction Failed: ' + (err.error?.detail || err.message), 'error');
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async saveResumeToUserCloud(file: File, dataUrl: string, skillsCount: number) {
+    const user = this.currentUser();
+    if (!user) return;
+    this.isSavingResume.set(true);
+
+    let publicUrl = null;
+    const { publicUrl: url, error: uploadErr } = await this.authService.uploadResume(file, user.id);
+    if (uploadErr) {
+      this.showToast('Warning: Could not upload PDF to storage. Preview may be unavailable.', 'warning');
+    } else {
+      publicUrl = url;
+    }
+
+    const resumePayload = {
+      fileName: file.name,
+      uploadedAt: new Date().toISOString(),
+      extractedSkillsCount: skillsCount,
+      dataUrl: publicUrl // Store the public Supabase Storage URL instead of Base64!
+    };
+
+    try {
+      const { data, error } = await this.authService.updateUserData({
+        portfolio_resume: resumePayload
+      });
+
+      if (error) {
+        console.error('Error saving resume to Supabase cloud profile:', error);
+        this.showToast('Failed to save resume to cloud: ' + error.message, 'error');
+      } else {
+        this.savedResumeMeta.set(resumePayload);
+        this.resumePdfUrlSafe.set(this.formatPdfViewerUrl(publicUrl || dataUrl));
+        this.showToast('Resume permanently saved to your cloud profile!', 'success');
+      }
+    } catch (err: any) {
+      console.error('Save resume error:', err);
+    } finally {
+      this.isSavingResume.set(false);
+    }
+  }
+
+  openResumeViewer() {
+    const dataUrl = this.savedResumeMeta()?.dataUrl;
+    if (!dataUrl) {
+      this.showToast('No saved resume found to display.', 'warning');
+      return;
+    }
+    this.resumePdfUrlSafe.set(this.formatPdfViewerUrl(dataUrl));
+    this.showResumeModal.set(true);
+  }
+
+  closeResumeViewer() {
+    this.showResumeModal.set(false);
+  }
+
+  deleteSavedResume() {
+    this.openConfirmDialog({
+      title: 'Delete Cloud Resume',
+      message: 'Are you sure you want to remove your saved resume PDF from your cloud profile?',
+      confirmText: 'Delete Resume',
+      cancelText: 'Cancel',
+      type: 'danger',
+      icon: 'delete',
+      onConfirm: async () => {
+        if (this.currentUser()) {
+          const { error } = await this.authService.updateUserData({
+            portfolio_resume: null
+          });
+          if (error) {
+            this.showToast('Failed to delete resume: ' + error.message, 'error');
+            return;
+          }
+        }
+
+        this.savedResumeMeta.set(null);
+        this.resumePdfUrlSafe.set(null);
+        this.resumeData.set(null);
+        this.showToast('Resume deleted from your cloud profile.', 'info');
       }
     });
   }
 
-  async importExtractedSkill(skillName: string) {
-    const existing = this.skills().find(s => s.name.toLowerCase() === skillName.toLowerCase());
-    if (existing) return;
+  isResumeSkillInPortfolio(skillName: string): boolean {
+    return this.getUserSkillNames().some(s => s.toLowerCase() === skillName.toLowerCase());
+  }
 
-    await this.skillService.createSkill(skillName, 'Extracted Skill');
-    await this.fetchSkills();
+  private async getOrCreateResumeProject(): Promise<any> {
+    const RESUME_PROJECT_NAME = '📄 Verified Resume Skills (NLP Extracted)';
+    const existing = this.projects().find(p => p.name.toLowerCase() === RESUME_PROJECT_NAME.toLowerCase());
+    if (existing) return existing;
+
+    const { data, error } = await this.projectService.createProject(
+      RESUME_PROJECT_NAME,
+      'Automatically created to verify technical competencies extracted from candidate PDF resume.'
+    );
+    if (error) {
+      console.error('Failed to create resume project:', error);
+      throw error;
+    }
+    return data;
+  }
+
+  async importExtractedSkill(skillName: string) {
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+
+    try {
+      // 1. Ensure skill exists in global catalog or insert it
+      let skillObj = this.skills().find(s => s.name.toLowerCase() === skillName.toLowerCase());
+      if (!skillObj) {
+        const { data: createdSkill, error } = await this.skillService.createSkill(skillName, 'Extracted Skill');
+        if (error) {
+          this.showToast(`Failed to register skill ${skillName}: ${error.message}`, 'error');
+          return;
+        }
+        skillObj = createdSkill;
+        await this.fetchSkills();
+      }
+
+      // 2. Attach to user's resume project
+      const resumeProject = await this.getOrCreateResumeProject();
+      if (!resumeProject || !skillObj) return;
+
+      // Check if already attached to this project
+      const alreadyAttached = (resumeProject.project_skills || []).some(
+        (ps: any) => ps.skill_id === skillObj.id || ps.skills?.name?.toLowerCase() === skillName.toLowerCase()
+      );
+
+      if (!alreadyAttached) {
+        await this.skillService.addSkillToProject(resumeProject.id, skillObj.id);
+        await this.fetchProjects();
+        this.showToast(`Added "${skillName}" to your portfolio skills!`, 'success');
+      } else {
+        this.showToast(`"${skillName}" is already active in your portfolio.`, 'info');
+      }
+    } catch (err: any) {
+      this.showToast(`Error adding skill: ${err.message}`, 'error');
+    }
+  }
+
+  async syncAllResumeSkillsToPortfolio() {
+    const resData = this.resumeData();
+    if (!resData || !resData.extracted_skills || resData.extracted_skills.length === 0) {
+      this.showToast('No extracted skills available to sync.', 'warning');
+      return;
+    }
+
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+
+    this.syncingResumeSkills.set(true);
+
+    try {
+      // 1. Get or create Resume container project
+      const resumeProj = await this.getOrCreateResumeProject();
+      if (!resumeProj) throw new Error('Could not initialize resume portfolio record.');
+
+      // 2. Map existing global skills
+      const skillMap = new Map<string, string>();
+      for (const s of this.skills()) {
+        skillMap.set(s.name.toLowerCase(), s.id);
+      }
+
+      // 3. Existing project skill ids
+      const attachedSkillIds = new Set<string>(
+        (resumeProj.project_skills || []).map((ps: any) => ps.skill_id)
+      );
+
+      let addedCount = 0;
+
+      for (const skillName of resData.extracted_skills) {
+        let skillId = skillMap.get(skillName.toLowerCase());
+
+        // Create if missing in global catalog
+        if (!skillId) {
+          const { data: created, error } = await this.skillService.createSkill(skillName, 'Extracted Skill');
+          if (!error && created) {
+            skillId = created.id;
+            skillMap.set(skillName.toLowerCase(), created.id);
+          }
+        }
+
+        // Attach to user's resume project if not yet attached
+        if (skillId && !attachedSkillIds.has(skillId)) {
+          const { error: attachErr } = await this.skillService.addSkillToProject(resumeProj.id, skillId);
+          if (!attachErr) {
+            attachedSkillIds.add(skillId);
+            addedCount++;
+          }
+        }
+      }
+
+      await this.fetchSkills();
+      await this.fetchProjects();
+
+      this.showToast(`Successfully synced ${resData.extracted_skills.length} resume skills to your developer portfolio!`, 'success');
+    } catch (err: any) {
+      this.showToast(`Failed to sync resume skills: ${err.message}`, 'error');
+    } finally {
+      this.syncingResumeSkills.set(false);
+    }
   }
 
   async importExtractedProject(proj: any) {
     if (!this.currentUser()) {
-      alert('Please login first to import projects into your portfolio.');
+      this.openAuthModal('login');
       return;
     }
 
@@ -882,7 +1407,7 @@ export class App implements OnInit {
     );
 
     if (error) {
-      alert('Failed to import project: ' + error.message);
+      this.showToast('Failed to import project: ' + error.message, 'error');
       return;
     }
 
@@ -896,7 +1421,7 @@ export class App implements OnInit {
     }
 
     await this.fetchProjects();
-    alert(`Imported project "${proj.name}"!`);
+    this.showToast(`Imported project "${proj.name}"!`, 'success');
   }
 
   // Portfolio Optimization Handlers (Stage 11)
@@ -927,14 +1452,15 @@ export class App implements OnInit {
       },
       error: (err) => {
         this.isOptimizing.set(false);
-        alert('Optimization Failed: ' + (err.error?.detail || err.message));
+        this.showToast('Optimization Failed: ' + (err.error?.detail || err.message), 'error');
       }
     });
   }
 
   async adoptRecommendedProject(rec: RecommendedProject) {
     if (!this.currentUser()) {
-      alert('Please login first to adopt this project into your portfolio.');
+      this.openAuthModal('login');
+      this.showToast('Please sign in first to adopt this project into your portfolio.', 'warning');
       return;
     }
 
@@ -944,7 +1470,7 @@ export class App implements OnInit {
     );
 
     if (error) {
-      alert('Failed to add project: ' + error.message);
+      this.showToast('Failed to add project: ' + error.message, 'error');
       return;
     }
 
@@ -966,7 +1492,7 @@ export class App implements OnInit {
     }
 
     await this.fetchProjects();
-    alert(`🎉 Successfully added "${rec.title}" to your active projects! Check the Projects tab.`);
+    this.showToast(`Successfully added "${rec.title}" to your active projects! Check the Projects tab.`, 'success');
   }
 
   // =========================================================================
@@ -1144,13 +1670,24 @@ export class App implements OnInit {
   }
 
   clearCoachChat() {
-    this.coachMessages.set([
-      {
-        role: 'assistant',
-        content: "Chat cleared! How can I help you elevate your developer portfolio today?",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    this.openConfirmDialog({
+      title: 'Clear AI Coach Chat',
+      message: 'Are you sure you want to reset and clear your conversation history with the AI Coach?',
+      confirmText: 'Clear Chat',
+      cancelText: 'Keep Chat',
+      type: 'danger',
+      icon: 'warning',
+      onConfirm: () => {
+        this.coachMessages.set([
+          {
+            role: 'assistant',
+            content: "Chat cleared! How can I help you elevate your developer portfolio today?",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
+        this.showToast('AI Coach conversation cleared.', 'info');
       }
-    ]);
+    });
   }
 
   // GitHub Integration Handlers (Stage 14)
@@ -1162,7 +1699,9 @@ export class App implements OnInit {
   }
 
   scanGitHub(username?: string) {
-    const user = (username || this.githubUsername).trim();
+    const raw = (username || this.githubUsername || '').trim();
+    // Strip URL prefixes (https://github.com/), github.com/, leading @, and whitespace
+    const user = raw.replace(/^https?:\/\/github\.com\//i, '').replace(/^github\.com\//i, '').replace(/^@+/, '').trim();
     if (!user || this.isScanningGitHub()) return;
     this.githubUsername = user;
     this.isScanningGitHub.set(true);
@@ -1283,18 +1822,22 @@ export class App implements OnInit {
       for (const skillName of (repo.detected_skills || [])) {
         let skillId = existingSkillMap.get(skillName.toLowerCase());
         if (!skillId) {
-          const { data: newSkill } = await this.skillService.createSkill(skillName, 'Technology');
-          if (newSkill && (newSkill as any).id) {
-            const createdId = String((newSkill as any).id);
-            skillId = createdId;
-            existingSkillMap.set(skillName.toLowerCase(), createdId);
+          try {
+            const { data: newSkill } = await this.skillService.createSkill(skillName, 'Technology');
+            if (newSkill && (newSkill as any).id) {
+              const createdId = String((newSkill as any).id);
+              skillId = createdId;
+              existingSkillMap.set(skillName.toLowerCase(), createdId);
+            }
+          } catch (e) {
+            console.warn('Skill create warning:', skillName, e);
           }
         }
         if (skillId) {
-          const { error: attachErr } = await this.skillService.addSkillToProject(newProject.id, skillId);
-          if (attachErr) {
-            console.error('Failed to attach skill:', skillName, attachErr);
-            throw new Error(`Failed to attach skill ${skillName}: ${attachErr.message}`);
+          try {
+            await this.skillService.addSkillToProject(newProject.id, skillId);
+          } catch (e) {
+            console.warn('Skill attach warning:', skillName, e);
           }
         }
       }
@@ -1303,7 +1846,9 @@ export class App implements OnInit {
       await this.fetchProjects();
 
       this.githubImportSuccessMsg.set(`Successfully imported "${repo.name}" with ${repo.detected_skills?.length || 0} skills into your portfolio!`);
+      this.showToast(`Imported ${repo.name}!`, 'success');
     } catch (err: any) {
+      console.error('Import repo error:', err);
       this.githubError.set(err.message || 'Import failed.');
     } finally {
       this.importingRepoId.set(null);
@@ -1341,22 +1886,36 @@ export class App implements OnInit {
     const unimported = data.repos.filter(r => !this.isRepoAlreadyImported(r.name));
     if (unimported.length === 0) {
       this.githubImportSuccessMsg.set('All scanned repositories are already in your portfolio!');
+      this.showToast('All scanned repositories are already imported!', 'info');
       return;
     }
 
     this.githubImportSuccessMsg.set(`Importing ${unimported.length} repositories...`);
     let count = 0;
     for (const repo of unimported) {
-      await this.importRepoToPortfolio(repo);
-      count++;
+      try {
+        await this.importRepoToPortfolio(repo);
+        count++;
+      } catch (e) {
+        console.warn('Batch import error for', repo.name, e);
+      }
     }
+    await this.fetchSkills();
+    await this.fetchProjects();
     this.githubImportSuccessMsg.set(`Batch import complete! Added ${count} new repositories to your portfolio.`);
+    this.showToast(`Successfully imported ${count} repositories!`, 'success');
   }
 
   // Stage 15: System Telemetry, Toasts, and Export Handlers
-  showToast(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', durationMs = 3800) {
+  showToast(
+    message: string, 
+    type: 'success' | 'error' | 'info' | 'warning' = 'info', 
+    durationMs = 3800,
+    actionLabel?: string,
+    onAction?: () => void
+  ) {
     const id = ++this.toastCounter;
-    this.toasts.update(current => [...current, { id, message, type }]);
+    this.toasts.update(current => [...current, { id, message, type, actionLabel, onAction }]);
     setTimeout(() => {
       this.dismissToast(id);
     }, durationMs);

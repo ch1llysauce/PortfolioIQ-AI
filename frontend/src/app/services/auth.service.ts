@@ -40,7 +40,19 @@ export class AuthService {
         return await this.supabase.auth.signOut();
     }
 
+    async getSession() {
+        const { data: { session } } = await this.supabase.auth.getSession();
+        return session;
+    }
+
     async getUser() {
+        // 1. Check active session first (synchronous cache, handles OAuth hash redirect tokens)
+        const session = await this.getSession();
+        if (session?.user) {
+            return session.user;
+        }
+
+        // 2. Server-side validation fallback
         const {
             data: { user }
         } = await this.supabase.auth.getUser();
@@ -65,6 +77,12 @@ export class AuthService {
     async updateUserPassword(newPassword: string) {
         return await this.supabase.auth.updateUser({
             password: newPassword
+        });
+    }
+
+    async updateUserData(data: any) {
+        return await this.supabase.auth.updateUser({
+            data: data
         });
     }
 
@@ -108,5 +126,21 @@ export class AuthService {
         return this.supabase.auth.onAuthStateChange((event, session) => {
             callback(event, session);
         });
+    }
+
+    async exchangeCodeForSession(code: string) {
+        return await this.supabase.auth.exchangeCodeForSession(code);
+    }
+
+    async uploadResume(file: File, userId: string): Promise<{ publicUrl: string | null; error: any }> {
+        const filePath = `${userId}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await this.supabase.storage
+            .from('resumes')
+            .upload(filePath, file, { upsert: true });
+            
+        if (uploadError) return { publicUrl: null, error: uploadError };
+        
+        const { data } = this.supabase.storage.from('resumes').getPublicUrl(filePath);
+        return { publicUrl: data.publicUrl, error: null };
     }
 }

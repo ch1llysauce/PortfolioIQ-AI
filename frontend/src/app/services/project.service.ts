@@ -43,6 +43,9 @@ export class ProjectService {
   }
 
   async getProjects() {
+    // Ensure active auth session is hydrated before querying RLS-protected projects
+    await this.supabase.auth.getSession();
+
     // 1. Fetch user projects
     const { data: projects, error: projectsError } = await this.supabase
       .from('projects')
