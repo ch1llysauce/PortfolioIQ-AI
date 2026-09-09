@@ -2,15 +2,28 @@ import re
 import io
 from typing import List, Dict, Any
 from pypdf import PdfReader
+from app.knowledge.entity_extractor import extract_entities_from_text, _load_knowledge_entities
 
-# Master skill dictionary for keyword matching
+# Comprehensive master skill dictionary for keyword matching
 KNOWN_SKILLS = [
-    "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "PHP", "Ruby", "Go", "Rust", "Swift", "Kotlin",
-    "Angular", "React", "Vue", "Next.js", "Express", "FastAPI", "Django", "Flask", "Spring Boot", "Laravel",
-    "PostgreSQL", "MySQL", "MongoDB", "Supabase", "Firebase", "Redis", "SQLite", "Oracle",
+    "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "PHP", "Ruby", "Go", "Rust", "Swift", "Kotlin", "Dart",
+    "Angular", "React", "React Native", "Vue", "Next.js", "Express", "Express.js", "FastAPI", "Django", "Flask", "Spring Boot", "Laravel", "NestJS",
+    "PostgreSQL", "MySQL", "MongoDB", "Supabase", "Firebase", "Firestore", "Redis", "SQLite", "Oracle", "SQL",
     "Machine Learning", "Deep Learning", "Data Science", "Artificial Intelligence", "NLP", "Computer Vision",
-    "Git", "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Linux", "CI/CD", "HTML", "CSS", "Tailwind", "Bootstrap"
+    "Git", "GitHub", "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Linux", "CI/CD", "HTML", "CSS", "HTML5", "CSS3",
+    "Tailwind", "Tailwind CSS", "Bootstrap", "Flutter", "Expo", "Vite", "Postman", "Vercel", "VS Code", "PWA",
+    "Responsive Web Design", "RESTful APIs", "REST API", "Agile / Scrum", "Problem Solving", "Code Reviews", "Technical Documentation", "Adaptability",
+    "Software Engineering"
 ]
+
+def _contains_word(text: str, term: str) -> bool:
+    """
+    Non-alphanumeric boundary matching that safely handles special characters
+    like C++, C#, .NET, CI/CD, React.js, etc. without regex word boundary \b failures.
+    """
+    escaped = re.escape(term.lower())
+    pattern = rf"(?<![a-zA-Z0-9_]){escaped}(?![a-zA-Z0-9_])"
+    return bool(re.search(pattern, text, re.IGNORECASE))
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """Extracts plain text content from PDF file bytes using pypdf."""
@@ -24,24 +37,33 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
 
 def parse_resume(pdf_bytes: bytes) -> Dict[str, Any]:
     """
-    Parses a PDF resume, extracting matched technical skills and candidate projects.
+    Parses a PDF resume, extracting matched technical skills and candidate projects
+    using both NLP knowledge extraction and symbol-safe keyword scanning.
+    All synonyms (e.g. RESTful APIs -> REST API) are canonicalized.
     """
     text = extract_text_from_pdf(pdf_bytes)
     
-    # 1. Match Skills
+    knowledge = _load_knowledge_entities()
+    aliases = knowledge.get("aliases", {})
+    
+    # 1. Match Skills via NLP Entity Extractor
     found_skills = set()
-    text_lower = text.lower()
-    
-    for skill in KNOWN_SKILLS:
-        # Use regex word boundaries for accurate keyword matching (avoid matching 'c' in 'cat')
-        pattern = r'\b' + re.escape(skill.lower()) + r'\b'
-        if re.search(pattern, text_lower):
-            found_skills.add(skill)
+    try:
+        nlp_res = extract_entities_from_text(text)
+        for s in nlp_res.get("skills", []) + nlp_res.get("technologies", []):
+            canonical = aliases.get(s.lower(), s)
+            found_skills.add(canonical)
+    except Exception:
+        pass
 
-    # 2. Extract Candidate Projects / Key Sections
+    # 2. Match Skills via symbol-safe boundary matching
+    for skill in KNOWN_SKILLS:
+        if _contains_word(text, skill):
+            canonical = aliases.get(skill.lower(), skill)
+            found_skills.add(canonical)
+
+    # 3. Extract Candidate Projects / Key Sections
     extracted_projects = []
-    
-    # Simple heuristic to find project blocks
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     in_project_section = False
     current_project = None
@@ -86,11 +108,11 @@ def parse_resume(pdf_bytes: bytes) -> Dict[str, Any]:
     if current_project:
         extracted_projects.append(current_project)
 
-    # Match skills per project description
+    # Match skills per project description with symbol-safe matching
     for proj in extracted_projects:
-        proj_text = (proj["name"] + " " + proj["description"]).lower()
-        proj_skills = [s for s in found_skills if re.search(r'\b' + re.escape(s.lower()) + r'\b', proj_text)]
-        proj["detected_skills"] = proj_skills
+        proj_text = proj["name"] + " " + proj["description"]
+        proj_skills = [s for s in found_skills if _contains_word(proj_text, s)]
+        proj["detected_skills"] = sorted(proj_skills)
 
     return {
         "extracted_skills": sorted(list(found_skills)),
