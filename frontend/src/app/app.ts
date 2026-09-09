@@ -1,7 +1,7 @@
-import { Component, signal, OnInit, HostListener } from '@angular/core';
+import { Component, signal, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 
 import { ApiService } from './services/api.service';
 import { AuthService } from './services/auth.service';
@@ -83,6 +83,13 @@ export class App implements OnInit {
   // Modal Analysis State
   activeAnalysisProject = signal<any | null>(null);
 
+  // Edit Project Modal State
+  editingProject = signal<any | null>(null);
+  editProjectName = '';
+  editProjectDesc = '';
+  editProjectStatus: 'idea' | 'active' | 'completed' = 'active';
+  isSavingProjectEdit = signal<boolean>(false);
+
   // Auth Modal State
   showAuthModal = signal<boolean>(false);
   authMode = signal<'login' | 'register' | 'forgot'>('login');
@@ -105,20 +112,33 @@ export class App implements OnInit {
   
   newProjectName = '';
   newProjectDesc = '';
-  newProjectStatus = 'active';
+  newProjectStatus: 'idea' | 'active' | 'completed' = 'idea';
+  repoImportStatuses = signal<{ [repoId: string]: 'completed' | 'active' | 'idea' }>({});
+  expandedProjectSkills = signal<{ [projectId: string]: boolean }>({});
+  expandedProjectDescs = signal<{ [projectId: string]: boolean }>({});
   showAddProjectForm = signal<boolean>(false);
   projectSearchQuery = signal<string>('');
   projectStatusFilter = signal<'all' | 'active' | 'completed' | 'idea'>('all');
+  highlightedProjectId = signal<string>('');
   
   newSkillName = '';
   newSkillCategory = 'Programming Language';
   skillsSubView = signal<'my-skills' | 'catalog'>('my-skills');
+  skillSearchQuery = signal<string>('');
+  skillCategoryFilter = signal<string>('all');
 
   // Resume Parser Operations
   resumeParsing = signal<boolean>(false);
   resumeData = signal<any>(null);
   syncingResumeSkills = signal<boolean>(false);
-  savedResumeMeta = signal<{ fileName: string; uploadedAt: string; dataUrl?: string | null; extractedSkillsCount?: number } | null>(null);
+  savedResumeMeta = signal<{
+    fileName: string;
+    uploadedAt: string;
+    dataUrl?: string | null;
+    extractedSkillsCount?: number;
+    extracted_skills?: string[];
+    extracted_projects?: any[];
+  } | null>(null);
   showResumeModal = signal<boolean>(false);
   resumePdfUrlSafe = signal<SafeResourceUrl | null>(null);
   isSavingResume = signal<boolean>(false);
@@ -127,10 +147,15 @@ export class App implements OnInit {
   optimizationResult = signal<OptimizationResponse | null>(null);
   isOptimizing = signal<boolean>(false);
   effortBudgetHours = signal<number>(80);
+  isGeneratingCustomBlueprint = signal<boolean>(false);
+  customAiBlueprint = signal<RecommendedProject | null>(null);
+  activeBlueprintView = signal<'curated' | 'ai_custom'>('curated');
 
   // Knowledge Graph & Representation Operations (Stage 12)
   knowledgeGraphData = signal<KnowledgeGraphData | null>(null);
-  selectedKnowledgeRole = signal<string>('AI Engineer');
+  selectedKnowledgeRole = signal<string>(
+    typeof localStorage !== 'undefined' ? (localStorage.getItem('portfolioiq_selected_knowledge_role') || '') : ''
+  );
   roleSkillTree = signal<RoleSkillTreeResponse | null>(null);
   inspectedNodeName = signal<string>('');
   inspectedNodePrereqs = signal<any[]>([]);
@@ -139,13 +164,14 @@ export class App implements OnInit {
   goalSkillInput = signal<string>('Kubernetes');
   goalSkillRoadmap = signal<LearningPathResponse | null>(null);
   isLoadingKnowledge = signal<boolean>(false);
+  isEvaluatingLearningPath = signal<boolean>(false);
   knowledgeViewMode = signal<'tree' | 'inspector' | 'path'>('tree');
 
   // Groq AI Developer Coach Operations (Stage 13)
   coachMessages = signal<ChatMessage[]>([
     {
       role: 'assistant',
-      content: "👋 Hello! I'm your **PortfolioIQ AI Developer Coach** powered by Groq Llama-3.\n\nI have real-time access to your portfolio health score, verified skills, active projects, and Knowledge Graph roadmaps. Ask me anything: how to improve your projects, what skills to prioritize next, or how to break into your target role!",
+      content: "Hello! I'm your **PortfolioIQ AI Developer Coach** powered by Groq Llama-3.\n\nI have real-time access to your portfolio health score, verified skills, active projects, and Knowledge Graph roadmaps. Ask me anything: how to improve your projects, what skills to prioritize next, or how to break into your target role!",
       timestamp: 'Just now'
     }
   ]);
@@ -153,10 +179,12 @@ export class App implements OnInit {
   coachInput = '';
   coachStatus = signal<CoachStatus | null>(null);
   suggestedFollowups = signal<string[]>([
-    '📊 Critique my developer portfolio',
-    '💡 Suggest 3 projects for my skill gaps',
-    '⚡ What should I learn next?'
+    'Critique my developer portfolio',
+    'Suggest 3 projects for my skill gaps',
+    'What should I learn next?'
   ]);
+  @ViewChild('chatStream') chatStreamRef?: ElementRef<HTMLDivElement>;
+  coachScrollTop: number = -1;
 
   // GitHub Integration Operations (Stage 14)
   linkedGitHubUsername = signal<string>('');
@@ -173,10 +201,15 @@ export class App implements OnInit {
   importingRepoId = signal<string | null>(null);
   githubImportSuccessMsg = signal<string>('');
   githubError = signal<string>('');
+  githubRepoSearchQuery = signal<string>('');
+  githubRepoFilter = signal<'all' | 'not_imported' | 'imported'>('all');
+  githubRepoDomainFilter = signal<string>('all');
+  expandedSkillMap = signal<{ [skillName: string]: boolean }>({});
 
   // System Diagnostics & Toast Notifications (Stage 15)
   systemTelemetry = signal<SystemTelemetryResponse | null>(null);
   showTelemetryModal = signal<boolean>(false);
+  showScoreInfoModal = signal<boolean>(false);
   isLoadingTelemetry = signal<boolean>(false);
   toasts = signal<ToastItem[]>([]);
   private toastCounter = 0;
@@ -232,6 +265,7 @@ export class App implements OnInit {
     await this.loadInitialData();
     this.loadInitialKnowledgeData();
     this.loadCoachStatus();
+    this.loadCoachMessages();
     this.loadGitHubStatus();
     this.fetchSystemTelemetry();
   }
@@ -301,10 +335,22 @@ export class App implements OnInit {
   }
 
   setTab(tabName: string) {
+    // If currently on coach tab, save exact scroll position
+    if (this.activeTab() === 'coach') {
+      const el = this.chatStreamRef?.nativeElement || (document.querySelector('.chat-message-stream') as HTMLDivElement);
+      if (el) {
+        this.coachScrollTop = el.scrollTop;
+      }
+    }
+
     this.activeTab.set(tabName);
     this.closeMobileSidebar();
+
     if (tabName === 'github') {
       this.loadGitHubStatus();
+    }
+    if (tabName === 'coach') {
+      this.restoreCoachScrollPosition();
     }
   }
 
@@ -782,19 +828,701 @@ export class App implements OnInit {
     this.showToast('You have been signed out.', 'info');
   }
 
+  getUserDisplayName(): string {
+    const u = this.currentUser();
+    if (!u) return 'Developer';
+    return u.user_metadata?.display_name 
+      || u.user_metadata?.full_name 
+      || u.user_metadata?.name 
+      || (u.email ? u.email.split('@')[0] : 'Developer');
+  }
+
+  getUserInitial(): string {
+    const name = this.getUserDisplayName();
+    return name.charAt(0).toUpperCase();
+  }
+
   // Skills Operations
+  getCanonicalSkillName(rawName: string): string {
+    if (!rawName) return '';
+    const trimmed = rawName.trim();
+    const lower = trimmed.toLowerCase();
+
+    const aliasMap: { [key: string]: string } = {
+      // Programming Languages
+      'js': 'JavaScript',
+      'javascript': 'JavaScript',
+      'es6': 'JavaScript',
+      'ts': 'TypeScript',
+      'typescript': 'TypeScript',
+      'advanced typescript patterns': 'TypeScript',
+      'advanced typescript': 'TypeScript',
+      'typescript patterns': 'TypeScript',
+      'py': 'Python',
+      'python': 'Python',
+      'python3': 'Python',
+      'cpp': 'C++',
+      'c++': 'C++',
+      'cplusplus': 'C++',
+      'csharp': 'C#',
+      'c#': 'C#',
+      'golang': 'Go',
+      'go': 'Go',
+      'dart': 'Dart',
+      'java': 'Java',
+      'php': 'PHP',
+      'ruby': 'Ruby',
+      'rust': 'Rust',
+      'swift': 'Swift',
+      'kotlin': 'Kotlin',
+      'r': 'R',
+      'scala': 'Scala',
+      'solidity': 'Solidity',
+      'sql': 'SQL',
+
+      // Frontend
+      'html': 'HTML/CSS',
+      'css': 'HTML/CSS',
+      'html5': 'HTML/CSS',
+      'css3': 'HTML/CSS',
+      'html/css': 'HTML/CSS',
+      'tailwind': 'Tailwind CSS',
+      'tailwindcss': 'Tailwind CSS',
+      'tailwind css': 'Tailwind CSS',
+      'bootstrap': 'Bootstrap',
+      'sass': 'Sass',
+      'scss': 'Sass',
+      'jquery': 'jQuery',
+      'responsive web design': 'Responsive Web Design',
+      'pwa': 'PWA',
+      'progressive web app': 'PWA',
+      'progressive web apps': 'PWA',
+
+      // Frameworks
+      'react': 'React',
+      'reactjs': 'React',
+      'react.js': 'React',
+      'react native': 'React Native',
+      'angular': 'Angular',
+      'angularjs': 'Angular',
+      'angular.js': 'Angular',
+      'vue': 'Vue.js',
+      'vuejs': 'Vue.js',
+      'vue.js': 'Vue.js',
+      'next': 'Next.js',
+      'nextjs': 'Next.js',
+      'next.js': 'Next.js',
+      'nuxt': 'Nuxt.js',
+      'nuxtjs': 'Nuxt.js',
+      'nuxt.js': 'Nuxt.js',
+      'svelte': 'Svelte',
+      'fastapi': 'FastAPI',
+      'fast api': 'FastAPI',
+      'express': 'Express.js',
+      'expressjs': 'Express.js',
+      'express.js': 'Express.js',
+      'django': 'Django',
+      'flask': 'Flask',
+      'spring': 'Spring Boot',
+      'spring boot': 'Spring Boot',
+      'springboot': 'Spring Boot',
+      'laravel': 'Laravel',
+      'nestjs': 'NestJS',
+      'nest': 'NestJS',
+      'node': 'Node.js',
+      'nodejs': 'Node.js',
+      'node.js': 'Node.js',
+      'flutter': 'Flutter',
+      'asp.net': 'ASP.NET Core',
+      'asp.net core': 'ASP.NET Core',
+      '.net': 'ASP.NET Core',
+      '.net core': 'ASP.NET Core',
+      'dotnet': 'ASP.NET Core',
+      'ruby on rails': 'Ruby on Rails',
+      'rails': 'Ruby on Rails',
+
+      // Databases
+      'sqlite': 'SQLite',
+      'sqlite3': 'SQLite',
+      'postgresql': 'PostgreSQL',
+      'postgres': 'PostgreSQL',
+      'mysql': 'MySQL',
+      'mongodb': 'MongoDB',
+      'mongo': 'MongoDB',
+      'supabase': 'Supabase',
+      'firebase': 'Firebase',
+      'firestore': 'Firestore',
+      'firebase firestore': 'Firebase Firestore',
+      'redis': 'Redis',
+      'oracle': 'Oracle',
+      'mariadb': 'MariaDB',
+      'cassandra': 'Cassandra',
+      'dynamodb': 'DynamoDB',
+      'chromadb': 'ChromaDB',
+      'pinecone': 'Pinecone',
+      'prisma': 'Prisma',
+      'typeorm': 'TypeORM',
+      'mongoose': 'Mongoose',
+      'relational database': 'Relational Database Design',
+      'relational database design': 'Relational Database Design',
+      'vector databases': 'Vector Databases',
+
+      // Tools & DevOps
+      'git': 'Git',
+      'github': 'GitHub',
+      'gh': 'GitHub',
+      'gitlab': 'GitLab',
+      'docker': 'Docker',
+      'docker compose': 'Docker',
+      'kubernetes': 'Kubernetes',
+      'k8s': 'Kubernetes',
+      'ci/cd': 'CI/CD',
+      'cicd': 'CI/CD',
+      'ci/cd pipeline automation': 'CI/CD',
+      'ci/cd pipeline': 'CI/CD',
+      'pipeline automation': 'CI/CD',
+      'github actions': 'GitHub Actions',
+      'aws': 'AWS (Amazon Web Services)',
+      'azure': 'Microsoft Azure',
+      'gcp': 'Google Cloud Platform (GCP)',
+      'google cloud': 'Google Cloud Platform (GCP)',
+      'linux': 'Linux',
+      'ubuntu': 'Linux',
+      'nginx': 'Nginx',
+      'apache': 'Apache',
+      'terraform': 'Terraform',
+      'ansible': 'Ansible',
+      'jenkins': 'Jenkins',
+      'postman': 'Postman',
+      'vercel': 'Vercel',
+      'netlify': 'Netlify',
+      'heroku': 'Heroku',
+      'vite': 'Vite',
+      'expo': 'Expo',
+      'vs code': 'VS Code',
+      'vscode': 'VS Code',
+      'visual studio code': 'VS Code',
+      'devops': 'DevOps',
+      'production monitoring & observability': 'Observability & Monitoring',
+      'monitoring & observability': 'Observability & Monitoring',
+      'observability': 'Observability & Monitoring',
+      'security best practices (owasp)': 'Cybersecurity',
+      'security best practices': 'Cybersecurity',
+
+      // Backend & Architecture
+      'rest': 'REST API',
+      'restful': 'REST API',
+      'rest api': 'REST API',
+      'restful api': 'REST API',
+      'restful apis': 'REST API',
+      'rest apis': 'REST API',
+      'restful api design': 'REST API',
+      'rest api design': 'REST API',
+      'api design': 'REST API',
+      'graphql': 'GraphQL',
+      'microservices': 'Microservices',
+      'microservice': 'Microservices',
+      'websockets': 'WebSockets',
+      'grpc': 'gRPC',
+      'backend development': 'Backend Development',
+
+      // Computer Science
+      'data structures': 'Data Structures & Algorithms',
+      'algorithms': 'Data Structures & Algorithms',
+      'dsa': 'Data Structures & Algorithms',
+      'data structures & algorithms': 'Data Structures & Algorithms',
+      'software engineering': 'Software Engineering',
+      'system design': 'System Design',
+      'system design & scalability': 'System Design',
+      'scalability': 'System Design',
+      'system architecture': 'System Design',
+
+      // AI & Data Science
+      'machine learning': 'Machine Learning',
+      'ml': 'Machine Learning',
+      'deep learning': 'Deep Learning',
+      'artificial intelligence': 'Artificial Intelligence',
+      'ai': 'Artificial Intelligence',
+      'nlp': 'NLP',
+      'computer vision': 'Computer Vision',
+      'computer vision integration': 'Computer Vision',
+      'pytorch': 'PyTorch',
+      'tensorflow': 'TensorFlow',
+      'keras': 'Keras',
+      'scikit-learn': 'Scikit-Learn',
+      'pandas': 'Pandas',
+      'numpy': 'NumPy',
+      'matplotlib': 'Matplotlib',
+      'seaborn': 'Seaborn',
+      'data science': 'Data Science',
+      'data engineering': 'Data Engineering',
+      'rag': 'Retrieval-Augmented Generation (RAG)',
+      'retrieval-augmented generation': 'Retrieval-Augmented Generation (RAG)',
+      'retrieval-augmented generation (rag)': 'Retrieval-Augmented Generation (RAG)',
+      'llm': 'LLMs / Generative AI',
+      'llms': 'LLMs / Generative AI',
+      'genai': 'LLMs / Generative AI',
+      'generative ai': 'LLMs / Generative AI',
+      'mlops': 'MLOps',
+      'langchain': 'LangChain',
+      'huggingface': 'Hugging Face Transformers',
+      'openai': 'OpenAI API',
+      'spark': 'Apache Spark',
+      'pyspark': 'Apache Spark',
+      'kafka': 'Apache Kafka',
+      'etl': 'ETL Pipelines',
+      'etl pipelines': 'ETL Pipelines',
+      'data visualization': 'Data Visualization',
+
+      // Professional Skills
+      'adaptability': 'Adaptability',
+      'problem solving': 'Problem Solving',
+      'code reviews': 'Code Reviews',
+      'technical documentation': 'Technical Documentation',
+      'communication': 'Communication',
+      'teamwork': 'Teamwork',
+      'team collaboration': 'Team Collaboration',
+      'collaboration': 'Collaboration',
+      'leadership': 'Leadership',
+      'critical thinking': 'Critical Thinking',
+      'time management': 'Time Management',
+
+      // Product Management
+      'product management': 'Product Management',
+      'agile': 'Agile / Scrum',
+      'scrum': 'Agile / Scrum',
+      'agile / scrum': 'Agile / Scrum',
+      'agile / scrum collaboration': 'Agile / Scrum',
+
+      // Quality Engineering
+      'automated testing': 'Automated Testing',
+      'e2e testing': 'E2E Testing',
+      'unit testing': 'Unit Testing',
+      'selenium': 'Selenium',
+      'cypress': 'Cypress',
+      'playwright': 'Playwright',
+      'jest': 'Jest',
+      'qa': 'QA',
+
+      // Cybersecurity
+      'cybersecurity': 'Cybersecurity',
+      'vulnerability assessment': 'Vulnerability Assessment',
+      'owasp': 'OWASP',
+      'penetration testing': 'Penetration Testing',
+
+      // UI/UX
+      'figma': 'Figma',
+      'ui/ux': 'UI/UX Design',
+      'ui/ux design': 'UI/UX Design',
+      'design systems': 'Design Systems',
+      'design system': 'Design Systems',
+      'wireframing': 'Wireframing & Prototyping',
+      'prototyping': 'Wireframing & Prototyping',
+      'wireframing & prototyping': 'Wireframing & Prototyping',
+      'user research': 'User Research'
+    };
+
+    return aliasMap[lower] || trimmed;
+  }
+
+  classifySkillCategory(skillName: string, existingCategory?: string): string {
+    const sName = (skillName || '').trim().toLowerCase();
+    const existing = (existingCategory || '').trim();
+
+    // 1. Specific skill name mappings (highest precision)
+    const skillCategoryMap: { [key: string]: string } = {
+      // Databases
+      'sqlite': 'Database',
+      'sqlite3': 'Database',
+      'postgresql': 'Database',
+      'postgres': 'Database',
+      'mysql': 'Database',
+      'mongodb': 'Database',
+      'mongo': 'Database',
+      'supabase': 'Database',
+      'firebase': 'Database',
+      'firestore': 'Database',
+      'firebase firestore': 'Database',
+      'redis': 'Database',
+      'oracle': 'Database',
+      'mariadb': 'Database',
+      'cassandra': 'Database',
+      'dynamodb': 'Database',
+      'sql server': 'Database',
+      'mssql': 'Database',
+      'sql': 'Database',
+      'relational database': 'Database',
+      'relational database design': 'Database',
+      'vector databases': 'Database',
+      'chromadb': 'Database',
+      'pinecone': 'Database',
+      'prisma': 'Database',
+      'typeorm': 'Database',
+      'mongoose': 'Database',
+
+      // Frontend Development
+      'html': 'Frontend Development',
+      'css': 'Frontend Development',
+      'html/css': 'Frontend Development',
+      'html5': 'Frontend Development',
+      'css3': 'Frontend Development',
+      'tailwind': 'Frontend Development',
+      'tailwind css': 'Frontend Development',
+      'tailwindcss': 'Frontend Development',
+      'bootstrap': 'Frontend Development',
+      'sass': 'Frontend Development',
+      'scss': 'Frontend Development',
+      'jquery': 'Frontend Development',
+      'responsive web design': 'Frontend Development',
+      'pwa': 'Frontend Development',
+      'progressive web apps': 'Frontend Development',
+      'progressive web app': 'Frontend Development',
+
+      // Frameworks & Libraries
+      'react': 'Framework',
+      'react.js': 'Framework',
+      'reactjs': 'Framework',
+      'angular': 'Framework',
+      'angularjs': 'Framework',
+      'angular.js': 'Framework',
+      'vue': 'Framework',
+      'vue.js': 'Framework',
+      'vuejs': 'Framework',
+      'next.js': 'Framework',
+      'nextjs': 'Framework',
+      'next': 'Framework',
+      'nuxt.js': 'Framework',
+      'nuxtjs': 'Framework',
+      'nuxt': 'Framework',
+      'svelte': 'Framework',
+      'fastapi': 'Framework',
+      'fast api': 'Framework',
+      'express': 'Framework',
+      'express.js': 'Framework',
+      'expressjs': 'Framework',
+      'django': 'Framework',
+      'flask': 'Framework',
+      'spring boot': 'Framework',
+      'spring': 'Framework',
+      'springboot': 'Framework',
+      'laravel': 'Framework',
+      'nestjs': 'Framework',
+      'nest': 'Framework',
+      'node.js': 'Framework',
+      'nodejs': 'Framework',
+      'node': 'Framework',
+      'flutter': 'Framework',
+      'react native': 'Framework',
+      'asp.net': 'Framework',
+      'asp.net core': 'Framework',
+      '.net': 'Framework',
+      '.net core': 'Framework',
+      'dotnet': 'Framework',
+      'ruby on rails': 'Framework',
+      'rails': 'Framework',
+
+      // Tools & DevOps
+      'git': 'Tool & DevOps',
+      'github': 'Tool & DevOps',
+      'gitlab': 'Tool & DevOps',
+      'docker': 'Tool & DevOps',
+      'docker compose': 'Tool & DevOps',
+      'kubernetes': 'Tool & DevOps',
+      'k8s': 'Tool & DevOps',
+      'ci/cd': 'Tool & DevOps',
+      'cicd': 'Tool & DevOps',
+      'github actions': 'Tool & DevOps',
+      'aws': 'Tool & DevOps',
+      'azure': 'Tool & DevOps',
+      'gcp': 'Tool & DevOps',
+      'google cloud': 'Tool & DevOps',
+      'linux': 'Tool & DevOps',
+      'ubuntu': 'Tool & DevOps',
+      'nginx': 'Tool & DevOps',
+      'apache': 'Tool & DevOps',
+      'terraform': 'Tool & DevOps',
+      'ansible': 'Tool & DevOps',
+      'jenkins': 'Tool & DevOps',
+      'postman': 'Tool & DevOps',
+      'vercel': 'Tool & DevOps',
+      'netlify': 'Tool & DevOps',
+      'heroku': 'Tool & DevOps',
+      'vite': 'Tool & DevOps',
+      'expo': 'Tool & DevOps',
+      'vs code': 'Tool & DevOps',
+      'vscode': 'Tool & DevOps',
+      'visual studio code': 'Tool & DevOps',
+      'devops': 'Tool & DevOps',
+
+      // Programming Languages
+      'javascript': 'Programming Language',
+      'js': 'Programming Language',
+      'typescript': 'Programming Language',
+      'ts': 'Programming Language',
+      'python': 'Programming Language',
+      'py': 'Programming Language',
+      'java': 'Programming Language',
+      'c++': 'Programming Language',
+      'cpp': 'Programming Language',
+      'cplusplus': 'Programming Language',
+      'c#': 'Programming Language',
+      'csharp': 'Programming Language',
+      'c': 'Programming Language',
+      'php': 'Programming Language',
+      'ruby': 'Programming Language',
+      'go': 'Programming Language',
+      'golang': 'Programming Language',
+      'rust': 'Programming Language',
+      'swift': 'Programming Language',
+      'kotlin': 'Programming Language',
+      'dart': 'Programming Language',
+      'r': 'Programming Language',
+      'scala': 'Programming Language',
+      'bash': 'Programming Language',
+      'shell': 'Programming Language',
+      'powershell': 'Programming Language',
+      'solidity': 'Programming Language',
+
+      // Computer Science & Core
+      'data structures & algorithms': 'Computer Science',
+      'data structures': 'Computer Science',
+      'algorithms': 'Computer Science',
+      'dsa': 'Computer Science',
+      'software engineering': 'Computer Science',
+      'algorithms & systems': 'Computer Science',
+      'system design': 'Computer Science',
+      'system architecture': 'Computer Science',
+
+      // Backend Development
+      'rest api': 'Backend Development',
+      'restful api': 'Backend Development',
+      'restful apis': 'Backend Development',
+      'rest apis': 'Backend Development',
+      'rest': 'Backend Development',
+      'restful': 'Backend Development',
+      'graphql': 'Backend Development',
+      'microservices': 'Backend Development',
+      'microservice': 'Backend Development',
+      'websockets': 'Backend Development',
+      'grpc': 'Backend Development',
+      'backend development': 'Backend Development',
+
+      // Professional & Soft Skills
+      'adaptability': 'Professional Skills',
+      'problem solving': 'Professional Skills',
+      'code reviews': 'Professional Skills',
+      'technical documentation': 'Professional Skills',
+      'communication': 'Professional Skills',
+      'teamwork': 'Professional Skills',
+      'team collaboration': 'Professional Skills',
+      'collaboration': 'Professional Skills',
+      'leadership': 'Professional Skills',
+      'critical thinking': 'Professional Skills',
+      'time management': 'Professional Skills',
+
+      // AI & Data Science
+      'machine learning': 'AI & Data Science',
+      'deep learning': 'AI & Data Science',
+      'artificial intelligence': 'AI & Data Science',
+      'ai': 'AI & Data Science',
+      'ml': 'AI & Data Science',
+      'ai / ml': 'AI & Data Science',
+      'ai/ml': 'AI & Data Science',
+      'ai & ml': 'AI & Data Science',
+      'ai & data science': 'AI & Data Science',
+      'ai / data science': 'AI & Data Science',
+      'nlp': 'AI & Data Science',
+      'natural language processing': 'AI & Data Science',
+      'computer vision': 'AI & Data Science',
+      'pytorch': 'AI & Data Science',
+      'tensorflow': 'AI & Data Science',
+      'keras': 'AI & Data Science',
+      'scikit-learn': 'AI & Data Science',
+      'pandas': 'AI & Data Science',
+      'numpy': 'AI & Data Science',
+      'matplotlib': 'AI & Data Science',
+      'seaborn': 'AI & Data Science',
+      'data science': 'AI & Data Science',
+      'data engineering': 'AI & Data Science',
+      'llm': 'AI & Data Science',
+      'llms': 'AI & Data Science',
+      'genai': 'AI & Data Science',
+      'generative ai': 'AI & Data Science',
+      'rag': 'AI & Data Science',
+      'retrieval-augmented generation (rag)': 'AI & Data Science',
+      'retrieval-augmented generation': 'AI & Data Science',
+      'retrieval augmented generation': 'AI & Data Science',
+      'mlops': 'AI & Data Science',
+      'langchain': 'AI & Data Science',
+      'huggingface': 'AI & Data Science',
+      'openai': 'AI & Data Science',
+      'spark': 'AI & Data Science',
+      'pyspark': 'AI & Data Science',
+      'kafka': 'AI & Data Science',
+      'etl pipelines': 'AI & Data Science',
+      'etl': 'AI & Data Science',
+      'data visualization': 'AI & Data Science',
+
+      // UI/UX Design
+      'figma': 'UI/UX Design',
+      'ui/ux design': 'UI/UX Design',
+      'ui/ux': 'UI/UX Design',
+      'design systems': 'UI/UX Design',
+      'design system': 'UI/UX Design',
+      'wireframing & prototyping': 'UI/UX Design',
+      'wireframing': 'UI/UX Design',
+      'prototyping': 'UI/UX Design',
+      'user research': 'UI/UX Design',
+
+      // Quality Engineering & Testing
+      'automated testing': 'Quality Engineering',
+      'e2e testing': 'Quality Engineering',
+      'unit testing': 'Quality Engineering',
+      'selenium': 'Quality Engineering',
+      'cypress': 'Quality Engineering',
+      'playwright': 'Quality Engineering',
+      'jest': 'Quality Engineering',
+      'qa': 'Quality Engineering',
+
+      // Cybersecurity
+      'cybersecurity': 'Cybersecurity',
+      'vulnerability assessment': 'Cybersecurity',
+      'owasp': 'Cybersecurity',
+      'security best practices (owasp)': 'Cybersecurity',
+      'security best practices': 'Cybersecurity',
+      'penetration testing': 'Cybersecurity',
+
+      // Product Management
+      'product management': 'Product Management',
+      'agile / scrum': 'Product Management',
+      'scrum': 'Product Management',
+      'agile': 'Product Management',
+      'agile / scrum collaboration': 'Product Management',
+
+      // Compound & Specialized Skills
+      'advanced typescript patterns': 'Programming Language',
+      'typescript patterns': 'Programming Language',
+      'ci/cd pipeline automation': 'Tool & DevOps',
+      'ci/cd pipeline': 'Tool & DevOps',
+      'pipeline automation': 'Tool & DevOps',
+      'docker & kubernetes orchestration': 'Tool & DevOps',
+      'docker & kubernetes': 'Tool & DevOps',
+      'kubernetes orchestration': 'Tool & DevOps',
+      'container orchestration': 'Tool & DevOps',
+      'production monitoring & observability': 'Tool & DevOps',
+      'production monitoring': 'Tool & DevOps',
+      'monitoring & observability': 'Tool & DevOps',
+      'observability': 'Tool & DevOps',
+      'monitoring': 'Tool & DevOps',
+      'computer vision integration': 'AI & Data Science',
+      'restful api design': 'Backend Development',
+      'api design': 'Backend Development',
+      'system design & scalability': 'Computer Science',
+      'scalability': 'Computer Science'
+    };
+
+    if (skillCategoryMap[sName]) {
+      return skillCategoryMap[sName];
+    }
+
+    // 2. Normalize existing category names if present
+    if (existing) {
+      const exLower = existing.toLowerCase().trim();
+      if (
+        exLower === 'ai / ml' || 
+        exLower === 'ai/ml' || 
+        exLower === 'ai & ml' || 
+        exLower === 'ai / data science' || 
+        exLower === 'ai & data science' || 
+        exLower === 'ai concept' || 
+        exLower === 'ml library' || 
+        exLower === 'deep learning library' ||
+        exLower === 'data science'
+      ) {
+        return 'AI & Data Science';
+      }
+      if (exLower === 'frontend framework' || exLower === 'web framework' || exLower === 'mobile framework') {
+        return 'Framework';
+      }
+      if (exLower === 'database / query' || exLower === 'embedded relational database' || exLower === 'relational database' || exLower === 'nosql document database') {
+        return 'Database';
+      }
+      if (exLower === 'web markup' || exLower === 'markup' || exLower === 'styling' || exLower === 'frontend' || exLower === 'frontend development' || exLower === 'ui styling') {
+        return 'Frontend Development';
+      }
+      if (exLower === 'devops tool' || exLower === 'orchestration tool' || exLower === 'version control' || exLower === 'operating system' || exLower === 'devops') {
+        return 'Tool & DevOps';
+      }
+      if (exLower === 'professional skills' || exLower === 'soft skills') {
+        return 'Professional Skills';
+      }
+      if (exLower === 'computer science') {
+        return 'Computer Science';
+      }
+      if (exLower === 'programming language' || exLower === 'language') {
+        return 'Programming Language';
+      }
+      // Re-classify any legacy 'full-stack' category to actual domain
+      if (exLower.includes('full-stack') || exLower.includes('full stack') || exLower === 'fullstack') {
+        if (sName.includes('typescript') || sName.includes('javascript') || sName.includes('python') || sName.includes('lang')) return 'Programming Language';
+        if (sName.includes('docker') || sName.includes('kubernetes') || sName.includes('ci/cd') || sName.includes('devops') || sName.includes('monitor') || sName.includes('observ') || sName.includes('cloud')) return 'Tool & DevOps';
+        if (sName.includes('vision') || sName.includes('ai') || sName.includes('ml') || sName.includes('nlp') || sName.includes('data')) return 'AI & Data Science';
+        if (sName.includes('security') || sName.includes('owasp') || sName.includes('auth')) return 'Cybersecurity';
+        if (sName.includes('api') || sName.includes('rest') || sName.includes('backend') || sName.includes('server') || sName.includes('graphql')) return 'Backend Development';
+        if (sName.includes('system') || sName.includes('scalability') || sName.includes('algorithm') || sName.includes('architecture')) return 'Computer Science';
+        if (sName.includes('css') || sName.includes('html') || sName.includes('front') || sName.includes('ui') || sName.includes('react') || sName.includes('angular') || sName.includes('vue')) return 'Frontend Development';
+        return 'Backend Development';
+      }
+      return existing;
+    }
+
+    // 3. Heuristic fallback based on name tokens
+    if (sName.includes('sql') || sName.includes('db') || sName.includes('database')) return 'Database';
+    if (sName.includes('css') || sName.includes('html') || sName.includes('web') || sName.includes('frontend')) return 'Frontend Development';
+    if (sName.includes('tool') || sName.includes('devops') || sName.includes('cloud') || sName.includes('deploy') || sName.includes('docker') || sName.includes('kubernetes') || sName.includes('ci/cd') || sName.includes('monitor')) return 'Tool & DevOps';
+    if (sName.includes('manage') || sName.includes('leader') || sName.includes('collaborat') || sName.includes('document') || sName.includes('problem') || sName.includes('adapt')) return 'Professional Skills';
+    if (sName.includes('security') || sName.includes('owasp') || sName.includes('cyber')) return 'Cybersecurity';
+    if (sName.includes('vision') || sName.includes('nlp') || sName.includes('learning') || sName.includes('intelligence')) return 'AI & Data Science';
+    if (sName.includes('system') || sName.includes('algorithm') || sName.includes('scalab')) return 'Computer Science';
+    if (sName.includes('api') || sName.includes('rest') || sName.includes('endpoint')) return 'Backend Development';
+
+    return 'Framework';
+  }
+
+
+  private async autoMigrateOutdatedSkillCategories(skillsList: Skill[]) {
+    for (const s of skillsList) {
+      const canonical = this.classifySkillCategory(s.name, s.category);
+      if (canonical !== s.category) {
+        try {
+          await this.skillService.updateSkillCategory(s.id, canonical);
+          s.category = canonical;
+        } catch (err) {
+          console.warn('Auto-migrating skill category warning:', s.name, err);
+        }
+      }
+    }
+  }
+
   async fetchSkills() {
     const { data, error } = await this.skillService.getSkills();
     if (!error && data) {
-      this.skills.set(data as Skill[]);
+      const mappedSkills = (data as Skill[]).map(s => ({
+        ...s,
+        category: this.classifySkillCategory(s.name, s.category)
+      }));
+      this.skills.set(mappedSkills);
+      // Auto-migrate any unclassified or legacy category in database
+      this.autoMigrateOutdatedSkillCategories(data as Skill[]);
     }
   }
 
   async createNewSkill() {
     if (!this.newSkillName.trim()) return;
+    const category = this.classifySkillCategory(this.newSkillName.trim(), this.newSkillCategory);
     const { data, error } = await this.skillService.createSkill(
       this.newSkillName.trim(),
-      this.newSkillCategory
+      category
     );
     if (error) {
       this.showToast('Error creating skill: ' + error.message, 'error');
@@ -830,36 +1558,154 @@ export class App implements OnInit {
     this.skillsSubView.set(view);
   }
 
+  setSkillCategoryFilter(category: string) {
+    this.skillCategoryFilter.set(category);
+  }
+
+  clearSkillFilters() {
+    this.skillSearchQuery.set('');
+    this.skillCategoryFilter.set('all');
+  }
+
+  getSkillCategories(): string[] {
+    const detailed = this.getUserSkillsDetailed();
+    const catSet = new Set<string>();
+    detailed.forEach(s => {
+      if (s.category) catSet.add(s.category);
+    });
+    return Array.from(catSet).sort();
+  }
+
+  getFilteredUserSkills(): { name: string; category: string; count: number; projectNames: string[] }[] {
+    const q = (this.skillSearchQuery() || '').toLowerCase().trim();
+    const filter = this.skillCategoryFilter();
+    const detailed = this.getUserSkillsDetailed();
+
+    return detailed.filter(s => {
+      const matchesCat = filter === 'all' || s.category.toLowerCase() === filter.toLowerCase();
+      if (!matchesCat) return false;
+      if (!q) return true;
+      const nameMatch = s.name.toLowerCase().includes(q);
+      const catMatch = s.category.toLowerCase().includes(q);
+      const projMatch = s.projectNames.some(p => p.toLowerCase().includes(q));
+      return nameMatch || catMatch || projMatch;
+    });
+  }
+
+  getSkillCountByCategory(category: string): number {
+    if (category === 'all') return this.getUserSkillsDetailed().length;
+    return this.getUserSkillsDetailed().filter(s => s.category.toLowerCase() === category.toLowerCase()).length;
+  }
+
+  toggleSkillProjectsExpand(skillName: string) {
+    const current = this.expandedSkillMap();
+    this.expandedSkillMap.set({
+      ...current,
+      [skillName]: !current[skillName]
+    });
+  }
+
+  isSkillProjectsExpanded(skillName: string): boolean {
+    return !!this.expandedSkillMap()[skillName];
+  }
+
+  navigateToProject(projectName: string) {
+    if (!projectName) return;
+    const trimmed = projectName.trim().toLowerCase();
+    
+    // Check for exact, prefix, or substring match in active projects
+    const target = this.projects().find(p => p.name && p.name.trim().toLowerCase() === trimmed)
+      || this.projects().find(p => p.name && p.name.toLowerCase().includes(trimmed))
+      || this.projects().find(p => p.name && trimmed.includes(p.name.toLowerCase()));
+
+    // Reset filters so the target card is rendered
+    this.projectStatusFilter.set('all');
+    this.projectSearchQuery.set('');
+
+    // Switch to projects tab
+    this.setTab('projects');
+
+    if (target) {
+      this.highlightedProjectId.set(target.id);
+      setTimeout(() => {
+        const el = document.getElementById('project-card-' + target.id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
+
+      setTimeout(() => {
+        this.highlightedProjectId.set('');
+      }, 3500);
+    }
+  }
+
   getUserSkillsDetailed(): { name: string; category: string; count: number; projectNames: string[] }[] {
     const skillMap = new Map<string, { name: string; category: string; count: number; projectNames: string[] }>();
     for (const p of this.projects()) {
-      if (p.project_skills) {
+      if (p.project_skills && p.project_skills.length > 0) {
+        // Collect unique canonical skills within THIS specific project
+        const projectCanonicalSkills = new Map<string, { canonicalName: string; category: string }>();
+
         for (const ps of p.project_skills) {
           const s = ps.skills;
           if (s?.name) {
-            const key = s.name.toLowerCase();
-            if (!skillMap.has(key)) {
-              skillMap.set(key, {
-                name: s.name,
-                category: s.category || 'Technology',
-                count: 1,
-                projectNames: [p.name]
-              });
-            } else {
-              const existing = skillMap.get(key)!;
-              existing.count++;
-              if (!existing.projectNames.includes(p.name)) {
-                existing.projectNames.push(p.name);
-              }
+            const canonicalName = this.getCanonicalSkillName(s.name);
+            const key = canonicalName.toLowerCase();
+            const normalizedCategory = this.classifySkillCategory(canonicalName, s.category);
+            if (!projectCanonicalSkills.has(key)) {
+              projectCanonicalSkills.set(key, { canonicalName, category: normalizedCategory });
             }
+          }
+        }
+
+        // Record each canonical skill once per project
+        for (const [key, { canonicalName, category }] of projectCanonicalSkills.entries()) {
+          if (!skillMap.has(key)) {
+            skillMap.set(key, {
+              name: canonicalName,
+              category: category,
+              count: 1,
+              projectNames: [p.name]
+            });
+          } else {
+            const existing = skillMap.get(key)!;
+            if (!existing.projectNames.includes(p.name)) {
+              existing.projectNames.push(p.name);
+            }
+            existing.count = existing.projectNames.length;
+            existing.category = category;
           }
         }
       }
     }
-    return Array.from(skillMap.values()).sort((a, b) => b.count - a.count);
+    return Array.from(skillMap.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  getSkillCategoryClass(category: string): string {
+    const c = (category || '').toLowerCase().trim();
+    if (c.includes('ai') || c.includes('ml') || c.includes('data science')) return 'cat-ai-data-science';
+    if (c.includes('ai') || c.includes('ml') || c.includes('data science') || c.includes('deep learning')) return 'cat-ai-data-science';
+    if (c.includes('ui') || c.includes('ux') || c.includes('design')) return 'cat-ui-ux';
+    if (c.includes('front') || c.includes('markup') || c.includes('styling') || c.includes('css') || c.includes('html')) return 'cat-frontend-development';
+    if (c.includes('front') || c.includes('markup') || c.includes('styling') || c.includes('css') || c.includes('html') || c.includes('pwa')) return 'cat-frontend-development';
+    if (c.includes('prog') || c.includes('lang')) return 'cat-programming-language';
+    if (c.includes('frame') || c.includes('lib')) return 'cat-framework';
+    if (c.includes('data') || c.includes('sql') || c.includes('store')) return 'cat-database';
+    if (c.includes('database') || c.includes('sql') || c.includes('store') || c.includes('db')) return 'cat-database';
+    if (c.includes('devops') || c.includes('tool') || c.includes('cloud') || c.includes('infra')) return 'cat-tool-devops';
+    if (c.includes('computer science') || c.includes('algorithm') || c.includes('software engineering')) return 'cat-computer-science';
+    if (c.includes('prof') || c.includes('soft') || c.includes('mindset') || c.includes('problem') || c.includes('adapt') || c.includes('document')) return 'cat-professional-skills';
+    if (c.includes('back') || c.includes('arch') || c.includes('api')) return 'cat-backend-development';
+    if (c.includes('test') || c.includes('qa') || c.includes('quality')) return 'cat-qa';
+    if (c.includes('sec') || c.includes('cyber')) return 'cat-security';
+    if (c.includes('product')) return 'cat-product';
+    if (c.includes('product') || c.includes('agile') || c.includes('scrum')) return 'cat-product';
+    return 'cat-default';
   }
 
   async removeSkillFromUserPortfolio(skillName: string) {
+    const canonicalTarget = this.getCanonicalSkillName(skillName).toLowerCase();
     this.openConfirmDialog({
       title: 'Remove Skill from Portfolio',
       message: `Are you sure you want to remove "${skillName}" from your active portfolio? This will detach it from your projects.`,
@@ -873,7 +1719,8 @@ export class App implements OnInit {
           for (const p of this.projects()) {
             if (p.project_skills) {
               for (const ps of p.project_skills) {
-                if (ps.skills?.name?.toLowerCase() === skillName.toLowerCase()) {
+                const sName = ps.skills?.name;
+                if (sName && (sName.toLowerCase() === skillName.toLowerCase() || this.getCanonicalSkillName(sName).toLowerCase() === canonicalTarget)) {
                   await this.skillService.removeSkillFromProject(p.id, ps.skill_id);
                   removedCount++;
                 }
@@ -894,8 +1741,15 @@ export class App implements OnInit {
     const { data, error } = await this.careerRoleService.getCareerRoles();
     if (!error && data) {
       this.careerRoles.set(data as CareerRole[]);
-      if (data.length > 0 && !this.selectedRoleId()) {
-        this.selectCareerRole(data[0].id);
+      if (data.length > 0) {
+        const savedRoleId = typeof localStorage !== 'undefined' ? localStorage.getItem('portfolioiq_selected_role_id') : null;
+        const targetRole = (savedRoleId && data.find((r: any) => r.id === savedRoleId)) 
+          ? data.find((r: any) => r.id === savedRoleId) 
+          : data[0];
+        
+        if (targetRole) {
+          await this.selectCareerRole(targetRole.id);
+        }
       }
     }
   }
@@ -904,7 +1758,49 @@ export class App implements OnInit {
     this.selectedRoleId.set(roleId);
     const role = this.careerRoles().find(r => r.id === roleId) || null;
     this.selectedRole.set(role);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('portfolioiq_selected_role_id', roleId);
+    }
+
+    // Load Role-Specific cached optimization and AI blueprint if previously saved for this role
+    this.loadRoleOptimizationCache(roleId);
+
+    // Also sync Knowledge Graph if no explicit knowledge role is set
+    if (role && !this.selectedKnowledgeRole()) {
+      this.selectRoleTree(role.title);
+    }
     await this.recalculateSkillGap();
+  }
+
+  private loadRoleOptimizationCache(roleId: string) {
+    if (typeof localStorage === 'undefined' || !roleId) return;
+
+    try {
+      const optKey = `portfolioiq_opt_cache_${roleId}`;
+      const savedOpt = localStorage.getItem(optKey);
+      if (savedOpt) {
+        this.optimizationResult.set(JSON.parse(savedOpt));
+      } else {
+        this.optimizationResult.set(null);
+      }
+
+      const aiKey = `portfolioiq_ai_blueprint_${roleId}`;
+      const savedAi = localStorage.getItem(aiKey);
+      if (savedAi) {
+        this.customAiBlueprint.set(JSON.parse(savedAi));
+      } else {
+        this.customAiBlueprint.set(null);
+      }
+
+      // If AI blueprint is available and no knapsack result, show AI custom view, else curated
+      if (savedAi && !savedOpt) {
+        this.activeBlueprintView.set('ai_custom');
+      } else {
+        this.activeBlueprintView.set('curated');
+      }
+    } catch (e) {
+      console.warn('Failed to parse role optimization cache:', e);
+    }
   }
 
   async recalculateSkillGap() {
@@ -929,15 +1825,7 @@ export class App implements OnInit {
   }
 
   getUserSkillNames(): string[] {
-    const skillSet = new Set<string>();
-    for (const p of this.projects()) {
-      if (p.project_skills) {
-        for (const ps of p.project_skills) {
-          if (ps.skills?.name) skillSet.add(ps.skills.name);
-        }
-      }
-    }
-    return Array.from(skillSet);
+    return this.getUserSkillsDetailed().map(s => s.name);
   }
 
   // Project Operations
@@ -957,7 +1845,10 @@ export class App implements OnInit {
 
   classifyAllProjectsWithMl() {
     for (const project of this.projects()) {
-      this.mlService.classifyProject(project.name, project.description || '').subscribe({
+      const skills = (project.project_skills || [])
+        .map((ps: any) => ps.skills?.name)
+        .filter(Boolean);
+      this.mlService.classifyProject(project.name, project.description || '', skills).subscribe({
         next: (res) => {
           this.mlPredictions.update(map => ({
             ...map,
@@ -969,6 +1860,72 @@ export class App implements OnInit {
     }
   }
 
+  setNewProjectStatus(status: 'idea' | 'active' | 'completed') {
+    this.newProjectStatus = status;
+  }
+
+  async updateProjectStatus(projectId: string, newStatus: string, projectName?: string) {
+    const { data, error } = await this.projectService.updateProjectStatus(projectId, newStatus);
+    if (error) {
+      this.showToast('Failed to update project status: ' + error.message, 'error');
+    } else {
+      await this.fetchProjects();
+      const statusLabel = newStatus === 'active' ? 'In Progress' : (newStatus === 'completed' ? 'Completed' : 'Idea');
+      this.showToast(`Updated "${projectName || 'project'}" phase to ${statusLabel}!`, 'success');
+    }
+  }
+
+  openEditProjectModal(project: any) {
+    if (!project) return;
+    this.editingProject.set(project);
+    this.editProjectName = project.name || '';
+    this.editProjectDesc = project.description || '';
+    this.editProjectStatus = (project.status || 'idea') as 'idea' | 'active' | 'completed';
+  }
+
+  editCurrentAnalysisProject() {
+    const proj = this.activeAnalysisProject();
+    if (proj) {
+      this.closeProjectAnalysis();
+      this.openEditProjectModal(proj);
+    }
+  }
+
+  closeEditProjectModal() {
+    this.editingProject.set(null);
+    this.editProjectName = '';
+    this.editProjectDesc = '';
+    this.isSavingProjectEdit.set(false);
+  }
+
+  async saveProjectEdits() {
+    const proj = this.editingProject();
+    if (!proj) return;
+
+    if (!this.editProjectName.trim()) {
+      this.showToast('Project title cannot be empty.', 'warning');
+      return;
+    }
+
+    this.isSavingProjectEdit.set(true);
+    const { data, error } = await this.projectService.updateProject(proj.id, {
+      name: this.editProjectName.trim(),
+      description: this.editProjectDesc.trim(),
+      status: this.editProjectStatus
+    });
+
+    this.isSavingProjectEdit.set(false);
+
+    if (error) {
+      this.showToast('Failed to update project: ' + error.message, 'error');
+    } else {
+      const updatedName = this.editProjectName.trim();
+      this.closeEditProjectModal();
+      await this.fetchProjects();
+      this.showToast(`Successfully updated "${updatedName}"!`, 'success');
+    }
+  }
+
   async createProject() {
     if (!this.newProjectName.trim()) {
       this.showToast('Please enter a project name.', 'warning');
@@ -977,7 +1934,7 @@ export class App implements OnInit {
     const { data, error } = await this.projectService.createProject(
       this.newProjectName.trim(),
       this.newProjectDesc.trim(),
-      this.newProjectStatus || 'active'
+      this.newProjectStatus || 'idea'
     );
     if (error) {
       this.showToast('Failed to create project: ' + error.message, 'error');
@@ -985,7 +1942,7 @@ export class App implements OnInit {
       const proj = this.newProjectName;
       this.newProjectName = '';
       this.newProjectDesc = '';
-      this.newProjectStatus = 'active';
+      this.newProjectStatus = 'idea';
       this.showAddProjectForm.set(false);
       await this.fetchProjects();
       this.showToast(`Project "${proj}" created successfully!`, 'success');
@@ -994,6 +1951,14 @@ export class App implements OnInit {
 
   toggleAddProjectForm() {
     this.showAddProjectForm.update(v => !v);
+  }
+
+  openAddProjectWithCurrentFilter() {
+    const filter = this.projectStatusFilter();
+    if (filter !== 'all') {
+      this.newProjectStatus = filter;
+    }
+    this.showAddProjectForm.set(true);
   }
 
   setProjectStatusFilter(status: 'all' | 'active' | 'completed' | 'idea') {
@@ -1078,9 +2043,44 @@ export class App implements OnInit {
     }
   }
 
+  toggleProjectSkillsExpanded(projectId: string) {
+    this.expandedProjectSkills.update(map => ({
+      ...map,
+      [projectId]: !map[projectId]
+    }));
+  }
+
+  isProjectSkillsExpanded(projectId: string): boolean {
+    return !!this.expandedProjectSkills()[projectId];
+  }
+
+  toggleProjectDescExpanded(projectId: string) {
+    this.expandedProjectDescs.update(map => ({
+      ...map,
+      [projectId]: !map[projectId]
+    }));
+  }
+
+  isProjectDescExpanded(projectId: string): boolean {
+    return !!this.expandedProjectDescs()[projectId];
+  }
 
   openProjectAnalysis(project: any) {
     this.activeAnalysisProject.set(project);
+    if (project?.id) {
+      const skills = (project.project_skills || [])
+        .map((ps: any) => ps.skills?.name)
+        .filter(Boolean);
+      this.mlService.classifyProject(project.name, project.description || '', skills).subscribe({
+        next: (res) => {
+          this.mlPredictions.update(map => ({
+            ...map,
+            [project.id]: res
+          }));
+        },
+        error: (err) => console.error('ML classification refresh error:', err)
+      });
+    }
   }
 
   closeProjectAnalysis() {
@@ -1141,6 +2141,14 @@ export class App implements OnInit {
 
     this.strengthsList.set(s);
     this.weaknessesList.set(w);
+  }
+
+  openScoreInfoModal() {
+    this.showScoreInfoModal.set(true);
+  }
+
+  closeScoreInfoModal() {
+    this.showScoreInfoModal.set(false);
   }
 
   // Resume Upload Handler
@@ -1206,7 +2214,9 @@ export class App implements OnInit {
       fileName: file.name,
       uploadedAt: new Date().toISOString(),
       extractedSkillsCount: skillsCount,
-      dataUrl: publicUrl // Store the public Supabase Storage URL instead of Base64!
+      dataUrl: publicUrl, // Store the public Supabase Storage URL
+      extracted_skills: this.resumeData()?.extracted_skills || [],
+      extracted_projects: this.resumeData()?.extracted_projects || []
     };
 
     try {
@@ -1227,6 +2237,95 @@ export class App implements OnInit {
     } finally {
       this.isSavingResume.set(false);
     }
+  }
+
+  getResumeExtractedSkills(): string[] {
+    const fromData = this.resumeData()?.extracted_skills;
+    if (fromData && fromData.length > 0) return fromData;
+
+    const fromMeta = this.savedResumeMeta()?.extracted_skills;
+    if (fromMeta && fromMeta.length > 0) return fromMeta;
+
+    // Fallback to active portfolio skills if available
+    const userSkills = this.getUserSkillNames();
+    if (userSkills && userSkills.length > 0) return userSkills.slice(0, 14);
+
+    return [];
+  }
+
+  getResumeExtractedProjects(): any[] {
+    const fromData = this.resumeData()?.extracted_projects;
+    if (fromData && fromData.length > 0) return fromData;
+
+    const fromMeta = this.savedResumeMeta()?.extracted_projects;
+    if (fromMeta && fromMeta.length > 0) return fromMeta;
+
+    return [];
+  }
+
+  getResumeAtsScore(): number {
+    const skills = this.getResumeExtractedSkills();
+    const projects = this.getResumeExtractedProjects();
+    let score = 70;
+    if (skills.length >= 12) score += 18;
+    else score += Math.round((skills.length / 12) * 18);
+
+    if (projects.length >= 2) score += 10;
+    else if (projects.length === 1) score += 6;
+    else score += 2;
+
+    return Math.min(score, 98);
+  }
+
+  getResumeRoleAlignment() {
+    const targetRole = this.currentUser()?.target_role || 'Full-Stack Developer';
+    const roleKey = targetRole.toLowerCase();
+
+    const roleSkillRequirements: { [key: string]: string[] } = {
+      'full-stack developer': ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Docker', 'RESTful APIs', 'Git'],
+      'frontend developer': ['JavaScript', 'TypeScript', 'React', 'Angular', 'Vue.js', 'HTML/CSS', 'Tailwind CSS', 'Git'],
+      'backend developer': ['Python', 'Node.js', 'PostgreSQL', 'MongoDB', 'Docker', 'RESTful APIs', 'Redis', 'Microservices'],
+      'ai / ml engineer': ['Python', 'PyTorch', 'TensorFlow', 'Scikit-Learn', 'Pandas', 'NumPy', 'Machine Learning', 'FastAPI'],
+      'devops engineer': ['Docker', 'Kubernetes', 'AWS', 'CI/CD', 'Terraform', 'Linux', 'GitHub Actions', 'PostgreSQL'],
+      'data engineer': ['Python', 'SQL', 'PostgreSQL', 'Apache Spark', 'Pandas', 'Docker', 'Data Pipelines', 'ETL'],
+      'mobile developer': ['Flutter', 'React Native', 'Swift', 'Kotlin', 'RESTful APIs', 'Firebase', 'Git'],
+      'qa engineer': ['Automated Testing', 'Jest', 'Cypress', 'Selenium', 'Playwright', 'Unit Testing', 'CI/CD']
+    };
+
+    const roleObj = this.careerRoles().find(r => (r.title || '').toLowerCase() === roleKey);
+    const requiredSkills: string[] = roleObj?.required_skills || (roleObj as any)?.skills || roleSkillRequirements[roleKey] || [
+      'JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Docker', 'Git', 'RESTful APIs'
+    ];
+
+    const extractedSkills = this.getResumeExtractedSkills();
+    const matching = requiredSkills.filter(req => extractedSkills.some(s => s.toLowerCase() === req.toLowerCase()));
+    const missing = requiredSkills.filter(req => !extractedSkills.some(s => s.toLowerCase() === req.toLowerCase()));
+    const matchPercentage = requiredSkills.length > 0 ? Math.round((matching.length / requiredSkills.length) * 100) : 75;
+
+    return {
+      targetRole,
+      requiredSkills,
+      matching,
+      missing,
+      matchPercentage
+    };
+  }
+
+  auditResumeWithCoach() {
+    const meta = this.savedResumeMeta();
+    const fileName = meta?.fileName || 'Uploaded Resume';
+    const skills = this.getResumeExtractedSkills();
+    const projects = this.getResumeExtractedProjects();
+    const targetRole = this.currentUser()?.target_role || 'Software Engineer';
+
+    let projectContext = '';
+    if (projects && projects.length > 0) {
+      projectContext = ` Extracted candidate projects from resume: ${projects.map(p => `${p.name} (${p.description || 'Production system'})`).join('; ')}.`;
+    }
+
+    this.setTab('coach');
+    const auditPrompt = `Please conduct an executive ATS audit and technical resume optimization for my uploaded profile ("${fileName}"). Target Role: ${targetRole}. Extracted Skills: ${skills.join(', ')}.${projectContext} Evaluate ATS keyword coverage, technical depth, and generate 3 concrete, high-impact STAR-format resume bullet points with quantifiable engineering metrics and architectural scope.`;
+    this.sendCoachMessage(auditPrompt);
   }
 
   openResumeViewer() {
@@ -1271,11 +2370,12 @@ export class App implements OnInit {
   }
 
   isResumeSkillInPortfolio(skillName: string): boolean {
-    return this.getUserSkillNames().some(s => s.toLowerCase() === skillName.toLowerCase());
+    const canonicalTarget = this.getCanonicalSkillName(skillName).toLowerCase();
+    return this.getUserSkillNames().some(s => s.toLowerCase() === skillName.toLowerCase() || this.getCanonicalSkillName(s).toLowerCase() === canonicalTarget);
   }
 
   private async getOrCreateResumeProject(): Promise<any> {
-    const RESUME_PROJECT_NAME = '📄 Verified Resume Skills (NLP Extracted)';
+    const RESUME_PROJECT_NAME = 'Verified Resume Skills (NLP Extracted)';
     const existing = this.projects().find(p => p.name.toLowerCase() === RESUME_PROJECT_NAME.toLowerCase());
     if (existing) return existing;
 
@@ -1297,12 +2397,15 @@ export class App implements OnInit {
     }
 
     try {
+      const canonicalName = this.getCanonicalSkillName(skillName);
+
       // 1. Ensure skill exists in global catalog or insert it
-      let skillObj = this.skills().find(s => s.name.toLowerCase() === skillName.toLowerCase());
+      let skillObj = this.skills().find(s => s.name.toLowerCase() === canonicalName.toLowerCase() || s.name.toLowerCase() === skillName.toLowerCase());
       if (!skillObj) {
-        const { data: createdSkill, error } = await this.skillService.createSkill(skillName, 'Extracted Skill');
+        const canonicalCat = this.classifySkillCategory(canonicalName);
+        const { data: createdSkill, error } = await this.skillService.createSkill(canonicalName, canonicalCat);
         if (error) {
-          this.showToast(`Failed to register skill ${skillName}: ${error.message}`, 'error');
+          this.showToast(`Failed to register skill ${canonicalName}: ${error.message}`, 'error');
           return;
         }
         skillObj = createdSkill;
@@ -1315,15 +2418,15 @@ export class App implements OnInit {
 
       // Check if already attached to this project
       const alreadyAttached = (resumeProject.project_skills || []).some(
-        (ps: any) => ps.skill_id === skillObj.id || ps.skills?.name?.toLowerCase() === skillName.toLowerCase()
+        (ps: any) => ps.skill_id === skillObj.id || ps.skills?.name?.toLowerCase() === canonicalName.toLowerCase() || this.getCanonicalSkillName(ps.skills?.name || '').toLowerCase() === canonicalName.toLowerCase()
       );
 
       if (!alreadyAttached) {
         await this.skillService.addSkillToProject(resumeProject.id, skillObj.id);
         await this.fetchProjects();
-        this.showToast(`Added "${skillName}" to your portfolio skills!`, 'success');
+        this.showToast(`Added "${canonicalName}" to your portfolio skills!`, 'success');
       } else {
-        this.showToast(`"${skillName}" is already active in your portfolio.`, 'info');
+        this.showToast(`"${canonicalName}" is already active in your portfolio.`, 'info');
       }
     } catch (err: any) {
       this.showToast(`Error adding skill: ${err.message}`, 'error');
@@ -1331,8 +2434,8 @@ export class App implements OnInit {
   }
 
   async syncAllResumeSkillsToPortfolio() {
-    const resData = this.resumeData();
-    if (!resData || !resData.extracted_skills || resData.extracted_skills.length === 0) {
+    const skillsToSync = this.getResumeExtractedSkills();
+    if (!skillsToSync || skillsToSync.length === 0) {
       this.showToast('No extracted skills available to sync.', 'warning');
       return;
     }
@@ -1355,30 +2458,36 @@ export class App implements OnInit {
         skillMap.set(s.name.toLowerCase(), s.id);
       }
 
-      // 3. Existing project skill ids
+      // 3. Existing project skill ids & canonical names attached
       const attachedSkillIds = new Set<string>(
         (resumeProj.project_skills || []).map((ps: any) => ps.skill_id)
+      );
+      const attachedSkillNames = new Set<string>(
+        (resumeProj.project_skills || []).map((ps: any) => this.getCanonicalSkillName(ps.skills?.name || '').toLowerCase())
       );
 
       let addedCount = 0;
 
-      for (const skillName of resData.extracted_skills) {
-        let skillId = skillMap.get(skillName.toLowerCase());
+      for (const rawSkillName of skillsToSync) {
+        const canonicalName = this.getCanonicalSkillName(rawSkillName);
+        let skillId = skillMap.get(canonicalName.toLowerCase()) || skillMap.get(rawSkillName.toLowerCase());
 
         // Create if missing in global catalog
         if (!skillId) {
-          const { data: created, error } = await this.skillService.createSkill(skillName, 'Extracted Skill');
+          const canonicalCat = this.classifySkillCategory(canonicalName);
+          const { data: created, error } = await this.skillService.createSkill(canonicalName, canonicalCat);
           if (!error && created) {
             skillId = created.id;
-            skillMap.set(skillName.toLowerCase(), created.id);
+            skillMap.set(canonicalName.toLowerCase(), created.id);
           }
         }
 
         // Attach to user's resume project if not yet attached
-        if (skillId && !attachedSkillIds.has(skillId)) {
+        if (skillId && !attachedSkillIds.has(skillId) && !attachedSkillNames.has(canonicalName.toLowerCase())) {
           const { error: attachErr } = await this.skillService.addSkillToProject(resumeProj.id, skillId);
           if (!attachErr) {
             attachedSkillIds.add(skillId);
+            attachedSkillNames.add(canonicalName.toLowerCase());
             addedCount++;
           }
         }
@@ -1387,7 +2496,11 @@ export class App implements OnInit {
       await this.fetchSkills();
       await this.fetchProjects();
 
-      this.showToast(`Successfully synced ${resData.extracted_skills.length} resume skills to your developer portfolio!`, 'success');
+      if (addedCount > 0) {
+        this.showToast(`Successfully synced ${addedCount} resume skill(s) to your developer portfolio!`, 'success');
+      } else {
+        this.showToast('All extracted resume skills are already active in your portfolio.', 'info');
+      }
     } catch (err: any) {
       this.showToast(`Failed to sync resume skills: ${err.message}`, 'error');
     } finally {
@@ -1434,11 +2547,13 @@ export class App implements OnInit {
 
     const userSkills = this.getUserSkillNames();
     const missingSkills = this.skillGap()?.missing_skills || [];
+    const matchingSkills = this.skillGap()?.matching_skills || [];
     const targetRoleTitle = this.selectedRole()?.title || 'General Developer';
 
     const req = {
       user_skills: userSkills,
       missing_skills: missingSkills,
+      matching_skills: matchingSkills,
       target_role: targetRoleTitle,
       existing_projects: this.projects(),
       effort_budget_hours: this.effortBudgetHours(),
@@ -1449,12 +2564,160 @@ export class App implements OnInit {
       next: (res) => {
         this.isOptimizing.set(false);
         this.optimizationResult.set(res);
+        this.activeBlueprintView.set('curated');
+        if (typeof localStorage !== 'undefined' && this.selectedRoleId()) {
+          localStorage.setItem(`portfolioiq_opt_cache_${this.selectedRoleId()}`, JSON.stringify(res));
+        }
       },
       error: (err) => {
         this.isOptimizing.set(false);
         this.showToast('Optimization Failed: ' + (err.error?.detail || err.message), 'error');
       }
     });
+  }
+
+  generateDynamicAiBlueprint() {
+    this.isGeneratingCustomBlueprint.set(true);
+
+    const userSkills = this.getUserSkillNames();
+    const missingSkills = this.skillGap()?.missing_skills || [];
+    const matchingSkills = this.skillGap()?.matching_skills || [];
+    const targetRoleTitle = this.selectedRole()?.title || 'General Developer';
+
+    const req = {
+      user_skills: userSkills,
+      missing_skills: missingSkills,
+      matching_skills: matchingSkills,
+      target_role: targetRoleTitle,
+      existing_projects: this.projects(),
+      effort_budget_hours: this.effortBudgetHours(),
+      max_projects_count: 1
+    };
+
+    this.optimizationService.generateCustomBlueprint(req).subscribe({
+      next: (res) => {
+        this.isGeneratingCustomBlueprint.set(false);
+        this.customAiBlueprint.set(res);
+        this.activeBlueprintView.set('ai_custom');
+        this.showToast(`AI Coach synthesized a custom blueprint: "${res.title}"!`, 'success');
+        if (typeof localStorage !== 'undefined' && this.selectedRoleId()) {
+          localStorage.setItem(`portfolioiq_ai_blueprint_${this.selectedRoleId()}`, JSON.stringify(res));
+        }
+      },
+      error: (err) => {
+        this.isGeneratingCustomBlueprint.set(false);
+        this.showToast('AI Blueprint Generation Failed: ' + (err.error?.detail || err.message), 'error');
+      }
+    });
+  }
+
+  setActiveBlueprintView(view: 'curated' | 'ai_custom') {
+    this.activeBlueprintView.set(view);
+  }
+
+  getSkillPedagogicalWeight(skill: string): number {
+    const s = (skill || '').toLowerCase().trim();
+    // Level 1: Core Foundations, Languages & Version Control (100 - 199)
+    if (s === 'git' || s === 'github') return 100;
+    if (s.includes('html') || s.includes('markup')) return 110;
+    if (s === 'css' || s === 'css3') return 120;
+    if (s === 'javascript' || s === 'js') return 130;
+    if (s === 'typescript' || s === 'ts') return 140;
+    if (s === 'python') return 150;
+    if (s === 'java' || s === 'c++' || s === 'c#' || s === 'go' || s === 'rust' || s === 'php') return 160;
+    if (s === 'sql') return 170;
+    if (s.includes('data structures') || s.includes('algorithms')) return 180;
+    if (s === 'linux' || s === 'bash' || s === 'shell') return 190;
+
+    // Level 2: UI Styling, Design & Frontend Frameworks (200 - 299)
+    if (s.includes('figma') || s.includes('ui/ux') || s.includes('wirefram')) return 200;
+    if (s.includes('design system')) return 210;
+    if (s.includes('tailwind') || s.includes('bootstrap') || s.includes('sass') || s.includes('scss')) return 220;
+    if (s.includes('responsive')) return 230;
+    if (s.includes('react') || s.includes('angular') || s.includes('vue') || s.includes('svelte')) return 250;
+    if (s.includes('next.js') || s.includes('nuxt')) return 260;
+    if (s.includes('flutter') || s.includes('mobile')) return 270;
+
+    // Level 3: APIs, Server-side & Backend Runtimes (300 - 399)
+    if (s.includes('rest api') || s.includes('api')) return 300;
+    if (s.includes('node') || s.includes('express')) return 310;
+    if (s.includes('fastapi') || s.includes('flask') || s.includes('django')) return 320;
+    if (s.includes('spring') || s.includes('nest') || s.includes('laravel')) return 330;
+    if (s.includes('supabase') || s.includes('firebase')) return 350;
+
+    // Level 4: Databases, Storage & Caching (400 - 499)
+    if (s.includes('relational database')) return 400;
+    if (s.includes('postgres') || s.includes('postgresql')) return 410;
+    if (s.includes('mysql') || s.includes('sqlite')) return 420;
+    if (s.includes('mongo') || s.includes('nosql')) return 430;
+    if (s.includes('redis') || s.includes('cache')) return 440;
+    if (s.includes('vector database') || s.includes('chroma') || s.includes('pinecone')) return 460;
+
+    // Level 5: Testing, DevOps, Containerization & CI/CD (500 - 599)
+    if (s.includes('test') || s.includes('qa') || s.includes('postman')) return 500;
+    if (s.includes('docker') || s.includes('container')) return 520;
+    if (s.includes('ci/cd') || s.includes('actions') || s.includes('jenkins')) return 540;
+    if (s.includes('kubernetes') || s.includes('k8s')) return 560;
+    if (s.includes('cloud') || s.includes('aws') || s.includes('azure') || s.includes('gcp') || s.includes('terraform')) return 580;
+
+    // Level 6: Advanced Architecture, AI & Distributed Systems (600 - 699)
+    if (s.includes('microservices') || s.includes('distributed')) return 600;
+    if (s.includes('graphql') || s.includes('websocket') || s.includes('grpc')) return 610;
+    if (s.includes('system design') || s.includes('architecture')) return 620;
+    if (s.includes('etl') || s.includes('pipeline')) return 630;
+    if (s.includes('machine learning') || s.includes('deep learning') || s.includes('ai') || s.includes('mlops') || s.includes('rag')) return 650;
+
+    return 350;
+  }
+
+  getFullRoleRoadmapNodes(): { name: string; status: 'mastered' | 'pending'; stepLabel: string; isPriority?: boolean; levelWeight: number }[] {
+    const matching = this.skillGap()?.matching_skills || [];
+    const missingSequence = this.optimizationResult()?.optimal_skill_path || this.skillGap()?.missing_skills || [];
+    
+    // 1. Sort Acquired / Mastered skills by pedagogical hierarchy (Foundational -> Advanced)
+    const sortedMatching = [...matching].sort((a, b) => this.getSkillPedagogicalWeight(a) - this.getSkillPedagogicalWeight(b));
+    
+    const nodes: { name: string; status: 'mastered' | 'pending'; stepLabel: string; isPriority?: boolean; levelWeight: number }[] = [];
+    
+    sortedMatching.forEach((skill) => {
+      nodes.push({
+        name: skill,
+        status: 'mastered',
+        stepLabel: 'Acquired',
+        levelWeight: this.getSkillPedagogicalWeight(skill)
+      });
+    });
+
+    // 2. Sort Target Gap Milestones by pedagogical hierarchy
+    const uniqueMissing = missingSequence.filter(skill => !matching.some(m => m.toLowerCase() === skill.toLowerCase()));
+    const sortedMissing = [...uniqueMissing].sort((a, b) => this.getSkillPedagogicalWeight(a) - this.getSkillPedagogicalWeight(b));
+
+    sortedMissing.forEach((skill, idx) => {
+      nodes.push({
+        name: skill,
+        status: 'pending',
+        stepLabel: `Milestone ${idx + 1}`,
+        isPriority: idx === 0,
+        levelWeight: this.getSkillPedagogicalWeight(skill)
+      });
+    });
+
+    return nodes;
+  }
+
+  getMasteredSkillsCount(): number {
+    return this.getFullRoleRoadmapNodes().filter(n => n.status === 'mastered').length;
+  }
+
+  getTotalRoleSkillsCount(): number {
+    return this.getFullRoleRoadmapNodes().length;
+  }
+
+  getRoleMasteryPercentage(): number {
+    const total = this.getTotalRoleSkillsCount();
+    if (total === 0) return 0;
+    const mastered = this.getMasteredSkillsCount();
+    return Math.round((mastered / total) * 100);
   }
 
   async adoptRecommendedProject(rec: RecommendedProject) {
@@ -1480,7 +2743,8 @@ export class App implements OnInit {
         let skillObj = this.skills().find(s => s.name.toLowerCase() === skillName.toLowerCase());
         if (!skillObj) {
           // auto create skill if it does not exist
-          const newSkill = await this.skillService.createSkill(skillName, rec.domain);
+          const canonicalCat = this.classifySkillCategory(skillName, rec.domain);
+          const newSkill = await this.skillService.createSkill(skillName, canonicalCat);
           if (newSkill.data) {
             skillObj = newSkill.data;
           }
@@ -1509,19 +2773,31 @@ export class App implements OnInit {
   }
 
   loadInitialKnowledgeData() {
-    this.selectRoleTree('AI Engineer');
+    const savedKnowledgeRole = typeof localStorage !== 'undefined' ? localStorage.getItem('portfolioiq_selected_knowledge_role') : null;
+    const initialRole = savedKnowledgeRole || this.selectedRole()?.title || (this.careerRoles().length > 0 ? this.careerRoles()[0].title : 'AI / ML Engineer');
+    this.selectRoleTree(initialRole);
     this.loadKnowledgeGraphData();
   }
 
   loadKnowledgeGraphData() {
     this.knowledgeService.getGraph().subscribe({
-      next: (res) => this.knowledgeGraphData.set(res),
+      next: (res) => {
+        this.knowledgeGraphData.set(res);
+        if (!this.inspectedNodeName() && res?.nodes?.length) {
+          const defaultNode = res.nodes.find(n => n.id === 'Docker') || res.nodes[0];
+          this.inspectNode(defaultNode.id);
+        }
+      },
       error: (err) => console.warn('Knowledge graph load failed:', err)
     });
   }
 
   selectRoleTree(roleTitle: string) {
+    if (!roleTitle) return;
     this.selectedKnowledgeRole.set(roleTitle);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('portfolioiq_selected_knowledge_role', roleTitle);
+    }
     this.isLoadingKnowledge.set(true);
 
     this.knowledgeService.getRoleTree(roleTitle).subscribe({
@@ -1569,11 +2845,18 @@ export class App implements OnInit {
   calculateGoalSkillPath(goalSkill?: string) {
     const target = goalSkill || this.goalSkillInput() || 'Kubernetes';
     this.goalSkillInput.set(target);
+    this.isEvaluatingLearningPath.set(true);
 
     const userSkills = this.getUserSkillNames();
     this.knowledgeService.getLearningPath(target, userSkills).subscribe({
-      next: (res) => this.goalSkillRoadmap.set(res),
-      error: (err) => console.error('Learning path calculation failed:', err)
+      next: (res) => {
+        this.goalSkillRoadmap.set(res);
+        this.isEvaluatingLearningPath.set(false);
+      },
+      error: (err) => {
+        this.isEvaluatingLearningPath.set(false);
+        console.error('Learning path calculation failed:', err);
+      }
     });
   }
 
@@ -1617,6 +2900,60 @@ export class App implements OnInit {
     };
   }
 
+  onCoachScroll(event: Event) {
+    const target = event.target as HTMLElement;
+    if (target) {
+      this.coachScrollTop = target.scrollTop;
+    }
+  }
+
+  restoreCoachScrollPosition() {
+    setTimeout(() => {
+      const el = this.chatStreamRef?.nativeElement || (document.querySelector('.chat-message-stream') as HTMLDivElement);
+      if (el) {
+        if (this.coachScrollTop >= 0) {
+          el.scrollTop = this.coachScrollTop;
+        } else {
+          el.scrollTop = el.scrollHeight;
+        }
+      }
+    }, 40);
+  }
+
+  scrollCoachToBottom(smooth = true) {
+    setTimeout(() => {
+      const el = this.chatStreamRef?.nativeElement || (document.querySelector('.chat-message-stream') as HTMLDivElement);
+      if (el) {
+        el.scrollTo({
+          top: el.scrollHeight,
+          behavior: smooth ? 'smooth' : 'auto'
+        });
+        this.coachScrollTop = el.scrollHeight;
+      }
+    }, 60);
+  }
+
+  scrollCoachToTop(smooth = true) {
+    setTimeout(() => {
+      const el = this.chatStreamRef?.nativeElement || (document.querySelector('.chat-message-stream') as HTMLDivElement);
+      if (el) {
+        el.scrollTo({
+          top: 0,
+          behavior: smooth ? 'smooth' : 'auto'
+        });
+        this.coachScrollTop = 0;
+      }
+    }, 20);
+  }
+
+  async loadCoachMessages() {
+    const messages = await this.coachService.loadMessagesFromCloud();
+    if (messages && messages.length > 0) {
+      this.coachMessages.set(messages);
+      this.scrollCoachToBottom(false);
+    }
+  }
+
   sendCoachMessage(overrideMessage?: string) {
     const text = (overrideMessage || this.coachInput).trim();
     if (!text || this.coachLoading()) return;
@@ -1625,6 +2962,9 @@ export class App implements OnInit {
     const userMsg: ChatMessage = { role: 'user', content: text, timestamp: time };
 
     this.coachMessages.update(msgs => [...msgs, userMsg]);
+    this.coachService.saveMessageToCloud(userMsg);
+    this.scrollCoachToBottom(true);
+
     if (!overrideMessage) {
       this.coachInput = '';
     }
@@ -1640,19 +2980,24 @@ export class App implements OnInit {
           isDemo: res.is_demo
         };
         this.coachMessages.update(msgs => [...msgs, assistantMsg]);
+        this.coachService.saveMessageToCloud(assistantMsg);
+
         if (res.suggested_followups?.length) {
           this.suggestedFollowups.set(res.suggested_followups);
         }
         this.coachLoading.set(false);
+        this.scrollCoachToBottom(true);
       },
       error: (err) => {
         const errorMsg: ChatMessage = {
           role: 'assistant',
-          content: `⚠️ Failed to reach AI Coach: ${err.message || 'Connection error'}. Please check if the backend is running.`,
+          content: `Failed to reach AI Coach: ${err.message || 'Connection error'}. Please check if the backend is running.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         this.coachMessages.update(msgs => [...msgs, errorMsg]);
+        this.coachService.saveMessageToCloud(errorMsg);
         this.coachLoading.set(false);
+        this.scrollCoachToBottom(true);
       }
     });
   }
@@ -1677,7 +3022,8 @@ export class App implements OnInit {
       cancelText: 'Keep Chat',
       type: 'danger',
       icon: 'warning',
-      onConfirm: () => {
+      onConfirm: async () => {
+        await this.coachService.clearMessagesFromCloud();
         this.coachMessages.set([
           {
             role: 'assistant',
@@ -1688,6 +3034,114 @@ export class App implements OnInit {
         this.showToast('AI Coach conversation cleared.', 'info');
       }
     });
+  }
+
+  formatCoachMarkdown(rawText: string): SafeHtml {
+    if (!rawText) return '';
+
+    let text = rawText
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Helper for inline markdown elements
+    const parseInline = (str: string): string => {
+      let s = str;
+      // Inline code: `code`
+      s = s.replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>');
+      // Bold + Italic: ***text***
+      s = s.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+      // Bold: **text** or __text__
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      // Italic: *text* or _text_
+      s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+      return s;
+    };
+
+    const blocks: string[] = [];
+
+    // 1. Extract Code Blocks into isolated placeholders
+    text = text.replace(/```([\w-]*)\r?\n([\s\S]*?)```/g, (_m, lang, code) => {
+      const languageBadge = lang ? `<span class="code-lang-tag">${lang}</span>` : '';
+      const formatted = `<div class="chat-code-block">${languageBadge}<pre><code>${code.trim()}</code></pre></div>`;
+      blocks.push(formatted);
+      return `@@BLOCK_${blocks.length - 1}@@`;
+    });
+
+    // 2. Extract and Parse Tables into isolated placeholders
+    text = text.replace(/((?:^[ \t]*\|?[^\n\r|]+\|[^\n\r]*\|?[ \t]*(?:\r?\n|$)){2,})/gm, (tableMatch) => {
+      const rawLines = tableMatch.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (rawLines.length < 2) return tableMatch;
+
+      // Find separator index
+      const sepIndex = rawLines.findIndex(l => /^[ \t]*\|?([ \t]*:?-{2,}:?[ \t]*\|)+([ \t]*:?-{2,}:?[ \t]*)?\|?[ \t]*$/.test(l));
+
+      let tableHtml = '<div class="chat-table-wrapper"><table class="chat-table">';
+      let isHeader = true;
+
+      for (let i = 0; i < rawLines.length; i++) {
+        const line = rawLines[i];
+        if (i === sepIndex || /^[ \t]*\|?([ \t]*:?-{2,}:?[ \t]*\|)+([ \t]*:?-{2,}:?[ \t]*)?\|?[ \t]*$/.test(line)) {
+          isHeader = false;
+          continue;
+        }
+
+        const clean = line.replace(/^\s*\|/, '').replace(/\|\s*$/, '');
+        const cells = clean.split('|').map(c => {
+          let cell = c.trim();
+          cell = cell.replace(/&lt;br\s*\/?&gt;/gi, '<br/>');
+          return parseInline(cell);
+        });
+
+        if (cells.length === 0 || (cells.length === 1 && !cells[0])) continue;
+
+        if (isHeader && i < (sepIndex !== -1 ? sepIndex : 1)) {
+          tableHtml += '<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+          if (sepIndex === -1) isHeader = false;
+        } else {
+          tableHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        }
+      }
+
+      tableHtml += '</tbody></table></div>';
+      blocks.push(tableHtml);
+      return `@@BLOCK_${blocks.length - 1}@@`;
+    });
+
+    // 3. Process Blockquotes
+    text = text.replace(/^>\s?(.*$)/gim, '<blockquote class="chat-blockquote">$1</blockquote>');
+
+    // 4. Horizontal Rules
+    text = text.replace(/^\s*(?:---+|\*\*\*+)\s*$/gm, '<hr class="chat-hr"/>');
+
+    // 5. Headers
+    text = text.replace(/^### (.*$)/gim, '<h4 class="chat-h4">$1</h4>');
+    text = text.replace(/^## (.*$)/gim, '<h3 class="chat-h3">$1</h3>');
+    text = text.replace(/^# (.*$)/gim, '<h2 class="chat-h2">$1</h2>');
+
+    // 6. Inline formatting on general text
+    text = parseInline(text);
+
+    // 7. Unordered lists
+    text = text.replace(/^\s*[\-\*]\s+(.*$)/gim, '<li class="chat-li">$1</li>');
+    text = text.replace(/((?:<li class="chat-li">.*?<\/li>(?:\r?\n|<br\/>)?)+)/g, '<ul class="chat-ul">$1</ul>');
+
+    // 8. Numbered lists
+    text = text.replace(/^\s*\d+\.\s+(.*$)/gim, '<li class="chat-oli">$1</li>');
+    text = text.replace(/((?:<li class="chat-oli">.*?<\/li>(?:\r?\n|<br\/>)?)+)/g, '<ol class="chat-ol">$1</ol>');
+
+    // 9. Paragraphs and line breaks
+    text = text.replace(/\r?\n\r?\n/g, '<div class="chat-paragraph-gap"></div>');
+    text = text.replace(/\r?\n/g, '<br/>');
+
+    // 10. Restore extracted Code Blocks and Tables cleanly
+    text = text.replace(/@@BLOCK_(\d+)@@/g, (_m, idx) => {
+      return blocks[Number(idx)] || '';
+    });
+
+    return this.sanitizer.bypassSecurityTrustHtml(text);
   }
 
   // GitHub Integration Handlers (Stage 14)
@@ -1778,7 +3232,18 @@ export class App implements OnInit {
     this.isEditingLinkedGitHub.set(false);
   }
 
-  async importRepoToPortfolio(repo: GitHubRepository) {
+  setRepoImportStatus(repoId: string, status: 'completed' | 'active' | 'idea') {
+    this.repoImportStatuses.update(map => ({
+      ...map,
+      [repoId]: status
+    }));
+  }
+
+  getRepoImportStatus(repoId: string): 'completed' | 'active' | 'idea' {
+    return this.repoImportStatuses()[repoId] || 'completed';
+  }
+
+  async importRepoToPortfolio(repo: GitHubRepository, statusOverride?: 'completed' | 'active' | 'idea') {
     if (!this.currentUser()) {
       this.openAuthModal('login');
       return;
@@ -1787,7 +3252,7 @@ export class App implements OnInit {
     // Option 3 Security Check: Require GitHub OAuth verification to import
     if (!this.isGitHubOAuthVerified()) {
       this.githubError.set(
-        `🔒 OAuth Verification Required: To prevent unauthorized imports and prove you own this repository, please verify via GitHub OAuth before importing.`
+        `OAuth Verification Required: To prevent unauthorized imports and prove you own this repository, please verify via GitHub OAuth before importing.`
       );
       this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
       return;
@@ -1795,7 +3260,7 @@ export class App implements OnInit {
 
     if (!this.isScannedAccountLinked()) {
       this.githubError.set(
-        `🔒 Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
+        `Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
       );
       return;
     }
@@ -1809,9 +3274,12 @@ export class App implements OnInit {
         ? `${repo.description} (Imported from GitHub: ${repo.html_url})` 
         : `Imported from GitHub: ${repo.html_url}`;
 
+      const targetStatus = statusOverride || this.getRepoImportStatus(repo.id);
+
       const { data: newProject, error: projErr } = await this.projectService.createProject(
         repo.name,
-        description
+        description,
+        targetStatus
       );
       if (projErr || !newProject) throw projErr || new Error('Failed to create project in portfolio.');
 
@@ -1823,7 +3291,8 @@ export class App implements OnInit {
         let skillId = existingSkillMap.get(skillName.toLowerCase());
         if (!skillId) {
           try {
-            const { data: newSkill } = await this.skillService.createSkill(skillName, 'Technology');
+            const canonicalCat = this.classifySkillCategory(skillName);
+            const { data: newSkill } = await this.skillService.createSkill(skillName, canonicalCat);
             if (newSkill && (newSkill as any).id) {
               const createdId = String((newSkill as any).id);
               skillId = createdId;
@@ -1870,7 +3339,7 @@ export class App implements OnInit {
     // Option 3 Security Check: Require GitHub OAuth verification to import
     if (!this.isGitHubOAuthVerified()) {
       this.githubError.set(
-        `🔒 OAuth Verification Required: To prevent unauthorized imports and prove you own these repositories, please verify via GitHub OAuth before importing.`
+        `OAuth Verification Required: To prevent unauthorized imports and prove you own these repositories, please verify via GitHub OAuth before importing.`
       );
       this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
       return;
@@ -1878,7 +3347,7 @@ export class App implements OnInit {
 
     if (!this.isScannedAccountLinked()) {
       this.githubError.set(
-        `🔒 Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
+        `Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
       );
       return;
     }
@@ -1904,6 +3373,140 @@ export class App implements OnInit {
     await this.fetchProjects();
     this.githubImportSuccessMsg.set(`Batch import complete! Added ${count} new repositories to your portfolio.`);
     this.showToast(`Successfully imported ${count} repositories!`, 'success');
+  }
+
+  // GitHub UI Polish Helpers
+  getLanguageColor(lang: string): string {
+    const l = (lang || '').toLowerCase().trim();
+    const colors: { [key: string]: string } = {
+      'typescript': '#3178c6',
+      'javascript': '#f7df1e',
+      'python': '#3572A5',
+      'dart': '#00B4AB',
+      'flutter': '#02569B',
+      'java': '#b07219',
+      'html': '#e34c26',
+      'html/css': '#e34c26',
+      'css': '#563d7c',
+      'c++': '#f34b7d',
+      'c#': '#178600',
+      'c': '#555555',
+      'go': '#00ADD8',
+      'rust': '#dea584',
+      'php': '#4F5D95',
+      'ruby': '#701516',
+      'swift': '#F05138',
+      'kotlin': '#A97BFF',
+      'shell': '#89e051',
+      'bash': '#89e051',
+      'vue': '#41b883',
+      'jupyter notebook': '#DA5B0B'
+    };
+    return colors[l] || '#6366f1';
+  }
+
+  getGitHubLanguageSegments(): { name: string; count: number; percentage: number; color: string }[] {
+    const dist = this.githubScanData()?.summary?.language_distribution;
+    if (!dist) return [];
+
+    const totalLangRepos = Object.values(dist).reduce((acc, val) => acc + (Number(val) || 0), 0) || 1;
+
+    const segments = Object.entries(dist).map(([name, count]) => {
+      const num = Number(count) || 0;
+      const percentage = Math.round((num / totalLangRepos) * 100);
+      return {
+        name,
+        count: num,
+        percentage,
+        color: this.getLanguageColor(name)
+      };
+    });
+
+    // Sort highest percentage first
+    return segments.sort((a, b) => b.count - a.count);
+  }
+
+  getEcosystemFocus(): string {
+    const segments = this.getGitHubLanguageSegments();
+    if (!segments.length) return 'General Software';
+    const names = segments.map(s => s.name.toLowerCase());
+    if (names.includes('dart') || names.includes('flutter') || names.includes('swift') || names.includes('kotlin')) {
+      if (names.includes('typescript') || names.includes('javascript')) {
+        return 'Full-Stack & Mobile';
+      }
+      return 'Mobile Engineering';
+    }
+    if (names.includes('python') && (names.includes('jupyter notebook') || names.includes('c++'))) {
+      return 'AI & Data Science';
+    }
+    if (names.includes('typescript') || names.includes('javascript') || names.includes('html') || names.includes('css')) {
+      return 'Full-Stack Web Dev';
+    }
+    return 'Multi-Platform Dev';
+  }
+
+  getDeduplicatedRepoSkills(repo: any): string[] {
+    if (!repo) return [];
+    const mainLang = (repo.language || '').toLowerCase().trim();
+    const skills = repo.detected_skills || [];
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    for (const s of skills) {
+      const sLower = s.toLowerCase().trim();
+      if (sLower === mainLang) continue; // Skip if already shown as primary language pill
+      if (!seen.has(sLower)) {
+        seen.add(sLower);
+        result.push(s);
+      }
+    }
+    return result;
+  }
+
+  filteredGitHubRepos(): any[] {
+    const repos = this.githubScanData()?.repos || [];
+    const query = this.githubRepoSearchQuery().toLowerCase().trim();
+    const filter = this.githubRepoFilter();
+    const domain = this.githubRepoDomainFilter();
+
+    return repos.filter(repo => {
+      // 1. Text Search Query
+      if (query) {
+        const matchName = (repo.name || '').toLowerCase().includes(query);
+        const matchDesc = (repo.description || '').toLowerCase().includes(query);
+        const matchLang = (repo.language || '').toLowerCase().includes(query);
+        const matchSkills = (repo.detected_skills || []).some((s: string) => s.toLowerCase().includes(query));
+        if (!matchName && !matchDesc && !matchLang && !matchSkills) return false;
+      }
+
+      // 2. Status Filter
+      if (filter === 'imported' && !this.isRepoAlreadyImported(repo.name)) return false;
+      if (filter === 'not_imported' && this.isRepoAlreadyImported(repo.name)) return false;
+
+      // 3. Domain Filter
+      if (domain !== 'all' && (repo.predicted_category || '').toLowerCase() !== domain.toLowerCase()) return false;
+
+      return true;
+    });
+  }
+
+  getGitHubDomainList(): string[] {
+    const repos = this.githubScanData()?.repos || [];
+    const domains = new Set<string>();
+    for (const r of repos) {
+      if (r.predicted_category) domains.add(r.predicted_category);
+    }
+    return Array.from(domains);
+  }
+
+  githubNotImportedCount(): number {
+    const repos = this.githubScanData()?.repos || [];
+    return repos.filter(r => !this.isRepoAlreadyImported(r.name)).length;
+  }
+
+  githubImportedCount(): number {
+    const repos = this.githubScanData()?.repos || [];
+    return repos.filter(r => this.isRepoAlreadyImported(r.name)).length;
   }
 
   // Stage 15: System Telemetry, Toasts, and Export Handlers

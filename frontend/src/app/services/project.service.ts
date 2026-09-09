@@ -100,8 +100,25 @@ export class ProjectService {
   }
 
 
-  async deleteProject(id: string) {
+  async updateProject(id: string, updates: { name?: string; description?: string; status?: string }) {
+    return await this.supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+  }
 
+  async updateProjectStatus(id: string, status: string) {
+    return await this.supabase
+      .from('projects')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+  }
+
+  async deleteProject(id: string) {
     return await this.supabase
       .from('projects')
       .delete()

@@ -5,6 +5,8 @@ export interface CareerRole {
   id: string;
   title: string;
   description?: string;
+  required_skills?: string[];
+  skills?: string[];
   created_at?: string;
 }
 

@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -46,12 +46,11 @@ def train_and_save_model():
     )
 
     pipeline = Pipeline([
-        ('tfidf', TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, stop_words='english')),
-        ('clf', MultinomialNB(alpha=0.05))
+        ('tfidf', TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, stop_words='english', min_df=1)),
+        ('clf', LogisticRegression(C=3.0, max_iter=1000, class_weight='balanced'))
     ])
 
-
-    print(f"[ML Trainer] Fitting Scikit-Learn TF-IDF + Multinomial Naive Bayes Classifier...")
+    print(f"[ML Trainer] Fitting Scikit-Learn TF-IDF + Calibrated Logistic Regression Classifier...")
     pipeline.fit(X_train, y_train)
 
     # 2. Holdout Test Set Evaluation

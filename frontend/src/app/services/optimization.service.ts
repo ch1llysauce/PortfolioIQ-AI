@@ -11,12 +11,16 @@ export interface RecommendedProject {
   skills: string[];
   description: string;
   architecture_highlights: string;
-  gap_gain: number;
-  diversity_bonus: number;
-  total_utility: number;
-  efficiency_score: number;
+  gap_gain?: number;
+  diversity_bonus?: number;
+  total_utility?: number;
+  efficiency_score?: number;
   covered_gaps: string[];
   new_skills: string[];
+  is_ai_generated?: boolean;
+  model?: string;
+  key_deliverables?: string[];
+  roi_rationale?: string;
 }
 
 export interface ImpactSimulation {
@@ -38,6 +42,7 @@ export interface OptimizationResponse {
 export interface OptimizationRequest {
   user_skills: string[];
   missing_skills: string[];
+  matching_skills?: string[];
   target_role: string;
   existing_projects: any[];
   effort_budget_hours: number;
@@ -54,6 +59,10 @@ export class OptimizationService {
 
   getRecommendations(request: OptimizationRequest): Observable<OptimizationResponse> {
     return this.http.post<OptimizationResponse>(`${this.apiUrl}/recommend`, request);
+  }
+
+  generateCustomBlueprint(request: OptimizationRequest): Observable<RecommendedProject> {
+    return this.http.post<RecommendedProject>(`${this.apiUrl}/generate-custom-blueprint`, request);
   }
 }
 

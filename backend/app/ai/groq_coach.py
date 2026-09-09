@@ -120,6 +120,7 @@ Your mission is to provide rigorous, actionable, high-signal advice to help deve
 3. **Encouraging yet Candid:** Praise solid foundations, but clearly point out red flags that hiring managers look for (e.g. lack of testing, no CI/CD, shallow CRUD projects, single-language portfolio).
 4. **Formatting:** Use clean GitHub Markdown (bullet points, bold highlights, code blocks when discussing architectures or commands).
 5. **Language Flexibility:** Respond in English or Tagalog/Taglish based on the user's language.
+6. **Direct Resume & ATS Audits:** When the user requests an audit of their uploaded resume or asks for bullet point improvements based on their extracted skills and projects, NEVER state that you cannot read the raw PDF or ask the user to re-paste their resume text. Directly perform the executive ATS audit using the provided extracted skills and projects, evaluate target role keyword alignment, and immediately formulate 3 high-impact STAR-format (Situation-Task-Action-Result) bullet points with quantifiable engineering metrics.
 """
 
     def chat(self, messages: List[Dict[str, str]], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -147,7 +148,7 @@ Your mission is to provide rigorous, actionable, high-signal advice to help deve
                         messages=groq_messages,
                         model=model_id,
                         temperature=0.7,
-                        max_tokens=1024,
+                        max_tokens=4096,
                     )
                     reply = chat_completion.choices[0].message.content
                     if reply and reply.strip():
@@ -220,6 +221,129 @@ Your mission is to provide rigorous, actionable, high-signal advice to help deve
             "ideas_markdown": response["message"],
             "model": response["model"],
             "is_demo": response["is_demo"]
+        }
+
+    def generate_dynamic_custom_blueprint(
+        self,
+        target_role: str,
+        missing_skills: List[str],
+        user_skills: List[str],
+        effort_budget_hours: int = 40,
+        existing_projects: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
+        """
+        Dynamically synthesizes a 100% custom, production-grade project blueprint
+        tailored to the user's specific target role, skill gaps, and effort budget.
+        """
+        missing_str = ", ".join(missing_skills[:6]) if missing_skills else "advanced industry practices"
+        user_skills_str = ", ".join(user_skills[:8]) if user_skills else "core foundational skills"
+        tier_label = "Sprint (~20 hrs)" if effort_budget_hours <= 25 else ("Standard (~40 hrs)" if effort_budget_hours <= 50 else "Capstone (~80 hrs)")
+
+        system_instruction = (
+            "You are an Elite Principal Software Architect & AI Engineering Coach at PortfolioIQ AI. "
+            "You MUST output valid JSON strictly without markdown fences or additional commentary. "
+            "Return a single JSON object with the following schema:\n"
+            "{\n"
+            '  "title": "string (Compelling, modern production-grade project title)",\n'
+            '  "domain": "string (e.g. UI/UX Design, Frontend Development, AI / ML, Backend Development, DevOps)",\n'
+            '  "difficulty": "string (Beginner / Intermediate / Advanced)",\n'
+            '  "estimated_hours": number (realistic hours close to the specified budget),\n'
+            '  "skills": ["string", "string"] (list of 4-7 specific skills taught/used, prioritizing the missing skills),\n'
+            '  "description": "string (2-3 concise sentences on problem statement, business value, and what the project accomplishes)",\n'
+            '  "architecture_highlights": "string (Technical stack, patterns, design principles, e.g. Design tokens, JWT auth, Vector embeddings)",\n'
+            '  "key_deliverables": ["string", "string", "string"] (3 bullet points of concrete artifacts built),\n'
+            '  "roi_rationale": "string (1-2 sentences explaining why this project maximizes hiring ROI for the role)"\n'
+            "}"
+        )
+
+        user_prompt = (
+            f"Generate a customized {tier_label} portfolio blueprint for a developer aiming for the role of '{target_role}'.\n"
+            f"- Missing Skill Gaps to Close: {missing_str}\n"
+            f"- Existing Skills: {user_skills_str}\n"
+            f"- Effort Budget Limit: {effort_budget_hours} hours\n\n"
+            f"Requirements:\n"
+            f"1. Make the project realistic, production-grade, and tailored specifically for {target_role}.\n"
+            f"2. Ensure the scope directly addresses the missing skill gaps within {effort_budget_hours} hours."
+        )
+
+        if self.client and self.api_key:
+            try:
+                chat_completion = self.client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    model=self.active_model,
+                    temperature=0.4,
+                    max_tokens=900,
+                    response_format={"type": "json_object"}
+                )
+                raw_json = chat_completion.choices[0].message.content.strip()
+                parsed = json.loads(raw_json)
+                
+                # Tag and validate
+                parsed["id"] = f"dynamic-ai-{int(effort_budget_hours)}h"
+                parsed["is_ai_generated"] = True
+                parsed["model"] = self.active_model
+                parsed["covered_gaps"] = [s for s in parsed.get("skills", []) if s.lower() in {m.lower() for m in missing_skills}]
+                parsed["new_skills"] = [s for s in parsed.get("skills", []) if s.lower() not in {u.lower() for u in user_skills}]
+                return parsed
+            except Exception as e:
+                print(f"[GroqCoachEngine] Dynamic blueprint generation error: {e}")
+
+        # Intelligent Fallback when offline or error
+        fallback_skills = list(missing_skills[:4]) if missing_skills else ["Clean Architecture", "API Integration", "CI/CD"]
+        if "UI/UX" in target_role or "Designer" in target_role:
+            domain = "UI/UX Design"
+            title = f"Interactive {tier_label} Design System & Accessible Component Showcase"
+            desc = "Production-grade design token hierarchy and responsive WCAG-compliant UI components designed to prove mastery of modern product design principles."
+            arch = "Design tokens, atomic components, Figma-to-code sync, responsive utility styling."
+            deliverables = ["Figma Component Library", "Interactive Storybook Documentation", "Live Responsive Prototype"]
+            fallback_skills = list(set(["Figma", "UI/UX Design", "Design Systems", "Tailwind CSS"] + fallback_skills))
+        elif "Frontend" in target_role:
+            domain = "Frontend Development"
+            title = f"High-Performance {tier_label} Reactive SPA with Real-Time State"
+            desc = "Modular client-side application with optimistic UI updates, responsive layouts, and seamless API integration."
+            arch = "Signal state management, standalone component hierarchy, responsive grid system."
+            deliverables = ["Responsive Web Application", "State Management Store", "API Client Module"]
+            fallback_skills = list(set(["TypeScript", "Angular", "Tailwind CSS", "REST API"] + fallback_skills))
+        elif "Backend" in target_role:
+            domain = "Backend Development"
+            title = f"High-Concurrency {tier_label} Microservice API with Distributed Cache"
+            desc = "Scalable backend REST service with asynchronous request processing, relational data modeling, and automated Swagger documentation."
+            arch = "Async/await I/O, Redis caching, PostgreSQL connection pooling, JWT security."
+            deliverables = ["Containerized REST API", "Relational Database Schema", "Automated Postman Collection"]
+            fallback_skills = list(set(["Python", "FastAPI", "PostgreSQL", "Docker"] + fallback_skills))
+        elif "AI" in target_role or "Machine Learning" in target_role or "Data" in target_role:
+            domain = "AI & Data Science"
+            title = f"Intelligent {tier_label} RAG Knowledge Retrieval & Analytics Pipeline"
+            desc = "Vector search embedding pipeline with real-time semantic query citations and statistical data validation."
+            arch = "Vector similarity search, semantic chunking, prompt engineering, FastAPI serving."
+            deliverables = ["Vector Embeddings Pipeline", "AI Search Agent", "Performance Evaluation Report"]
+            fallback_skills = list(set(["Python", "FastAPI", "Vector Databases", "Retrieval-Augmented Generation (RAG)"] + fallback_skills))
+        else:
+            domain = "Software Engineering"
+            title = f"Full-Stack {tier_label} Production Service & Automated Quality Gate"
+            desc = "End-to-end full-stack software service with automated test coverage, database migrations, and container deployment."
+            arch = "Clean architecture, automated CI/CD pipeline, relational persistence."
+            deliverables = ["Production Service Codebase", "CI/CD Deployment Manifest", "API Documentation"]
+            fallback_skills = list(set(["Git", "REST API", "Docker", "SQL"] + fallback_skills))
+
+        return {
+            "id": f"dynamic-ai-{int(effort_budget_hours)}h",
+            "title": title,
+            "domain": domain,
+            "difficulty": "Intermediate" if effort_budget_hours <= 45 else "Advanced",
+            "estimated_hours": min(effort_budget_hours, 40) if effort_budget_hours <= 40 else effort_budget_hours,
+            "skills": fallback_skills,
+            "description": desc,
+            "architecture_highlights": arch,
+            "key_deliverables": deliverables,
+            "roi_rationale": f"Engineered specifically to close your identified skill gaps in {missing_str} while fitting within {effort_budget_hours} hours.",
+            "is_ai_generated": True,
+            "model": "local-fallback",
+            "covered_gaps": [s for s in fallback_skills if s.lower() in {m.lower() for m in missing_skills}],
+            "new_skills": [s for s in fallback_skills if s.lower() not in {u.lower() for u in user_skills}]
         }
 
     def _generate_suggested_followups(self, reply: str, context: Optional[Dict[str, Any]] = None) -> List[str]:

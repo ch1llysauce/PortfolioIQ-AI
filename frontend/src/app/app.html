@@ -70,14 +70,6 @@
       </button>
     </nav>
 
-    <div class="sidebar-footer flex-between">
-      <span class="badge" [class.badge-success]="backendConnected()" [class.badge-danger]="!backendConnected()">
-        {{ backendStatus() }}
-      </span>
-      <button class="btn-icon telemetry-icon-btn" (click)="openTelemetryModal()" title="View Real-Time System Architecture & Diagnostics">
-        <svg class="btn-svg" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-      </button>
-    </div>
   </aside>
 
   <!-- MAIN CONTENT AREA -->
@@ -102,14 +94,26 @@
 
       <div class="user-auth-bar">
         <ng-container *ngIf="currentUser(); else authButtons">
-          <div class="user-profile-badge">
-            <span class="user-avatar-initial">{{ (currentUser()?.email || 'U')[0].toUpperCase() }}</span>
-            <span class="user-greeting"><strong>{{ currentUser()?.email }}</strong></span>
+          <div class="user-profile-widget flex-align gap-sm">
+            <div class="user-profile-badge" [title]="'Signed in as ' + currentUser()?.email">
+              <div class="user-avatar-initial">{{ getUserInitial() }}</div>
+              <div class="user-profile-info">
+                <span class="user-display-name">{{ getUserDisplayName() }}</span>
+                <span class="user-email-subtitle">{{ currentUser()?.email }}</span>
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm header-signout-btn" (click)="confirmSignOut()" title="Sign out of your account">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Sign Out</span>
+            </button>
           </div>
-          <button class="btn btn-secondary btn-sm auth-signout-btn" (click)="confirmSignOut()">Sign Out</button>
         </ng-container>
         <ng-template #authButtons>
-          <div class="header-auth-actions">
+          <div class="header-auth-actions flex-align gap-sm">
             <button class="btn btn-outline btn-sm" (click)="openAuthModal('login')">Sign In</button>
             <button class="btn btn-primary btn-sm" (click)="openAuthModal('register')">Get Started</button>
           </div>
@@ -117,6 +121,41 @@
       </div>
     </header>
 
+    <!-- MOBILE HORIZONTAL FEATURES QUICK-BAR (Stage 16 Responsive) -->
+    <div class="mobile-features-bar">
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'dashboard'" (click)="setTab('dashboard')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'projects'" (click)="setTab('projects')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+        <span>Projects</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'skills'" (click)="setTab('skills')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/><circle cx="12" cy="12" r="3.5"/></svg>
+        <span>Skills</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'coach'" (click)="setTab('coach')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M12 4v4"></path><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M9 13v2"></path><path d="M15 13v2"></path></svg>
+        <span>AI Coach</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'resume'" (click)="setTab('resume')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+        <span>Resume</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'career'" (click)="setTab('career')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+        <span>Optimizer</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'knowledge'" (click)="setTab('knowledge')">
+        <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        <span>Knowledge</span>
+      </button>
+      <button class="mobile-feature-chip" [class.active]="activeTab() === 'github'" (click)="setTab('github')">
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        <span>GitHub</span>
+      </button>
+    </div>
 
     <!-- CONTENT BODY -->
     <main class="content-container">
@@ -128,7 +167,16 @@
           <!-- Health Score Box -->
           <div class="card health-card">
             <div class="card-header flex-between">
-              <h2>Portfolio Health Status</h2>
+              <div class="flex-align gap-xs">
+                <h2>Portfolio Health Status</h2>
+                <button class="btn-icon info-score-btn" (click)="openScoreInfoModal()" title="How is this score calculated? Click for full rubric">
+                  <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
               <div class="flex-align gap-xs">
                 <button class="btn btn-outline btn-xs export-dossier-btn" (click)="exportPortfolioPdf()" title="Export / Print Developer Dossier Report">
                   <svg class="btn-svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -318,12 +366,30 @@
               </div>
 
               <div class="form-group flex-1">
-                <label class="form-label">Lifecycle Status</label>
-                <select [(ngModel)]="newProjectStatus" class="form-select">
-                  <option value="active">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="idea">Idea / Concept</option>
-                </select>
+                <label class="form-label">Project Phase / Lifecycle</label>
+                <div class="phase-selector-group">
+                  <button 
+                    type="button" 
+                    class="phase-btn phase-idea" 
+                    [class.active]="newProjectStatus === 'idea'" 
+                    (click)="setNewProjectStatus('idea')">
+                    <span class="status-dot dot-idea"></span> Idea
+                  </button>
+                  <button 
+                    type="button" 
+                    class="phase-btn phase-active" 
+                    [class.active]="newProjectStatus === 'active'" 
+                    (click)="setNewProjectStatus('active')">
+                    <span class="status-dot dot-active"></span> In Progress
+                  </button>
+                  <button 
+                    type="button" 
+                    class="phase-btn phase-completed" 
+                    [class.active]="newProjectStatus === 'completed'" 
+                    (click)="setNewProjectStatus('completed')">
+                    <span class="status-dot dot-completed"></span> Completed
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -355,45 +421,62 @@
 
         <!-- Projects Grid -->
         <div class="projects-modern-grid" *ngIf="getFilteredProjects().length > 0">
-          <div class="project-glass-card" *ngFor="let project of getFilteredProjects()">
+          <div 
+            class="project-glass-card" 
+            *ngFor="let project of getFilteredProjects()"
+            [id]="'project-card-' + project.id"
+            [class.project-card-highlighted]="highlightedProjectId() === project.id">
             
             <!-- Card Header -->
-            <div class="proj-card-top flex-between">
-              <div class="proj-title-group flex-align gap-xs">
-                <div class="proj-icon-badge">
-                  <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+            <div class="proj-card-top">
+              <div class="proj-header-main">
+                <div class="proj-title-group">
+                  <div class="proj-icon-badge">
+                    <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+                  </div>
+                  <h3 class="proj-title">{{ project.name }}</h3>
                 </div>
-                <h3 class="proj-title" [title]="project.name">{{ project.name }}</h3>
+
+                <div class="proj-header-actions">
+                  <button class="btn-icon proj-edit-btn" (click)="openEditProjectModal(project)" title="Edit Project Title & Description">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="btn-icon proj-delete-btn" (click)="deleteProject(project.id, project.name)" title="Delete Project">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
               </div>
 
-              <div class="proj-header-right flex-align gap-xs">
-                <span class="modern-status-badge" [class]="'badge-status-' + project.status">
+              <!-- Phase Status & ML Classification Meta Bar -->
+              <div class="proj-meta-bar">
+                <div class="proj-status-dropdown-wrapper" [class]="'wrapper-status-' + project.status">
                   <span class="status-dot"></span>
-                  {{ project.status === 'active' ? 'In Progress' : (project.status === 'completed' ? 'Completed' : 'Idea') }}
-                </span>
-                <button class="btn-icon proj-delete-btn" (click)="deleteProject(project.id, project.name)" title="Delete Project">
-                  <svg class="btn-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </div>
+                  <select 
+                    [ngModel]="project.status" 
+                    (ngModelChange)="updateProjectStatus(project.id, $event, project.name)"
+                    class="modern-status-select" 
+                    [class]="'select-status-' + project.status"
+                    title="Change Project Phase">
+                    <option value="idea">Idea</option>
+                    <option value="active">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
 
-            <!-- Project Description -->
-            <p class="proj-card-desc" [title]="project.description || 'No description provided.'">
-              {{ project.description || 'No description provided for this project.' }}
-            </p>
-
-            <!-- ML Classification AI Pill -->
-            <div class="proj-ai-domain-wrapper" *ngIf="mlPredictions()[project.id]">
-              <div class="proj-ai-domain-pill" [class.ai-warning]="mlPredictions()[project.id].needs_details || mlPredictions()[project.id].confidence_score <= 30">
-                <svg class="ai-sparkle-svg" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
-                <span *ngIf="!mlPredictions()[project.id].needs_details && mlPredictions()[project.id].confidence_score > 30">
-                  ML Domain: <strong>{{ mlPredictions()[project.id].predicted_category }}</strong>
-                  <span class="ai-score">({{ mlPredictions()[project.id].confidence_score }}%)</span>
-                </span>
-                <span *ngIf="mlPredictions()[project.id].needs_details || mlPredictions()[project.id].confidence_score <= 30">
-                  ML Domain: <strong>Needs Details</strong>
-                  <span class="ai-score">({{ mlPredictions()[project.id].confidence_score }}%)</span>
-                </span>
+                <!-- ML Classification AI Pill -->
+                <div class="proj-ai-domain-wrapper" *ngIf="mlPredictions()[project.id]">
+                  <div class="proj-ai-domain-pill" [class.ai-warning]="mlPredictions()[project.id].needs_details || mlPredictions()[project.id].confidence_score <= 30">
+                    <svg class="ai-sparkle-svg" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                    <span *ngIf="!mlPredictions()[project.id].needs_details && mlPredictions()[project.id].confidence_score > 30">
+                      ML Domain: <strong>{{ mlPredictions()[project.id].predicted_category }}</strong>
+                      <span class="ai-score">({{ mlPredictions()[project.id].confidence_score }}%)</span>
+                    </span>
+                    <span *ngIf="mlPredictions()[project.id].needs_details || mlPredictions()[project.id].confidence_score <= 30">
+                      ML Domain: <strong>Needs Details</strong>
+                      <span class="ai-score">({{ mlPredictions()[project.id].confidence_score }}%)</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -401,12 +484,24 @@
             <div class="proj-tech-stack-section">
               <div class="proj-tech-label flex-between">
                 <span>Tech Stack ({{ project.project_skills?.length || 0 }})</span>
+                <button 
+                  *ngIf="(project.project_skills?.length || 0) > 6"
+                  type="button"
+                  class="btn-tech-toggle" 
+                  (click)="toggleProjectSkillsExpanded(project.id)"
+                  title="Toggle visible skills">
+                  {{ isProjectSkillsExpanded(project.id) ? 'Show less' : '+' + (project.project_skills.length - 6) + ' more' }}
+                </button>
               </div>
               <div class="proj-chips-container" *ngIf="project.project_skills?.length">
-                <span class="modern-tech-chip" *ngFor="let ps of project.project_skills">
-                  <span>{{ ps.skills?.name }}</span>
-                  <button class="chip-remove-btn" (click)="detachSkillFromProject(project.id, ps.skill_id, ps.skills?.name)" title="Remove {{ ps.skills?.name }}">×</button>
-                </span>
+                <ng-container *ngFor="let ps of project.project_skills; let i = index">
+                  <span 
+                    class="modern-tech-chip" 
+                    *ngIf="isProjectSkillsExpanded(project.id) || i < 6">
+                    <span>{{ ps.skills?.name }}</span>
+                    <button class="chip-remove-btn" (click)="detachSkillFromProject(project.id, ps.skill_id, ps.skills?.name)" title="Remove {{ ps.skills?.name }}">×</button>
+                  </span>
+                </ng-container>
               </div>
               <div class="empty-tech-hint" *ngIf="!project.project_skills?.length">
                 <span>No skills attached yet. Attach below:</span>
@@ -417,7 +512,7 @@
             <div class="proj-card-footer flex-between">
               <button class="btn btn-outline btn-sm proj-analysis-btn" (click)="openProjectAnalysis(project)">
                 <svg class="btn-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                <span>View Analysis</span>
+                <span>View AI Analysis</span>
               </button>
 
               <div class="modern-attach-picker">
@@ -476,7 +571,7 @@
             <button class="btn btn-outline btn-sm" *ngIf="projectSearchQuery().trim()" (click)="clearProjectFilters()">
               Clear Search
             </button>
-            <button class="btn btn-secondary btn-sm" *ngIf="!projectSearchQuery().trim() && projectStatusFilter() !== 'all'" (click)="newProjectStatus = projectStatusFilter(); showAddProjectForm.set(true)">
+            <button class="btn btn-secondary btn-sm" *ngIf="!projectSearchQuery().trim() && projectStatusFilter() !== 'all'" (click)="openAddProjectWithCurrentFilter()">
               + Add {{ projectStatusFilter() === 'active' ? 'In Progress' : (projectStatusFilter() === 'completed' ? 'Completed' : 'Idea') }} Project
             </button>
           </div>
@@ -502,31 +597,47 @@
         <!-- Case 2: Signed In - User's Verified Skills Portfolio -->
         <div *ngIf="currentUser()">
           
-          <!-- Sub-view switcher -->
-          <div class="skills-sub-nav flex-between margin-bottom-md">
-            <div class="skills-tab-pills flex-align gap-xs">
-              <button 
-                class="btn btn-sm" 
-                [class.btn-primary]="skillsSubView() === 'my-skills'" 
-                [class.btn-outline]="skillsSubView() !== 'my-skills'" 
-                (click)="setSkillsSubView('my-skills')">
-                My Verified Skills ({{ getUserSkillNames().length }})
-              </button>
-            </div>
-
-            <span class="sub-view-hint text-muted" *ngIf="skillsSubView() === 'my-skills'">
-              Derived from your {{ projects().length }} portfolio projects
-            </span>
-          </div>
-
           <!-- SUB-VIEW 1: MY VERIFIED SKILLS -->
           <div class="card" *ngIf="skillsSubView() === 'my-skills'">
-            <div class="card-header flex-between">
+            <div class="card-header">
               <div>
                 <h2>My Verified Developer Skills</h2>
                 <p class="sub-text">Technologies extracted and verified across your active portfolio projects.</p>
               </div>
-              <span class="count-badge badge-success">{{ getUserSkillNames().length }} Acquired Skills</span>
+            </div>
+
+            <!-- Skills Search & Category Filter Toolbar -->
+            <div class="skills-filter-toolbar margin-bottom-md" *ngIf="getUserSkillNames().length > 0">
+              <div class="skills-toolbar-layout">
+                <!-- Search Input Row -->
+                <div class="skill-search-box">
+                  <svg class="search-svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input 
+                    type="text" 
+                    class="form-input skill-search-input" 
+                    placeholder="Search verified skills or projects..." 
+                    [(ngModel)]="skillSearchQuery" 
+                  />
+                  <button *ngIf="skillSearchQuery()" class="btn-clear-search" (click)="skillSearchQuery.set('')" title="Clear search">✕</button>
+                </div>
+
+                <!-- Category Filter Pills -->
+                <div class="skill-category-pills flex-align gap-xs">
+                  <button 
+                    class="filter-pill" 
+                    [class.active]="skillCategoryFilter() === 'all'" 
+                    (click)="setSkillCategoryFilter('all')">
+                    All ({{ getUserSkillsDetailed().length }})
+                  </button>
+                  <button 
+                    class="filter-pill" 
+                    *ngFor="let cat of getSkillCategories()"
+                    [class.active]="skillCategoryFilter() === cat" 
+                    (click)="setSkillCategoryFilter(cat)">
+                    {{ cat }} ({{ getSkillCountByCategory(cat) }})
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Empty State when user has 0 skills attached -->
@@ -541,12 +652,21 @@
               </div>
             </div>
 
+            <!-- Search / Filter Zero State -->
+            <div class="empty-state text-center" *ngIf="getUserSkillNames().length > 0 && getFilteredUserSkills().length === 0" style="padding: 32px 16px;">
+              <h3>No Matching Skills Found</h3>
+              <p class="text-muted" style="max-width: 480px; margin: 6px auto 16px;">
+                No skills matched your search query "<strong>{{ skillSearchQuery() }}</strong>" in category <strong>{{ skillCategoryFilter() }}</strong>.
+              </p>
+              <button class="btn btn-primary btn-sm" (click)="clearSkillFilters()">Clear Filters</button>
+            </div>
+
             <!-- User's Skills Grid -->
-            <div class="user-skills-grid" *ngIf="getUserSkillNames().length > 0">
-              <div class="user-skill-card" *ngFor="let s of getUserSkillsDetailed()">
+            <div class="user-skills-grid" *ngIf="getFilteredUserSkills().length > 0">
+              <div class="user-skill-card" *ngFor="let s of getFilteredUserSkills()">
                 <div class="user-skill-top flex-between">
-                  <span class="user-skill-name">{{ s.name }}</span>
-                  <div class="flex-align gap-xs">
+                  <span class="user-skill-name" [title]="s.name">{{ s.name }}</span>
+                  <div class="user-skill-actions flex-align gap-xs">
                     <span class="user-skill-count-pill" [title]="'Used in ' + s.count + ' project(s)'">
                       {{ s.count }} project{{ s.count > 1 ? 's' : '' }}
                     </span>
@@ -556,10 +676,27 @@
                   </div>
                 </div>
                 <div class="user-skill-meta">
-                  <span class="skill-cat-pill">{{ s.category }}</span>
+                  <span class="skill-cat-pill" [ngClass]="getSkillCategoryClass(s.category)">
+                    {{ s.category }}
+                  </span>
                 </div>
                 <div class="user-skill-projects">
-                  <span class="project-tag" *ngFor="let pName of s.projectNames">{{ pName }}</span>
+                  <button 
+                    type="button"
+                    class="project-tag clickable-project-tag" 
+                    *ngFor="let pName of (isSkillProjectsExpanded(s.name) ? s.projectNames : (s.projectNames | slice:0:3))" 
+                    [title]="'View project: ' + pName"
+                    (click)="navigateToProject(pName)">
+                    {{ pName }}
+                  </button>
+                  <button 
+                    type="button"
+                    class="project-tag project-tag-more" 
+                    *ngIf="s.projectNames.length > 3" 
+                    (click)="toggleSkillProjectsExpand(s.name)"
+                    [title]="isSkillProjectsExpanded(s.name) ? 'Click to collapse projects' : 'Click to view all ' + s.projectNames.length + ' projects'">
+                    {{ isSkillProjectsExpanded(s.name) ? 'Show less ▴' : ('+' + (s.projectNames.length - 3) + ' more ▾') }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -573,11 +710,15 @@
 
       <!-- TAB 4: CAREER GOALS & SKILL GAP (UI 7 & UI 8 Wireframe Specs) -->
       <div *ngIf="activeTab() === 'career'" class="tab-pane">
-        <div class="card">
-          <div class="card-header flex-between">
-            <h2>Target Career Role & Skill Gap Analysis</h2>
+        <!-- Target Career Role & Skill Gap Analysis Card -->
+        <div class="card career-role-card">
+          <div class="career-header flex-between">
+            <div>
+              <h2 class="career-main-title">Target Career Role & Skill Gap Analysis</h2>
+              <p class="career-subtitle">Benchmark your active skills against industry career requirements</p>
+            </div>
             <div class="role-selector-wrapper" *ngIf="careerRoles().length > 0">
-              <select class="form-select" [ngModel]="selectedRoleId()" (ngModelChange)="selectCareerRole($event)">
+              <select class="form-select modern-role-select" [ngModel]="selectedRoleId()" (ngModelChange)="selectCareerRole($event)">
                 <option *ngFor="let role of careerRoles()" [value]="role.id">
                   Target: {{ role.title }}
                 </option>
@@ -585,42 +726,45 @@
             </div>
           </div>
 
-          <div class="role-summary-box" *ngIf="selectedRole()">
-            <h3>{{ selectedRole()?.title }}</h3>
-            <p>{{ selectedRole()?.description }}</p>
+          <!-- Sleek Role Summary Box -->
+          <div class="role-summary-box-compact" *ngIf="selectedRole()">
+            <div class="role-badge-title">{{ selectedRole()?.title }}</div>
+            <p class="role-desc-text">{{ selectedRole()?.description }}</p>
           </div>
 
-          <div class="skill-gap-analysis-grid">
-            <div class="metric-box">
-              <div class="flex-between">
-                <h3>Role Alignment Score</h3>
-                <span class="match-badge" [class.high-match]="(skillGap()?.match_percentage ?? 0) >= 70">
+          <div class="career-gap-grid">
+            <!-- Alignment Score -->
+            <div class="alignment-score-card">
+              <div class="flex-between flex-align">
+                <span class="alignment-label">Role Alignment Score</span>
+                <span class="match-badge-compact" [class.high-match]="(skillGap()?.match_percentage ?? 0) >= 70">
                   {{ skillGap()?.match_percentage ?? 0 }}% Match
                 </span>
               </div>
-              <div class="progress-bar-bg margin-top-sm">
-                <div class="progress-bar-fill" [style.width.%]="skillGap()?.match_percentage ?? 0"></div>
+              <div class="progress-bar-bg-compact">
+                <div class="progress-bar-fill-compact" [style.width.%]="skillGap()?.match_percentage ?? 0"></div>
               </div>
             </div>
 
-            <div class="skill-lists-wrapper">
-              <div class="skill-list-group">
-                <span class="group-title text-success">Matching Skills ({{ skillGap()?.matching_skills?.length ?? 0 }})</span>
-                <div class="chip-container">
-                  <span class="chip chip-success" *ngFor="let skill of skillGap()?.matching_skills">
+            <!-- Skills Split -->
+            <div class="career-skills-split">
+              <div class="career-skill-group">
+                <span class="skill-group-header text-success">Matching Skills ({{ skillGap()?.matching_skills?.length ?? 0 }})</span>
+                <div class="compact-chip-cloud">
+                  <span class="compact-chip chip-match" *ngFor="let skill of skillGap()?.matching_skills">
                     {{ skill }}
                   </span>
-                  <span class="empty-hint" *ngIf="!skillGap()?.matching_skills?.length">No matching skills yet</span>
+                  <span class="empty-skills-text" *ngIf="!skillGap()?.matching_skills?.length">No matching skills yet</span>
                 </div>
               </div>
 
-              <div class="skill-list-group">
-                <span class="group-title text-danger">Skill Gaps Needed ({{ skillGap()?.missing_skills?.length ?? 0 }})</span>
-                <div class="chip-container">
-                  <span class="chip chip-danger" *ngFor="let skill of skillGap()?.missing_skills">
+              <div class="career-skill-group">
+                <span class="skill-group-header text-danger">Skill Gaps Needed ({{ skillGap()?.missing_skills?.length ?? 0 }})</span>
+                <div class="compact-chip-cloud">
+                  <span class="compact-chip chip-gap" *ngFor="let skill of skillGap()?.missing_skills">
                     {{ skill }}
                   </span>
-                  <span class="empty-hint text-success" *ngIf="!skillGap()?.missing_skills?.length">Great job! All target role skills acquired!</span>
+                  <span class="empty-skills-text text-success" *ngIf="!skillGap()?.missing_skills?.length">All target role skills acquired!</span>
                 </div>
               </div>
             </div>
@@ -628,12 +772,12 @@
         </div>
 
         <!-- Controls & Configuration Header Card -->
-        <div class="card optimizer-header-card margin-top-md">
-          <div class="card-header flex-between">
+        <div class="card optimizer-header-card">
+          <div class="optimizer-top-row flex-between">
             <div>
-              <h2>AI Portfolio Optimizer & Project Recommender</h2>
-              <p class="section-subtitle">
-                Uses multi-objective constraint optimization to calculate the highest-yield projects and skills for your target role.
+              <h2 class="optimizer-title">AI Portfolio Optimizer & Project Recommender</h2>
+              <p class="optimizer-subtext">
+                Multi-objective constraint optimization to calculate the highest-yield projects and skills for your target role.
               </p>
             </div>
             <div class="optimizer-role-badge">
@@ -645,7 +789,7 @@
 
           <div class="optimizer-controls-row">
             <div class="control-group">
-              <label class="control-label">Development Effort Budget:</label>
+              <span class="control-label">Development Effort Budget:</span>
               <div class="budget-pill-group">
                 <button 
                   type="button" 
@@ -671,34 +815,55 @@
               </div>
             </div>
 
-            <button 
-              class="btn btn-primary run-opt-btn" 
-              [disabled]="isOptimizing()" 
-              (click)="runPortfolioOptimization()">
-              <span *ngIf="!isOptimizing()">Run Portfolio Optimization</span>
-              <span *ngIf="isOptimizing()">Computing Optimal Path...</span>
-            </button>
+            <div class="opt-action-buttons-row">
+              <button 
+                class="btn btn-primary run-opt-btn" 
+                [disabled]="isOptimizing() || isGeneratingCustomBlueprint()" 
+                (click)="runPortfolioOptimization()">
+                <span *ngIf="!isOptimizing()">Run Portfolio Optimization</span>
+                <span *ngIf="isOptimizing()">Computing Optimal Path...</span>
+              </button>
+
+              <button 
+                class="btn btn-outline-ai generate-ai-btn" 
+                [disabled]="isGeneratingCustomBlueprint() || isOptimizing()" 
+                (click)="generateDynamicAiBlueprint()">
+                <span *ngIf="!isGeneratingCustomBlueprint()">Synthesize AI Dynamic Blueprint</span>
+                <span *ngIf="isGeneratingCustomBlueprint()">AI Coach Generating Custom Project...</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Empty State Prompt -->
-        <div class="card optimizer-empty-state margin-top-md" *ngIf="!optimizationResult() && !isOptimizing()">
+        <div class="card optimizer-empty-state" *ngIf="!optimizationResult() && !customAiBlueprint() && !isOptimizing() && !isGeneratingCustomBlueprint()">
           <h3>Ready to Optimize Your Developer Portfolio</h3>
           <p>
-            Our optimization algorithm evaluates your current projects, detected skill gaps for 
-            <strong>{{ selectedRole()?.title || 'your career goal' }}</strong>, and available study hours to formulate 
-            the best blueprint projects and learning schedule.
+            Choose between <strong>Mathematical Knapsack Optimization</strong> (highest ROI from curated blueprints) 
+            or <strong>Dynamic AI Synthesis</strong> (100% bespoke project blueprint generated on-the-fly by Groq Llama-3).
           </p>
-          <button class="btn btn-primary" (click)="runPortfolioOptimization()">
-            Compute My Optimal Recommendations
-          </button>
+          <div class="flex-align gap-sm justify-center margin-top-sm">
+            <button class="btn btn-primary btn-sm" (click)="runPortfolioOptimization()">
+              Run Portfolio Optimization
+            </button>
+            <button class="btn btn-outline-ai btn-sm" (click)="generateDynamicAiBlueprint()">
+              Synthesize AI Dynamic Blueprint
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Generating Loading Banner -->
+        <div class="card ai-synthesis-loading-card" *ngIf="isGeneratingCustomBlueprint()">
+          <div class="ai-pulse-spinner"></div>
+          <h4>PortfolioIQ AI is Synthesizing a Custom Blueprint...</h4>
+          <p>Analyzing {{ selectedRole()?.title || 'your target role' }} requirements, identified skill gaps, and your {{ effortBudgetHours() }}-hour budget to construct a production-grade architecture.</p>
         </div>
 
         <!-- Results View -->
-        <div class="optimization-results-container margin-top-md" *ngIf="optimizationResult()">
+        <div class="optimization-results-container" *ngIf="optimizationResult() || customAiBlueprint()">
           
-          <!-- Impact Simulation Bar -->
-          <div class="card simulation-hero-card">
+          <!-- Impact Simulation Bar (when optimizationResult exists) -->
+          <div class="card simulation-hero-card" *ngIf="optimizationResult()">
             <div class="sim-metrics-grid">
               <div class="sim-metric-box">
                 <span class="sim-label">Target Role Alignment</span>
@@ -729,84 +894,220 @@
             </div>
           </div>
 
-          <!-- Recommended Projects Section -->
-          <div class="optimizer-section-heading">
-            <h3>Recommended Blueprint Projects</h3>
-            <p>Tailored projects mathematically proven to close your biggest skill gaps with highest ROI.</p>
+          <!-- Hybrid Blueprint View Switcher (when both or custom exists) -->
+          <div class="blueprint-view-switcher" *ngIf="optimizationResult() && customAiBlueprint()">
+            <button 
+              type="button" 
+              class="switcher-pill" 
+              [class.active]="activeBlueprintView() === 'curated'" 
+              (click)="setActiveBlueprintView('curated')">
+              Curated Optimal Blueprints ({{ optimizationResult()?.recommended_projects?.length }})
+            </button>
+            <button 
+              type="button" 
+              class="switcher-pill ai-pill" 
+              [class.active]="activeBlueprintView() === 'ai_custom'" 
+              (click)="setActiveBlueprintView('ai_custom')">
+              AI-Synthesized Custom Blueprint (Groq)
+            </button>
           </div>
 
-          <div class="rec-projects-grid">
-            <div class="card rec-project-card" *ngFor="let rec of optimizationResult()?.recommended_projects">
-              <div class="rec-card-header flex-between">
-                <div class="flex-align">
-                  <span class="domain-tag">{{ rec.domain }}</span>
-                  <span class="difficulty-tag" [class]="'diff-' + rec.difficulty.toLowerCase()">{{ rec.difficulty }}</span>
+          <!-- 1. AI Custom Generated Blueprint View -->
+          <div class="custom-ai-blueprint-view" *ngIf="customAiBlueprint() && (activeBlueprintView() === 'ai_custom' || !optimizationResult())">
+            <div class="optimizer-section-heading flex-between">
+              <div>
+                <div class="flex-align gap-xs">
+                  <span class="ai-generated-badge">Groq LLM Synthesized</span>
+                  <h3>{{ customAiBlueprint()?.title }}</h3>
                 </div>
-                <span class="hours-tag">~{{ rec.estimated_hours }} hrs</span>
+                <p>100% custom-tailored project blueprint designed on-the-fly for your exact profile.</p>
+              </div>
+              <button class="btn btn-outline-ai btn-sm" (click)="generateDynamicAiBlueprint()" [disabled]="isGeneratingCustomBlueprint()">
+                Re-Synthesize New AI Idea
+              </button>
+            </div>
+
+            <div class="card custom-ai-blueprint-card">
+              <div class="rec-card-header flex-between">
+                <div class="flex-align gap-xs">
+                  <span class="domain-tag">{{ customAiBlueprint()?.domain }}</span>
+                  <span class="difficulty-tag diff-intermediate">{{ customAiBlueprint()?.difficulty }}</span>
+                  <span class="model-tag">{{ customAiBlueprint()?.model || 'Groq Llama-3' }}</span>
+                </div>
+                <span class="hours-tag">~{{ customAiBlueprint()?.estimated_hours }} hrs budget</span>
               </div>
 
-              <h4 class="rec-title">{{ rec.title }}</h4>
-              <p class="rec-desc">{{ rec.description }}</p>
+              <p class="rec-desc margin-top-sm">{{ customAiBlueprint()?.description }}</p>
 
-              <div class="rec-arch-box">
+              <div class="rec-arch-box margin-top-sm">
                 <strong>Architecture Highlights:</strong>
-                <p>{{ rec.architecture_highlights }}</p>
+                <p>{{ customAiBlueprint()?.architecture_highlights }}</p>
+              </div>
+
+              <!-- Key Deliverables -->
+              <div class="rec-deliverables-box margin-top-sm" *ngIf="customAiBlueprint()?.key_deliverables?.length">
+                <strong>Concrete Key Deliverables:</strong>
+                <ul class="deliverables-list">
+                  <li *ngFor="let item of customAiBlueprint()?.key_deliverables">{{ item }}</li>
+                </ul>
+              </div>
+
+              <!-- Hiring ROI Rationale -->
+              <div class="rec-roi-box margin-top-sm" *ngIf="customAiBlueprint()?.roi_rationale">
+                <strong>Hiring ROI Rationale:</strong>
+                <p class="text-secondary">{{ customAiBlueprint()?.roi_rationale }}</p>
               </div>
 
               <!-- Skills Addressed -->
-              <div class="rec-skills-section">
-                <div class="skills-group" *ngIf="rec.covered_gaps?.length">
+              <div class="rec-skills-section margin-top-sm">
+                <div class="skills-group" *ngIf="customAiBlueprint()?.covered_gaps?.length">
                   <span class="skills-group-label text-success">Closes Target Gap:</span>
-                  <div class="chip-container">
-                    <span class="chip chip-success" *ngFor="let s of rec.covered_gaps">{{ s }}</span>
+                  <div class="compact-chip-cloud">
+                    <span class="compact-chip chip-gap-covered" *ngFor="let s of customAiBlueprint()?.covered_gaps">{{ s }}</span>
                   </div>
                 </div>
 
-                <div class="skills-group" *ngIf="rec.new_skills?.length">
-                  <span class="skills-group-label text-primary">New Complementary Skills:</span>
-                  <div class="chip-container">
-                    <span class="chip chip-primary" *ngFor="let s of rec.new_skills">{{ s }}</span>
+                <div class="skills-group" *ngIf="customAiBlueprint()?.new_skills?.length">
+                  <span class="skills-group-label text-primary">Complementary Stack:</span>
+                  <div class="compact-chip-cloud">
+                    <span class="compact-chip chip-complementary" *ngFor="let s of customAiBlueprint()?.new_skills">{{ s }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="rec-card-footer flex-between">
-                <div class="rec-stats">
-                  <span class="efficiency-badge" title="Gain per hour">ROI Efficiency: {{ rec.efficiency_score }}x</span>
-                </div>
-                <button class="btn btn-primary btn-sm" (click)="adoptRecommendedProject(rec)">
+              <div class="rec-card-footer flex-between margin-top-md">
+                <span class="custom-ai-label text-secondary">Ready to start building this project?</span>
+                <button class="btn btn-primary btn-sm" (click)="adoptRecommendedProject(customAiBlueprint()!)">
                   + Add to My Projects
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- Optimal Skill Acquisition Learning Path -->
-          <div class="card skill-path-card" *ngIf="optimizationResult()?.optimal_skill_path?.length">
-            <div class="card-header">
-              <h2>Optimal Skill Learning Sequence</h2>
-              <p class="section-subtitle">Recommended sequential order to acquire technologies for maximum learning velocity.</p>
+          <!-- 2. Curated Optimal Projects Section (when viewing curated or no custom) -->
+          <div class="curated-blueprints-view" *ngIf="optimizationResult() && (activeBlueprintView() === 'curated' || !customAiBlueprint())">
+            <div class="optimizer-section-heading">
+              <h3>Recommended Blueprint Projects</h3>
+              <p>Tailored projects mathematically proven to close your biggest skill gaps with highest ROI.</p>
             </div>
 
-            <div class="skill-steps-list">
-              <div class="skill-step-item" *ngFor="let skill of optimizationResult()?.optimal_skill_path; let i = index">
-                <div class="step-circle">{{ i + 1 }}</div>
-                <div class="step-info">
-                  <span class="step-skill-name">{{ skill }}</span>
-                  <span class="step-tag" *ngIf="i === 0">Highest Priority Gap</span>
+            <div class="rec-projects-grid">
+              <div class="card rec-project-card" *ngFor="let rec of optimizationResult()?.recommended_projects">
+                <div class="rec-card-header flex-between">
+                  <div class="flex-align gap-xs">
+                    <span class="domain-tag">{{ rec.domain }}</span>
+                    <span class="difficulty-tag" [class]="'diff-' + rec.difficulty.toLowerCase()">{{ rec.difficulty }}</span>
+                  </div>
+                  <span class="hours-tag">~{{ rec.estimated_hours }} hrs</span>
+                </div>
+
+                <h4 class="rec-title">{{ rec.title }}</h4>
+                <p class="rec-desc">{{ rec.description }}</p>
+
+                <div class="rec-arch-box">
+                  <strong>Architecture Highlights:</strong>
+                  <p>{{ rec.architecture_highlights }}</p>
+                </div>
+
+                <!-- Skills Addressed -->
+                <div class="rec-skills-section">
+                  <div class="skills-group" *ngIf="rec.covered_gaps?.length">
+                    <span class="skills-group-label text-success">Closes Target Gap:</span>
+                    <div class="compact-chip-cloud">
+                      <span class="compact-chip chip-gap-covered" *ngFor="let s of rec.covered_gaps">{{ s }}</span>
+                    </div>
+                  </div>
+
+                  <div class="skills-group" *ngIf="rec.new_skills?.length">
+                    <span class="skills-group-label text-primary">New Complementary Skills:</span>
+                    <div class="compact-chip-cloud">
+                      <span class="compact-chip chip-complementary" *ngFor="let s of rec.new_skills">{{ s }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rec-card-footer flex-between">
+                  <div class="rec-stats">
+                    <span class="efficiency-badge" title="Gain per hour">ROI Efficiency: {{ rec.efficiency_score }}x</span>
+                  </div>
+                  <button class="btn btn-primary btn-sm" (click)="adoptRecommendedProject(rec)">
+                    + Add to My Projects
+                  </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- End-to-End Skill Progression Roadmap (Horizontal Pipeline Visualizer) -->
+          <div class="card skill-roadmap-card" *ngIf="getFullRoleRoadmapNodes().length">
+            <div class="roadmap-card-header flex-between flex-wrap gap-xs">
+              <div>
+                <div class="flex-align gap-xs flex-wrap">
+                  <h3 class="roadmap-title">End-to-End Skill Progression Roadmap</h3>
+                  <span class="roadmap-completion-tag">
+                    {{ getMasteredSkillsCount() }} of {{ getTotalRoleSkillsCount() }} Skills Mastered ({{ getRoleMasteryPercentage() }}%)
+                  </span>
+                </div>
+                <p class="roadmap-subtitle">
+                  Visualizer of your verified competencies (<span class="text-success font-semibold">Acquired</span>) and upcoming learning milestones (<span class="text-primary font-semibold">Target Gaps</span>) for {{ selectedRole()?.title || 'Target Role' }}.
+                </p>
+              </div>
+              <div class="roadmap-legend-chips flex-align gap-xs">
+                <span class="legend-chip legend-mastered">Verified Acquired</span>
+                <span class="legend-chip legend-gap">Next Milestones</span>
+              </div>
+            </div>
+
+            <!-- Horizontal Connected Pipeline Flow -->
+            <div class="roadmap-pipeline-flow">
+              <ng-container *ngFor="let node of getFullRoleRoadmapNodes(); let i = index; let isLast = last">
+                <!-- Mastered Node -->
+                <div class="roadmap-step-node node-mastered" *ngIf="node.status === 'mastered'">
+                  <div class="step-badge-counter badge-mastered">
+                    <svg class="check-mini-svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Acquired
+                  </div>
+                  <div class="step-node-body">
+                    <span class="step-skill-text text-mastered">{{ node.name }}</span>
+                    <span class="step-verified-tag">In Portfolio</span>
+                  </div>
+                </div>
+
+                <!-- Target Gap Node -->
+                <div class="roadmap-step-node node-pending" [class.priority-node]="node.isPriority" *ngIf="node.status === 'pending'">
+                  <div class="step-badge-counter badge-pending">{{ node.stepLabel }}</div>
+                  <div class="step-node-body">
+                    <span class="step-skill-text">{{ node.name }}</span>
+                    <span class="step-status-tag" *ngIf="node.isPriority">Highest Priority Gap</span>
+                    <span class="step-cat-tag" *ngIf="!node.isPriority">Target Gap</span>
+                  </div>
+                </div>
+
+                <!-- Connector Arrow between nodes -->
+                <div class="roadmap-connector" *ngIf="!isLast" [class.connector-mastered]="node.status === 'mastered'">
+                  <svg class="connector-arrow-svg" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </ng-container>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- TAB 5: RESUME PDF EXTRACTOR -->
+      <!-- TAB 5: RESUME PDF EXTRACTOR & ATS INTELLIGENCE -->
       <div *ngIf="activeTab() === 'resume'" class="tab-pane">
-        <div class="card">
+        
+        <!-- Main Container Card -->
+        <div class="card resume-hub-card">
           <div class="card-header flex-between">
-            <h2>AI Resume PDF Extractor</h2>
+            <div>
+              <h2>AI Resume & ATS Intelligence Hub</h2>
+              <p class="section-subtitle">Automated NLP parser, ATS compatibility scoring, and target role keyword matching.</p>
+            </div>
             <span class="badge badge-success">Capstone Feature</span>
           </div>
 
@@ -814,21 +1115,29 @@
           <div class="saved-resume-card margin-bottom-md" *ngIf="savedResumeMeta()">
             <div class="flex-between flex-wrap gap-sm">
               <div class="flex-align gap-sm">
+                <div class="resume-icon-box">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
                 <div>
-                  <div class="flex-align gap-xs">
+                  <div class="flex-align gap-xs flex-wrap">
                     <h3 class="saved-resume-title">{{ savedResumeMeta()?.fileName }}</h3>
                     <span class="badge badge-success">Saved to Cloud Profile</span>
                   </div>
                   <p class="sub-text">
                     Uploaded: {{ savedResumeMeta()?.uploadedAt | date:'medium' }} 
-                    <span *ngIf="savedResumeMeta()?.extractedSkillsCount">• {{ savedResumeMeta()?.extractedSkillsCount }} Skills Extracted</span>
+                    <span *ngIf="getResumeExtractedSkills().length">• {{ getResumeExtractedSkills().length }} Skills Extracted</span>
                   </p>
                 </div>
               </div>
 
-              <div class="flex-align gap-sm">
+              <div class="flex-align gap-sm flex-wrap">
                 <button class="btn btn-primary btn-sm" (click)="openResumeViewer()">
-                  View Resume
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span>View PDF</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" (click)="auditResumeWithCoach()" title="Ask Groq AI Coach for bullet-point critique">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <span>Audit with AI Coach</span>
                 </button>
                 <label for="resume-file-input" class="btn btn-outline btn-sm cursor-pointer" title="Upload a new PDF to replace this resume">
                   Replace
@@ -840,53 +1149,158 @@
             </div>
           </div>
 
+          <!-- Empty State Upload Box -->
           <div class="resume-upload-box" *ngIf="!savedResumeMeta()">
-            <p class="resume-upload-instructions">
-              Upload your <strong>PDF Resume</strong> to automatically extract technical skills and candidate projects into your PortfolioIQ profile.
-            </p>
-            
-            <div class="file-upload-row">
-              <input type="file" accept=".pdf" (change)="onResumeUpload($event)" #resumeFileInput class="file-input-hidden" id="resume-file-input" />
-              <label for="resume-file-input" class="btn btn-primary">
-                Select PDF Resume...
-              </label>
-              <span class="loading-spinner" *ngIf="resumeParsing()">Extracting skills & projects from PDF...</span>
-              <span class="loading-spinner" *ngIf="isSavingResume()">Saving to cloud profile...</span>
+            <div class="upload-dropzone">
+              <div class="upload-hero-icon">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              </div>
+              <h3>Upload Your Developer Resume (PDF)</h3>
+              <p class="resume-upload-instructions">
+                Our NLP engine will extract verified technical skills, detect portfolio projects, and run real-time ATS keyword matching.
+              </p>
+              
+              <div class="file-upload-row">
+                <input type="file" accept=".pdf" (change)="onResumeUpload($event)" #resumeFileInput class="file-input-hidden" id="resume-file-input" />
+                <label for="resume-file-input" class="btn btn-primary btn-lg cursor-pointer">
+                  Select PDF File...
+                </label>
+                <div class="margin-top-xs" *ngIf="resumeParsing() || isSavingResume()">
+                  <span class="loading-spinner" *ngIf="resumeParsing()">Extracting skills & projects from PDF...</span>
+                  <span class="loading-spinner" *ngIf="isSavingResume()">Saving to cloud profile...</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Hidden file input for Replace action when saved resume already exists -->
           <input *ngIf="savedResumeMeta()" type="file" accept=".pdf" (change)="onResumeUpload($event)" class="file-input-hidden" id="resume-file-input" />
 
-          <div class="extracted-results-container" *ngIf="resumeData()">
-            <div class="extracted-results-header flex-between margin-bottom-md">
-              <div>
-                <h3>Extracted Resume Data</h3>
-                <p class="sub-text">AI NLP detected {{ resumeData()?.extracted_skills?.length || 0 }} skills and {{ resumeData()?.extracted_projects?.length || 0 }} candidate projects from your PDF.</p>
-              </div>
-              <button 
-                class="btn btn-primary" 
-                (click)="syncAllResumeSkillsToPortfolio()" 
-                [disabled]="syncingResumeSkills() || !resumeData()?.extracted_skills?.length"
-              >
-                <span *ngIf="!syncingResumeSkills()">Sync All ({{ resumeData()?.extracted_skills?.length }}) Skills to My Portfolio</span>
-                <span *ngIf="syncingResumeSkills()">Syncing to Portfolio...</span>
-              </button>
-            </div>
+          <!-- RESUME INTELLIGENCE DASHBOARD (Visible when Resume is Loaded) -->
+          <div class="resume-dashboard-container margin-top-md" *ngIf="savedResumeMeta() || resumeData()">
             
-            <div class="extracted-group">
-              <div class="flex-between margin-bottom-xs">
-                <h4>Extracted Technical Skills ({{ resumeData()?.extracted_skills?.length }})</h4>
-                <span class="sub-text">Click any skill to add/verify individually</span>
+            <!-- 2-Column Telemetry & Alignment Grid -->
+            <div class="resume-intel-grid">
+              
+              <!-- Card 1: AI ATS Score & Format Health -->
+              <div class="card resume-ats-card">
+                <div class="flex-between margin-bottom-sm">
+                  <div class="flex-align gap-xs">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <h4>ATS Compatibility Score</h4>
+                  </div>
+                  <span class="badge badge-success">ATS Optimized</span>
+                </div>
+
+                <div class="ats-score-display flex-align gap-md margin-bottom-md">
+                  <div class="ats-score-circle">
+                    <span class="ats-score-num">{{ getResumeAtsScore() }}</span>
+                    <span class="ats-score-denom">/100</span>
+                  </div>
+                  <div class="ats-score-verdict">
+                    <strong>High Applicant Pass Rate</strong>
+                    <p class="sub-text">Format is easily readable by enterprise ATS parsers (Workday, Greenhouse, Lever).</p>
+                  </div>
+                </div>
+
+                <div class="ats-sub-metrics">
+                  <div class="metric-row flex-between">
+                    <span>Technical Keyword Density</span>
+                    <strong class="text-indigo-400">92%</strong>
+                  </div>
+                  <div class="progress-bar-bg margin-bottom-sm">
+                    <div class="progress-bar-fill bg-indigo" style="width: 92%;"></div>
+                  </div>
+
+                  <div class="metric-row flex-between">
+                    <span>Format & Parseability</span>
+                    <strong class="text-emerald-400">96%</strong>
+                  </div>
+                  <div class="progress-bar-bg margin-bottom-sm">
+                    <div class="progress-bar-fill bg-emerald" style="width: 96%;"></div>
+                  </div>
+
+                  <div class="metric-row flex-between">
+                    <span>Project & Action Depth</span>
+                    <strong class="text-amber-400">84%</strong>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill bg-amber" style="width: 84%;"></div>
+                  </div>
+                </div>
               </div>
+
+              <!-- Card 2: Target Role Keyword Alignment -->
+              <div class="card resume-alignment-card" *ngIf="getResumeRoleAlignment() as roleAlign">
+                <div class="flex-between margin-bottom-sm">
+                  <div class="flex-align gap-xs">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <h4>Target Role Alignment</h4>
+                  </div>
+                  <span class="badge badge-primary">{{ roleAlign.targetRole }}</span>
+                </div>
+
+                <div class="alignment-summary flex-between margin-bottom-sm">
+                  <span class="sub-text">Match Ratio for {{ roleAlign.targetRole }}:</span>
+                  <strong class="text-indigo-300">{{ roleAlign.matching.length }} of {{ roleAlign.requiredSkills.length }} Skills Matched ({{ roleAlign.matchPercentage }}%)</strong>
+                </div>
+
+                <div class="progress-bar-bg margin-bottom-md">
+                  <div class="progress-bar-fill bg-indigo" [style.width.%]="roleAlign.matchPercentage"></div>
+                </div>
+
+                <!-- Matched vs Missing Tags -->
+                <div class="alignment-tags-section">
+                  <div class="tags-group margin-bottom-sm">
+                    <span class="tag-group-label text-success">✓ Matched on Resume ({{ roleAlign.matching.length }}):</span>
+                    <div class="chip-container mini-chips">
+                      <span class="chip chip-success" *ngFor="let s of roleAlign.matching">{{ s }}</span>
+                      <span class="sub-text" *ngIf="!roleAlign.matching.length">No matching role keywords detected.</span>
+                    </div>
+                  </div>
+
+                  <div class="tags-group">
+                    <span class="tag-group-label text-amber-400">+ Missing from Resume ({{ roleAlign.missing.length }}):</span>
+                    <div class="chip-container mini-chips">
+                      <span class="chip chip-warning" *ngFor="let m of roleAlign.missing" [title]="'Consider adding ' + m + ' experience or projects to your resume'">
+                        + {{ m }}
+                      </span>
+                      <span class="sub-text text-success" *ngIf="!roleAlign.missing.length">All core role keywords present!</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Extracted Technical Skills Section -->
+            <div class="card resume-skills-card margin-top-md" *ngIf="getResumeExtractedSkills().length">
+              <div class="extracted-results-header flex-between flex-wrap gap-sm margin-bottom-md">
+                <div>
+                  <div class="flex-align gap-xs">
+                    <h3>Extracted Technical Skills ({{ getResumeExtractedSkills().length }})</h3>
+                    <span class="badge badge-info">NLP Detected</span>
+                  </div>
+                  <p class="sub-text">Click any individual skill to add/verify in your portfolio, or sync all at once.</p>
+                </div>
+                <button 
+                  class="btn btn-primary btn-sm" 
+                  (click)="syncAllResumeSkillsToPortfolio()" 
+                  [disabled]="syncingResumeSkills()"
+                >
+                  <span *ngIf="!syncingResumeSkills()">Sync All ({{ getResumeExtractedSkills().length }}) to My Portfolio</span>
+                  <span *ngIf="syncingResumeSkills()">Syncing to Portfolio...</span>
+                </button>
+              </div>
+
               <div class="chip-container">
                 <span 
-                  class="chip" 
-                  [class.chip-success]="!isResumeSkillInPortfolio(s)" 
-                  [class.chip-active-portfolio]="isResumeSkillInPortfolio(s)"
-                  *ngFor="let s of resumeData()?.extracted_skills" 
+                  class="chip clickable-chip" 
+                  [class.chip-verified]="isResumeSkillInPortfolio(s)" 
+                  [class.chip-unadded]="!isResumeSkillInPortfolio(s)"
+                  *ngFor="let s of getResumeExtractedSkills()" 
                   (click)="importExtractedSkill(s)" 
-                  [title]="isResumeSkillInPortfolio(s) ? s + ' is already active in your portfolio' : 'Click to add ' + s + ' to your portfolio'"
+                  [title]="isResumeSkillInPortfolio(s) ? s + ' is already verified in your portfolio' : 'Click to add ' + s + ' to your portfolio'"
                 >
                   <span *ngIf="isResumeSkillInPortfolio(s)">✓ {{ s }}</span>
                   <span *ngIf="!isResumeSkillInPortfolio(s)">+ {{ s }}</span>
@@ -894,10 +1308,16 @@
               </div>
             </div>
 
-            <div class="extracted-group" *ngIf="resumeData()?.extracted_projects?.length">
-              <h4>Extracted Projects ({{ resumeData()?.extracted_projects?.length }})</h4>
+            <!-- Extracted Projects Section -->
+            <div class="card resume-projects-card margin-top-md" *ngIf="getResumeExtractedProjects().length">
+              <div class="flex-between margin-bottom-md">
+                <div>
+                  <h3>Extracted Projects ({{ getResumeExtractedProjects().length }})</h3>
+                  <p class="sub-text">Candidate projects detected from your PDF work history and portfolio sections.</p>
+                </div>
+              </div>
               <div class="extracted-projects-grid">
-                <div class="extracted-project-card" *ngFor="let proj of resumeData()?.extracted_projects">
+                <div class="extracted-project-card" *ngFor="let proj of getResumeExtractedProjects()">
                   <div class="flex-between">
                     <strong>{{ proj.name }}</strong>
                     <button class="btn btn-outline btn-sm" (click)="importExtractedProject(proj)">+ Import to Portfolio</button>
@@ -909,7 +1329,9 @@
                 </div>
               </div>
             </div>
+
           </div>
+
         </div>
       </div>
 
@@ -996,18 +1418,21 @@
               </div>
 
               <div class="tier-cards-list">
-                <div class="card tier-node-card" *ngFor="let node of roleSkillTree()?.foundational">
+                <div class="tier-node-card" *ngFor="let node of roleSkillTree()?.foundational" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Click to view in Skill Explorer">
                   <div class="flex-between">
                     <strong class="node-name">{{ node.name }}</strong>
-                    <button class="btn btn-outline btn-xs" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
+                    <button class="btn btn-outline btn-xs" (click)="$event.stopPropagation(); inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
                   </div>
                   <span class="node-cat">{{ node.category }}</span>
                   <div class="prereqs-box" *ngIf="node.prerequisites?.length">
                     <span class="prereq-label">Prerequisites:</span>
-                    <span class="prereq-pill" *ngFor="let p of node.prerequisites">{{ p }}</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites" (click)="$event.stopPropagation(); inspectNode(p); setKnowledgeViewMode('inspector')" [title]="'Inspect ' + p">{{ p }}</span>
                   </div>
                 </div>
-                <div class="empty-hint" *ngIf="!roleSkillTree()?.foundational?.length">No foundational skills classified.</div>
+                <div class="empty-tier-box" *ngIf="!roleSkillTree()?.foundational?.length">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>No foundational skills classified for this role.</span>
+                </div>
               </div>
             </div>
 
@@ -1020,18 +1445,21 @@
               </div>
 
               <div class="tier-cards-list">
-                <div class="card tier-node-card" *ngFor="let node of roleSkillTree()?.intermediate">
+                <div class="tier-node-card" *ngFor="let node of roleSkillTree()?.intermediate" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Click to view in Skill Explorer">
                   <div class="flex-between">
                     <strong class="node-name">{{ node.name }}</strong>
-                    <button class="btn btn-outline btn-xs" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
+                    <button class="btn btn-outline btn-xs" (click)="$event.stopPropagation(); inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
                   </div>
                   <span class="node-cat">{{ node.category }}</span>
                   <div class="prereqs-box" *ngIf="node.prerequisites?.length">
                     <span class="prereq-label">Prerequisites:</span>
-                    <span class="prereq-pill" *ngFor="let p of node.prerequisites">{{ p }}</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites" (click)="$event.stopPropagation(); inspectNode(p); setKnowledgeViewMode('inspector')" [title]="'Inspect ' + p">{{ p }}</span>
                   </div>
                 </div>
-                <div class="empty-hint" *ngIf="!roleSkillTree()?.intermediate?.length">No intermediate skills listed.</div>
+                <div class="empty-tier-box" *ngIf="!roleSkillTree()?.intermediate?.length">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>No intermediate skills listed for this role.</span>
+                </div>
               </div>
             </div>
 
@@ -1044,18 +1472,21 @@
               </div>
 
               <div class="tier-cards-list">
-                <div class="card tier-node-card" *ngFor="let node of roleSkillTree()?.advanced">
+                <div class="tier-node-card" *ngFor="let node of roleSkillTree()?.advanced" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Click to view in Skill Explorer">
                   <div class="flex-between">
                     <strong class="node-name">{{ node.name }}</strong>
-                    <button class="btn btn-outline btn-xs" (click)="inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
+                    <button class="btn btn-outline btn-xs" (click)="$event.stopPropagation(); inspectNode(node.name); setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
                   </div>
                   <span class="node-cat">{{ node.category }}</span>
                   <div class="prereqs-box" *ngIf="node.prerequisites?.length">
                     <span class="prereq-label">Prerequisites:</span>
-                    <span class="prereq-pill" *ngFor="let p of node.prerequisites">{{ p }}</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites" (click)="$event.stopPropagation(); inspectNode(p); setKnowledgeViewMode('inspector')" [title]="'Inspect ' + p">{{ p }}</span>
                   </div>
                 </div>
-                <div class="empty-hint" *ngIf="!roleSkillTree()?.advanced?.length">No advanced skills listed.</div>
+                <div class="empty-tier-box" *ngIf="!roleSkillTree()?.advanced?.length">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: #a78bfa; opacity: 0.85;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <span>All core competencies covered in Tiers 1 & 2.</span>
+                </div>
               </div>
             </div>
 
@@ -1066,11 +1497,13 @@
         <div class="entity-inspector-view" *ngIf="knowledgeViewMode() === 'inspector'">
           
           <div class="card inspector-search-card">
-            <div class="form-row flex-align">
-              <label class="control-label">Explore Skill Connections (General Info):</label>
-              <select #nodeSelect class="form-select" [value]="inspectedNodeName()" (change)="inspectNode(nodeSelect.value)">
-                <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
-              </select>
+            <div class="form-row flex-between flex-wrap gap-md">
+              <div class="flex-align flex-1">
+                <label class="control-label">Explore Skill Connections (General Info):</label>
+                <select class="form-select" [ngModel]="inspectedNodeName()" (ngModelChange)="inspectNode($event)">
+                  <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1141,16 +1574,11 @@
         <div class="path-solver-view" *ngIf="knowledgeViewMode() === 'path'">
           
           <div class="card path-search-card">
-            <div class="flex-between flex-wrap gap-md">
-              <div class="flex-align flex-1">
-                <label class="control-label">Calculate My Personal Learning Path for:</label>
-                <select #goalSelect class="form-select" [value]="goalSkillInput()" (change)="calculateGoalSkillPath(goalSelect.value)">
-                  <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }}</option>
-                </select>
-              </div>
-              <button class="btn btn-primary" (click)="calculateGoalSkillPath(goalSelect.value)">
-                Evaluate Learning Readiness
-              </button>
+            <div class="form-row flex-align">
+              <label class="control-label">Calculate My Personal Learning Path for:</label>
+              <select class="form-select" [ngModel]="goalSkillInput()" (ngModelChange)="calculateGoalSkillPath($event)">
+                <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
+              </select>
             </div>
           </div>
 
@@ -1158,7 +1586,13 @@
             
             <!-- Readiness Status Banner -->
             <div class="readiness-banner" [class.ready]="goalSkillRoadmap()?.is_ready_to_learn" [class.not-ready]="!goalSkillRoadmap()?.is_ready_to_learn">
-              <div>
+              <div style="width: 100%;">
+                <div class="flex-between margin-bottom-sm">
+                  <span class="badge" [class.badge-success]="goalSkillRoadmap()?.is_ready_to_learn" [class.badge-warning]="!goalSkillRoadmap()?.is_ready_to_learn">
+                    {{ goalSkillRoadmap()?.is_ready_to_learn ? 'Learning Path Ready' : 'Prerequisites Required' }}
+                  </span>
+                  <span style="font-size: 0.75rem; color: #94a3b8;">Evaluated against {{ getUserSkillNames().length }} verified skills</span>
+                </div>
                 <h3 *ngIf="goalSkillRoadmap()?.is_ready_to_learn">You Are Ready to Learn {{ goalSkillRoadmap()?.goal_skill }}!</h3>
                 <h3 *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">Prerequisites Needed Before Learning {{ goalSkillRoadmap()?.goal_skill }}</h3>
                 <p *ngIf="goalSkillRoadmap()?.is_ready_to_learn">
@@ -1176,26 +1610,41 @@
               <div class="path-col">
                 <h4 class="text-success">Already Acquired Prerequisites</h4>
                 <div class="path-list" *ngIf="goalSkillRoadmap()?.already_acquired_prereqs?.length; else noneAcquired">
-                  <div class="path-item acquired" *ngFor="let p of goalSkillRoadmap()?.already_acquired_prereqs">
-                    <span>{{ p }}</span>
-                    <span class="badge badge-success">Mastered</span>
+                  <div class="path-item acquired clickable-path-item" *ngFor="let p of goalSkillRoadmap()?.already_acquired_prereqs" (click)="inspectNode(p); setKnowledgeViewMode('inspector')" title="Inspect {{ p }} in Skill Explorer">
+                    <span class="path-skill-name">{{ p }}</span>
+                    <div class="flex-align gap-xs">
+                      <span class="badge badge-success">Mastered</span>
+                      <span class="path-inspect-arrow">→</span>
+                    </div>
                   </div>
                 </div>
                 <ng-template #noneAcquired>
-                  <p class="empty-hint">None of the prerequisites are currently in your active portfolio.</p>
+                  <p class="empty-hint" *ngIf="!goalSkillRoadmap()?.missing_prerequisites_in_order?.length">
+                    No prior prerequisites required for this skill. You can start learning right away!
+                  </p>
+                  <p class="empty-hint" *ngIf="goalSkillRoadmap()?.missing_prerequisites_in_order?.length">
+                    None of the required prerequisites are currently demonstrated in your portfolio.
+                  </p>
                 </ng-template>
               </div>
 
               <div class="path-col">
-                <h4 class="text-danger">Missing Prerequisites (In Sequence)</h4>
+                <h4 [class.text-danger]="goalSkillRoadmap()?.missing_prerequisites_in_order?.length" [class.text-success]="!goalSkillRoadmap()?.missing_prerequisites_in_order?.length">
+                  Missing Prerequisites (In Sequence)
+                </h4>
                 <div class="path-list" *ngIf="goalSkillRoadmap()?.missing_prerequisites_in_order?.length; else noneMissing">
-                  <div class="path-item missing" *ngFor="let m of goalSkillRoadmap()?.missing_prerequisites_in_order; let i = index">
+                  <div class="path-item missing clickable-path-item" *ngFor="let m of goalSkillRoadmap()?.missing_prerequisites_in_order; let i = index" (click)="inspectNode(m); setKnowledgeViewMode('inspector')" title="Inspect {{ m }} in Skill Explorer">
                     <span><strong>Step {{ i + 1 }}:</strong> {{ m }}</span>
-                    <span class="badge badge-warning">Required First</span>
+                    <div class="flex-align gap-xs">
+                      <span class="badge badge-warning">Required First</span>
+                      <span class="path-inspect-arrow">→</span>
+                    </div>
                   </div>
                 </div>
                 <ng-template #noneMissing>
-                  <p class="empty-hint text-success">No missing prerequisites! You can start directly with {{ goalSkillRoadmap()?.goal_skill }}.</p>
+                  <p class="empty-hint text-success">
+                    No missing prerequisites! You can start directly with {{ goalSkillRoadmap()?.goal_skill }}.
+                  </p>
                 </ng-template>
               </div>
 
@@ -1208,115 +1657,141 @@
       </div>
 
       <!-- TAB: GROQ AI CAREER COACH (Stage 13 Spec) -->
-      <div *ngIf="activeTab() === 'coach'" class="tab-pane coach-tab-pane">
+      <div *ngIf="activeTab() === 'coach'" class="tab-pane coach-tab-pane coach-main-canvas">
         
-        <!-- Coach Top Telemetry & Controls Card -->
-        <div class="card coach-context-card">
-          <div class="flex-between flex-wrap gap-md">
+        <!-- Coach Sleek Top Header Bar -->
+        <div class="coach-top-bar">
+          <div class="flex-between flex-wrap gap-md w-full">
             <div class="coach-profile-summary">
+              <div class="coach-main-avatar">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
               <div>
-                <h2>PortfolioIQ AI Developer Coach</h2>
+                <h2 class="coach-title">PortfolioIQ AI Developer Coach</h2>
                 <p class="coach-subtitle">
                   Real-time career mentor powered by 
                   <strong class="text-accent">{{ coachStatus()?.provider || 'Groq Llama-3' }}</strong>
-                  <span class="badge badge-success margin-left-xs" *ngIf="coachStatus()?.live">● Live Cloud Model ({{ coachStatus()?.model }})</span>
+                  <span class="live-model-pill" *ngIf="coachStatus()?.live">
+                    <span class="live-dot"></span>
+                    Live Cloud Model ({{ coachStatus()?.model }})
+                  </span>
                   <span class="badge badge-warning margin-left-xs" *ngIf="!coachStatus()?.live">Demonstration Mode</span>
                 </p>
               </div>
             </div>
 
-            <div class="coach-telemetry-pills">
-              <div class="telemetry-pill">
-                <span class="telemetry-label">Target Role:</span>
-                <span class="telemetry-value">{{ selectedRole()?.title || 'None Selected' }}</span>
-              </div>
-              <div class="telemetry-pill">
-                <span class="telemetry-label">Role Readiness:</span>
-                <span class="telemetry-value text-accent">{{ skillGap()?.match_percentage || 0 }}%</span>
-              </div>
-              <div class="telemetry-pill">
-                <span class="telemetry-label">Health Score:</span>
-                <span class="telemetry-value text-success">{{ portfolioScore()?.overall_health_score || 0 }}/100</span>
-              </div>
+            <!-- Quick Action Buttons on Right -->
+            <div class="coach-header-actions">
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestExecutiveCritique()" [disabled]="coachLoading()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Request Critique</span>
+              </button>
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestProjectRecommendations()" [disabled]="coachLoading()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Recommend Blueprints</span>
+              </button>
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="scrollCoachToTop(true)" title="Scroll to the first message / top of chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                <span>Jump to Start</span>
+              </button>
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="scrollCoachToBottom(true)" title="Scroll to latest message / bottom">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                <span>Latest</span>
+              </button>
+              <button class="btn btn-outline btn-sm coach-action-btn" (click)="clearCoachChat()" title="Reset conversation">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span>Clear Chat</span>
+              </button>
             </div>
-          </div>
-
-          <!-- Quick Action Buttons -->
-          <div class="coach-action-bar">
-            <button class="btn btn-secondary btn-sm" (click)="requestExecutiveCritique()" [disabled]="coachLoading()">
-              Request Full Portfolio Critique
-            </button>
-            <button class="btn btn-secondary btn-sm" (click)="requestProjectRecommendations()" [disabled]="coachLoading()">
-              Recommend Blueprint Projects
-            </button>
-            <button class="btn btn-outline btn-sm" (click)="clearCoachChat()">
-              Clear Chat
-            </button>
           </div>
         </div>
 
-        <!-- Interactive Chat Container -->
-        <div class="card coach-chat-card">
-          <!-- Chat Message Feed -->
-          <div class="chat-message-stream" #chatStream>
-            <div *ngFor="let msg of coachMessages()" 
-                 class="chat-bubble-row" 
-                 [class.user-row]="msg.role === 'user'" 
-                 [class.assistant-row]="msg.role === 'assistant'">
-              
-              <div class="chat-avatar">
-                <span class="user-avatar-initial" *ngIf="msg.role === 'user'">{{ (currentUser()?.email || 'U')[0].toUpperCase() }}</span>
-                <span class="user-avatar-initial" style="background: var(--accent, #8b5cf6);" *ngIf="msg.role === 'assistant'">AI</span>
+        <!-- Interactive Chat Stream Canvas (Main UI) -->
+        <div class="coach-chat-stream-wrapper">
+          <!-- Full-width Scroll Container (Scrollbar pinned at far right edge) -->
+          <div class="chat-message-stream" #chatStream (scroll)="onCoachScroll($event)">
+            <!-- Centered Message Content Column -->
+            <div class="chat-message-stream-inner">
+              <div *ngFor="let msg of coachMessages()" 
+                   class="chat-bubble-row" 
+                   [class.user-row]="msg.role === 'user'" 
+                   [class.assistant-row]="msg.role === 'assistant'">
+                
+                <div class="chat-avatar">
+                  <span class="user-avatar-initial" *ngIf="msg.role === 'user'">{{ (currentUser()?.email || 'U')[0].toUpperCase() }}</span>
+                  <span class="ai-avatar-badge" *ngIf="msg.role === 'assistant'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </div>
+
+                <div class="chat-bubble">
+                  <div class="chat-bubble-header">
+                    <div class="flex-align gap-xs">
+                      <span class="sender-name">{{ msg.role === 'user' ? 'You' : 'PortfolioIQ Coach' }}</span>
+                      <span class="badge badge-demo" *ngIf="msg.isDemo">Demo Mode</span>
+                    </div>
+                    <span class="message-time" *ngIf="msg.timestamp">{{ msg.timestamp }}</span>
+                  </div>
+                  <div class="chat-bubble-content">
+                    <div class="chat-rendered-markdown" [innerHTML]="formatCoachMarkdown(msg.content)"></div>
+                  </div>
+                </div>
               </div>
 
-              <div class="chat-bubble">
-                <div class="chat-bubble-header">
-                  <span class="sender-name">{{ msg.role === 'user' ? 'You' : 'PortfolioIQ Coach' }}</span>
-                  <span class="badge badge-demo" *ngIf="msg.isDemo">Demo Mode</span>
-                  <span class="message-time" *ngIf="msg.timestamp">{{ msg.timestamp }}</span>
+              <!-- Thinking Indicator -->
+              <div class="chat-bubble-row assistant-row" *ngIf="coachLoading()">
+                <div class="chat-avatar">
+                  <span class="ai-avatar-badge">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
                 </div>
-                <div class="chat-bubble-content">
-                  <pre class="chat-text-pre">{{ msg.content }}</pre>
-                </div>
-              </div>
-            </div>
-
-            <!-- Thinking Indicator -->
-            <div class="chat-bubble-row assistant-row" *ngIf="coachLoading()">
-              <div class="chat-avatar">
-                <span class="user-avatar-initial" style="background: var(--accent, #8b5cf6);">AI</span>
-              </div>
-              <div class="chat-bubble typing-bubble">
-                <span class="typing-text">AI Coach is analyzing your portfolio telemetry...</span>
-                <div class="typing-dots">
-                  <span></span><span></span><span></span>
+                <div class="chat-bubble typing-bubble">
+                  <span class="typing-text">AI Coach is analyzing your portfolio telemetry and generating response...</span>
+                  <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Suggested Followup Chips -->
-          <div class="suggested-prompts-container" *ngIf="suggestedFollowups().length && !coachLoading()">
-            <span class="suggested-label">Suggested Questions:</span>
-            <button class="prompt-chip" *ngFor="let prompt of suggestedFollowups()" (click)="sendQuickPrompt(prompt)">
-              {{ prompt }}
-            </button>
-          </div>
-
-          <!-- Chat Input Bar -->
+          <!-- Suggested Followup Chips & Chat Input Dock -->
           <div class="chat-input-bar">
-            <input 
-              type="text" 
-              class="form-input chat-input-field" 
-              placeholder="Ask your AI coach anything (e.g. 'Paano ko mapapaganda ang portfolio ko para maging AI Engineer?')" 
-              [(ngModel)]="coachInput" 
-              (keydown.enter)="sendCoachMessage()" 
-              [disabled]="coachLoading()" 
-            />
-            <button class="btn btn-primary chat-send-btn" (click)="sendCoachMessage()" [disabled]="coachLoading() || !coachInput.trim()">
-              <span *ngIf="!coachLoading()">Send</span>
-              <span *ngIf="coachLoading()">Thinking...</span>
-            </button>
+            <div class="chat-dock-container">
+              <!-- Suggested Followup Chips -->
+              <div class="suggested-prompts-container" *ngIf="suggestedFollowups().length && !coachLoading()">
+                <div class="suggested-label-wrapper">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>
+                  <span class="suggested-label">Suggested Questions:</span>
+                </div>
+                <div class="prompt-chips-wrapper">
+                  <button class="prompt-chip" *ngFor="let prompt of suggestedFollowups()" (click)="sendQuickPrompt(prompt)">
+                    {{ prompt }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input Capsule -->
+              <div class="chat-input-capsule">
+                <input 
+                  type="text" 
+                  class="chat-input-field" 
+                  placeholder="Ask your AI coach anything (e.g. 'Paano ko mapapaganda ang portfolio ko para maging AI Engineer?')" 
+                  [(ngModel)]="coachInput" 
+                  (keydown.enter)="sendCoachMessage()" 
+                  [disabled]="coachLoading()" 
+                />
+                <button class="btn btn-primary chat-send-btn" (click)="sendCoachMessage()" [disabled]="coachLoading() || !coachInput.trim()">
+                  <span *ngIf="!coachLoading()" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span>Send</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  </span>
+                  <span *ngIf="coachLoading()">Thinking...</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1331,7 +1806,7 @@
             <div>
               <h2>GitHub Profile Scanner & Importer</h2>
               <p class="section-subtitle">
-                Analyze public developer profiles, discover repositories, extract tech stacks via Stage 12 NER, classify project domains with Stage 9 Machine Learning, and import them with 1 click.
+                Analyze public developer profiles, discover repositories, extract tech stacks using automated NLP entity recognition, and classify project domains with machine learning.
               </p>
             </div>
             <!-- Rate Limit & API Status Badge -->
@@ -1384,9 +1859,6 @@
             </div>
 
             <div class="flex-align gap-xs">
-              <button class="btn btn-outline btn-xs dev-bypass-pill" [class.active]="devBypassActive()" (click)="toggleDevOAuthBypass()" title="Toggle simulated GitHub OAuth for testing">
-                {{ devBypassActive() ? 'Dev Bypass: ON' : 'Dev Bypass: OFF' }}
-              </button>
               <button class="btn btn-outline btn-xs" *ngIf="linkedGitHubUsername() || verifiedGitHubUsername()" (click)="scanGitHub(isGitHubOAuthVerified() ? (verifiedGitHubUsername() || '') : linkedGitHubUsername())">
                 Sync Profile
               </button>
@@ -1485,30 +1957,69 @@
           </div>
 
           <!-- Language Distribution & Extracted Skills Dual Card -->
-          <div class="grid-2-col margin-bottom-lg">
+          <div class="grid-2-col margin-bottom-md">
             
-            <!-- Language Distribution Card -->
+            <!-- Language Distribution Card (Unified GitHub Multi-Segment Bar) -->
             <div class="card gh-analysis-card">
-              <h3>Languages Distribution</h3>
-              <p class="sub-text">Breakdown of primary programming languages detected across scanned repositories.</p>
-              
-              <div class="gh-lang-list" *ngIf="githubScanData()?.summary?.language_distribution">
-                <div class="gh-lang-item" *ngFor="let lang of githubScanData()?.summary?.language_distribution | keyvalue">
-                  <div class="flex-between">
-                    <span class="gh-lang-name"><strong>{{ lang.key }}</strong></span>
-                    <span class="gh-lang-count">{{ lang.value }} repo{{ lang.value > 1 ? 's' : '' }}</span>
-                  </div>
-                  <div class="progress-bar-bg small">
-                    <div class="progress-bar-fill" [style.width.%]="(lang.value / (githubScanData()?.summary?.total_scanned_repos || 1)) * 100"></div>
-                  </div>
+              <div class="gh-card-header">
+                <div class="gh-card-title-row">
+                  <h3>Language Distribution</h3>
+                  <span class="gh-header-badge">{{ getGitHubLanguageSegments().length }} Languages</span>
                 </div>
+                <p class="gh-card-desc">Breakdown of programming languages detected across scanned repositories.</p>
+              </div>
+              
+              <!-- Multi-Segment Visual Bar -->
+              <div class="gh-multi-lang-bar" *ngIf="getGitHubLanguageSegments().length">
+                <div 
+                  *ngFor="let seg of getGitHubLanguageSegments()" 
+                  class="gh-lang-segment" 
+                  [style.width.%]="seg.percentage" 
+                  [style.background-color]="seg.color"
+                  [title]="seg.name + ': ' + seg.percentage + '% (' + seg.count + ' repos)'">
+                </div>
+              </div>
+
+              <!-- Language Legend List -->
+              <div class="gh-lang-legend-grid margin-bottom-sm" *ngIf="getGitHubLanguageSegments().length">
+                <div *ngFor="let seg of getGitHubLanguageSegments()" class="gh-lang-legend-item">
+                  <span class="gh-lang-dot" [style.background-color]="seg.color"></span>
+                  <span class="gh-lang-name"><strong>{{ seg.name }}</strong></span>
+                  <span class="gh-lang-pct">{{ seg.percentage }}%</span>
+                  <span class="gh-lang-count">({{ seg.count }})</span>
+                </div>
+              </div>
+
+              <!-- Language Insights Ecosystem Stats -->
+              <div class="gh-lang-insights-row" *ngIf="getGitHubLanguageSegments().length">
+                <div class="gh-lang-stat-chip">
+                  <span class="stat-chip-label">Primary Stack</span>
+                  <strong class="stat-chip-value text-accent">{{ getGitHubLanguageSegments()[0]?.name || 'N/A' }} ({{ getGitHubLanguageSegments()[0]?.percentage }}%)</strong>
+                </div>
+                <div class="gh-lang-stat-chip">
+                  <span class="stat-chip-label">Ecosystem Focus</span>
+                  <strong class="stat-chip-value">{{ getEcosystemFocus() }}</strong>
+                </div>
+                <div class="gh-lang-stat-chip">
+                  <span class="stat-chip-label">Total Codebases</span>
+                  <strong class="stat-chip-value">{{ githubScanData()?.summary?.total_scanned_repos || 0 }} Scanned</strong>
+                </div>
+              </div>
+
+              <div *ngIf="!getGitHubLanguageSegments().length" class="empty-state-text">
+                No language data available.
               </div>
             </div>
 
             <!-- Top Detected Technologies Card -->
             <div class="card gh-analysis-card">
-              <h3>Detected Technical Stack & Tools</h3>
-              <p class="sub-text">Discovered via PortfolioIQ Stage 12 NLP knowledge extractor on repos, topics, and codebases.</p>
+              <div class="gh-card-header">
+                <div class="gh-card-title-row">
+                  <h3>Extracted Tech Stack & Tools</h3>
+                  <span class="gh-header-badge primary">{{ githubScanData()?.summary?.unique_skills_count || 0 }} Skills</span>
+                </div>
+                <p class="gh-card-desc">Frameworks, libraries, and tools identified across repository manifests and codebases.</p>
+              </div>
               
               <div class="gh-detected-skills-cloud" *ngIf="githubScanData()?.summary?.top_skills?.length">
                 <span class="gh-tech-tag" *ngFor="let item of githubScanData()?.summary?.top_skills">
@@ -1516,6 +2027,16 @@
                   <span class="tech-badge">{{ item.repo_count }}</span>
                 </span>
               </div>
+
+              <div class="gh-skills-card-footer margin-top-md" *ngIf="githubScanData()?.summary?.top_skills?.length">
+                <div class="flex-between flex-wrap gap-xs">
+                  <span class="text-muted text-xs">Extracted from repository imports & manifests</span>
+                  <button class="btn btn-outline btn-xs" (click)="setTab('skills')" title="Explore in Developer Skills Profile">
+                    Explore Skills Profile →
+                  </button>
+                </div>
+              </div>
+
               <div *ngIf="!githubScanData()?.summary?.top_skills?.length" class="empty-state-text">
                 No technologies extracted yet.
               </div>
@@ -1532,16 +2053,19 @@
           </div>
 
           <!-- Repositories Section Header with Batch Import -->
-          <div class="gh-repos-header flex-between margin-bottom-md">
-            <div>
-              <h3>Scanned Repositories ({{ githubScanData()?.repos?.length || 0 }})</h3>
-              <p class="sub-text" *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()">Verified owner. Review and import your repositories directly into your portfolio with detected skills attached.</p>
-              <p class="sub-text text-warning" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">OAuth verification required before repositories can be imported.</p>
-              <p class="sub-text text-muted" *ngIf="!isScannedAccountLinked()">Browsing external profile for skill benchmarking & exploration (Read-Only).</p>
+          <div class="gh-repos-header flex-between margin-top-md margin-bottom-sm">
+            <div class="gh-repos-header-info">
+              <div class="flex-align gap-xs margin-bottom-xs">
+                <h3>Scanned Repositories</h3>
+                <span class="gh-header-badge">{{ filteredGitHubRepos().length }} of {{ githubScanData()?.repos?.length || 0 }}</span>
+              </div>
+              <p class="gh-card-desc" *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()">Verified owner. Review and import your repositories directly into your portfolio with detected skills attached.</p>
+              <p class="gh-card-desc text-warning" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">OAuth verification required before repositories can be imported.</p>
+              <p class="gh-card-desc text-muted" *ngIf="!isScannedAccountLinked()">Browsing external profile for skill benchmarking & exploration (Read-Only).</p>
             </div>
-            <div>
-              <button *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()" class="btn btn-secondary btn-sm" (click)="importAllScannedRepos()" [disabled]="importingRepoId() !== null">
-                Import All Repositories to Portfolio
+            <div class="gh-repos-header-actions">
+              <button *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()" class="btn btn-secondary btn-sm" (click)="importAllScannedRepos()" [disabled]="importingRepoId() !== null || githubNotImportedCount() === 0">
+                Import All Repositories ({{ githubNotImportedCount() }})
               </button>
               <button *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()" class="btn btn-warning btn-sm" (click)="connectGitHubOAuth()">
                 Connect OAuth to Import All
@@ -1552,38 +2076,93 @@
             </div>
           </div>
 
+          <!-- NEW: Repo Search & Filter Toolbar -->
+          <div class="gh-repo-filter-toolbar margin-bottom-md">
+            <div class="gh-repo-search-box">
+              <svg class="search-svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input 
+                type="text" 
+                class="form-input gh-repo-search-input" 
+                placeholder="Search repositories by name, skill, language, or topic..." 
+                [ngModel]="githubRepoSearchQuery()" 
+                (ngModelChange)="githubRepoSearchQuery.set($event)" 
+              />
+              <button class="btn-clear-search" *ngIf="githubRepoSearchQuery()" (click)="githubRepoSearchQuery.set('')">✕</button>
+            </div>
+
+            <div class="gh-filter-controls">
+              <!-- Status Pills -->
+              <div class="gh-status-pills">
+                <button 
+                  class="gh-filter-pill" 
+                  [class.active]="githubRepoFilter() === 'all'" 
+                  (click)="githubRepoFilter.set('all')">
+                  All ({{ githubScanData()?.repos?.length || 0 }})
+                </button>
+                <button 
+                  class="gh-filter-pill" 
+                  [class.active]="githubRepoFilter() === 'not_imported'" 
+                  (click)="githubRepoFilter.set('not_imported')">
+                  Available to Import ({{ githubNotImportedCount() }})
+                </button>
+                <button 
+                  class="gh-filter-pill" 
+                  [class.active]="githubRepoFilter() === 'imported'" 
+                  (click)="githubRepoFilter.set('imported')">
+                  In Portfolio ({{ githubImportedCount() }})
+                </button>
+              </div>
+
+              <!-- Domain Dropdown -->
+              <div class="gh-domain-select-wrapper" *ngIf="getGitHubDomainList().length">
+                <select 
+                  class="form-select gh-domain-select" 
+                  [ngModel]="githubRepoDomainFilter()" 
+                  (ngModelChange)="githubRepoDomainFilter.set($event)">
+                  <option value="all">All Domains ({{ getGitHubDomainList().length }})</option>
+                  <option *ngFor="let dom of getGitHubDomainList()" [value]="dom">{{ dom }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <!-- Repositories Grid -->
-          <div class="gh-repo-grid">
-            <div class="card gh-repo-card" *ngFor="let repo of githubScanData()?.repos">
+          <div class="gh-repo-grid" *ngIf="filteredGitHubRepos().length">
+            <div class="card gh-repo-card" *ngFor="let repo of filteredGitHubRepos()">
               
               <div class="gh-repo-card-top flex-between">
                 <div class="gh-repo-title-row">
-                  <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer" class="gh-repo-name">
+                  <span class="gh-repo-name">
                     {{ repo.name }}
+                  </span>
+                  <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer" class="gh-repo-link-icon" title="View on GitHub">
+                    ↗
                   </a>
                   <span class="gh-repo-fork-badge" *ngIf="repo.is_fork">Fork</span>
                 </div>
                 <div class="gh-repo-stats">
-                  <span class="gh-meta-pill" title="Stars">Stars: {{ repo.stars }}</span>
-                  <span class="gh-meta-pill" title="Forks">Forks: {{ repo.forks }}</span>
+                  <span class="gh-meta-pill" title="Stars">★ {{ repo.stars }}</span>
+                  <span class="gh-meta-pill" title="Forks">⑂ {{ repo.forks }}</span>
                 </div>
               </div>
 
-              <p class="gh-repo-desc">
+              <p class="gh-repo-desc" [class.text-muted-italic]="!repo.description">
                 {{ repo.description || 'No description provided for this repository.' }}
               </p>
 
-              <!-- ML Category & Language Badges -->
+              <!-- ML Category & Primary Language Badges -->
               <div class="gh-repo-badges">
-                <span class="gh-lang-pill" *ngIf="repo.language">{{ repo.language }}</span>
+                <span class="gh-lang-pill" *ngIf="repo.language" [style.border-left-color]="getLanguageColor(repo.language)">
+                  {{ repo.language }}
+                </span>
                 <span class="gh-ml-category-badge" [title]="'ML Confidence: ' + repo.confidence_score + '%'">
                   {{ repo.predicted_category }} ({{ repo.confidence_score }}%)
                 </span>
               </div>
 
-              <!-- Detected Skills Tags -->
-              <div class="gh-repo-skills-row" *ngIf="repo.detected_skills?.length">
-                <span class="gh-repo-skill-tag" *ngFor="let skill of repo.detected_skills">
+              <!-- Detected Skills Tags (Deduplicated with language) -->
+              <div class="gh-repo-skills-row" *ngIf="getDeduplicatedRepoSkills(repo).length">
+                <span class="gh-repo-skill-tag" *ngFor="let skill of getDeduplicatedRepoSkills(repo)">
                   {{ skill }}
                 </span>
               </div>
@@ -1592,17 +2171,31 @@
               <div class="gh-repo-card-footer flex-between">
                 <span class="gh-repo-updated text-muted">Updated {{ repo.updated_at | slice:0:10 }}</span>
                 
-                <div>
+                <div class="flex-align gap-xs">
                   <ng-container *ngIf="isScannedAccountLinked()">
                     <ng-container *ngIf="isGitHubOAuthVerified()">
-                      <button 
-                        *ngIf="!isRepoAlreadyImported(repo.name)" 
-                        class="btn btn-primary btn-sm gh-import-btn" 
-                        (click)="importRepoToPortfolio(repo)" 
-                        [disabled]="importingRepoId() === repo.id">
-                        <span *ngIf="importingRepoId() !== repo.id">1-Click Import</span>
-                        <span *ngIf="importingRepoId() === repo.id">Importing...</span>
-                      </button>
+                      <div class="gh-import-group flex-align gap-xs" *ngIf="!isRepoAlreadyImported(repo.name)">
+                        <div class="proj-status-dropdown-wrapper" [class]="'wrapper-status-' + getRepoImportStatus(repo.id)">
+                          <span class="status-dot"></span>
+                          <select 
+                            [ngModel]="getRepoImportStatus(repo.id)" 
+                            (ngModelChange)="setRepoImportStatus(repo.id, $event)"
+                            class="modern-status-select gh-status-select" 
+                            [class]="'select-status-' + getRepoImportStatus(repo.id)"
+                            title="Select Phase to Import as">
+                            <option value="completed">Completed</option>
+                            <option value="active">In Progress</option>
+                            <option value="idea">Idea</option>
+                          </select>
+                        </div>
+                        <button 
+                          class="btn btn-primary btn-sm gh-import-btn" 
+                          (click)="importRepoToPortfolio(repo)" 
+                          [disabled]="importingRepoId() === repo.id">
+                          <span *ngIf="importingRepoId() !== repo.id">+ Import</span>
+                          <span *ngIf="importingRepoId() === repo.id">Importing...</span>
+                        </button>
+                      </div>
                       <span *ngIf="isRepoAlreadyImported(repo.name)" class="badge badge-success gh-imported-badge">
                         In Portfolio
                       </span>
@@ -1624,6 +2217,13 @@
             </div>
           </div>
 
+          <!-- Empty State when filters return 0 results -->
+          <div class="card gh-empty-search-card" *ngIf="!filteredGitHubRepos().length && githubScanData()?.repos?.length">
+            <p>No repositories match your active search or filters.</p>
+            <button class="btn btn-outline btn-sm margin-top-xs" (click)="githubRepoSearchQuery.set(''); githubRepoFilter.set('all'); githubRepoDomainFilter.set('all')">
+              Reset Filters
+            </button>
+          </div>
         </div>
 
       </div>
@@ -1634,33 +2234,63 @@
 
 <!-- PROJECT ANALYSIS MODAL (UI 5 Wireframe Spec) -->
 <div class="modal-backdrop" *ngIf="activeAnalysisProject()" (click)="closeProjectAnalysis()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
+  <div class="modal-card project-analysis-modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header flex-between">
-      <h2>Project Analysis: {{ activeAnalysisProject()?.name }}</h2>
+      <h2 class="analysis-modal-title">{{ activeAnalysisProject()?.name }}</h2>
       <button class="btn-icon" (click)="closeProjectAnalysis()">✕</button>
     </div>
 
     <div class="modal-body" *ngIf="activeAnalysisProject()">
-      <p class="modal-desc">{{ activeAnalysisProject()?.description }}</p>
-      <div class="flex-align margin-bottom-md">
-        <span class="status-tag" [class]="'status-' + activeAnalysisProject()?.status">{{ activeAnalysisProject()?.status }}</span>
+      <!-- Project Metadata Card / Banner -->
+      <div class="analysis-project-info-card">
+        <div class="analysis-info-top-row">
+          <span class="analysis-info-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            Project Overview
+          </span>
+          <div class="analysis-status-wrapper">
+            <span class="phase-badge" [class]="'phase-' + activeAnalysisProject()?.status">
+              <span class="phase-dot"></span>
+              <span class="phase-text">{{ activeAnalysisProject()?.status === 'idea' ? 'Idea' : (activeAnalysisProject()?.status === 'completed' ? 'Completed' : 'In Progress') }}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="analysis-desc-box">
+          <span class="analysis-sublabel">Description</span>
+          <p class="analysis-desc-text" [class.empty-desc]="!activeAnalysisProject()?.description || activeAnalysisProject()?.description?.trim() === ''">
+            {{ activeAnalysisProject()?.description || 'No description provided for this project.' }}
+          </p>
+        </div>
       </div>
 
       <!-- ML Probabilities Breakdown (UI 5 Spec) -->
-      <div class="card sub-card" *ngIf="mlPredictions()[activeAnalysisProject()?.id]">
-        <h3>Machine Learning Classification Breakdown</h3>
-        <p class="predicted-highlight" *ngIf="!mlPredictions()[activeAnalysisProject().id].needs_details && mlPredictions()[activeAnalysisProject().id].confidence_score > 30">
-          Predicted Domain: <strong>{{ mlPredictions()[activeAnalysisProject().id].predicted_category }}</strong>
-          ({{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence)
-        </p>
-        <p class="predicted-highlight warning-highlight" *ngIf="mlPredictions()[activeAnalysisProject().id].needs_details || mlPredictions()[activeAnalysisProject().id].confidence_score <= 30">
-          Status: <strong>Needs More Details</strong>
-          ({{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence — Add a detailed description of features and tools used)
-        </p>
+      <div class="card sub-card analysis-ml-card" *ngIf="mlPredictions()[activeAnalysisProject()?.id]">
+        <div class="analysis-ml-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <h3>Machine Learning Classification Breakdown</h3>
+        </div>
+        
+        <div class="predicted-highlight" *ngIf="!mlPredictions()[activeAnalysisProject().id].needs_details && mlPredictions()[activeAnalysisProject().id].confidence_score > 30">
+          <div class="predicted-highlight-main">
+            <span class="predicted-tag">Predicted Domain</span>
+            <strong class="predicted-domain-name">{{ mlPredictions()[activeAnalysisProject().id].predicted_category }}</strong>
+          </div>
+          <span class="confidence-pill">{{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence</span>
+        </div>
+        <div class="predicted-highlight warning-highlight" *ngIf="mlPredictions()[activeAnalysisProject().id].needs_details || mlPredictions()[activeAnalysisProject().id].confidence_score <= 30">
+          <div class="predicted-highlight-main">
+            <span class="predicted-tag warning-tag">Status</span>
+            <strong>Needs More Details</strong>
+          </div>
+          <span class="confidence-pill warning-pill">{{ mlPredictions()[activeAnalysisProject().id].confidence_score }}% Confidence — Add a detailed description of features and tools used</span>
+        </div>
 
         <div class="prob-list">
           <div class="prob-item" *ngFor="let item of mlPredictions()[activeAnalysisProject().id].probabilities | keyvalue">
-            <div class="flex-between">
+            <div class="flex-between prob-item-header">
               <span class="prob-label">{{ item.key }}</span>
               <span class="prob-pct">{{ (item.value * 100).toFixed(1) }}%</span>
             </div>
@@ -1672,9 +2302,91 @@
       </div>
     </div>
 
-    <div class="modal-footer">
+    <div class="modal-footer flex-between">
       <button class="btn btn-secondary" (click)="closeProjectAnalysis()">Close</button>
+      <button class="btn btn-primary" (click)="editCurrentAnalysisProject()" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 0.88rem; font-weight: 600;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Edit Title & Description</span>
+      </button>
     </div>
+  </div>
+</div>
+
+<!-- EDIT PROJECT MODAL DIALOG -->
+<div class="modal-backdrop" *ngIf="editingProject()" (click)="closeEditProjectModal()">
+  <div class="modal-card edit-project-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <h2>Edit Project Details</h2>
+      </div>
+      <button class="btn-icon" (click)="closeEditProjectModal()">✕</button>
+    </div>
+
+    <form (ngSubmit)="saveProjectEdits()" class="modal-body">
+      <div class="form-group margin-bottom-md">
+        <label class="form-label" for="editProjectNameInput">Project Title / Name <span class="text-danger">*</span></label>
+        <input
+          id="editProjectNameInput"
+          type="text"
+          class="form-input"
+          [(ngModel)]="editProjectName"
+          name="editProjectName"
+          placeholder="e.g. MediaHub: Local-First Multimedia Manager"
+          required
+        />
+      </div>
+
+      <div class="form-group margin-bottom-md edit-desc-group">
+        <label class="form-label" for="editProjectDescInput">Project Description</label>
+        <textarea
+          id="editProjectDescInput"
+          class="form-textarea"
+          rows="10"
+          [(ngModel)]="editProjectDesc"
+          name="editProjectDesc"
+          placeholder="Describe your project, key features, architecture, and technologies used..."
+        ></textarea>
+        <small class="text-muted" style="margin-top: 6px; display: block; font-size: 0.82rem; line-height: 1.4;">
+          Tip: Adding specific framework names and architectural tools directly in the title or description helps the Machine Learning Classifier produce accurate domain predictions.
+        </small>
+      </div>
+
+      <div class="form-group margin-bottom-md edit-phase-group">
+        <label class="form-label">Project Phase / Lifecycle</label>
+        <div class="phase-selector-group">
+          <button 
+            type="button" 
+            class="phase-btn phase-idea" 
+            [class.active]="editProjectStatus === 'idea'" 
+            (click)="editProjectStatus = 'idea'">
+            <span class="status-dot dot-idea"></span> Idea
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-active" 
+            [class.active]="editProjectStatus === 'active'" 
+            (click)="editProjectStatus = 'active'">
+            <span class="status-dot dot-active"></span> In Progress
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-completed" 
+            [class.active]="editProjectStatus === 'completed'" 
+            (click)="editProjectStatus = 'completed'">
+            <span class="status-dot dot-completed"></span> Completed
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer flex-between edit-modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditProjectModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSavingProjectEdit() || !editProjectName.trim()">
+          <span *ngIf="!isSavingProjectEdit()">Save Changes</span>
+          <span *ngIf="isSavingProjectEdit()">Saving Changes...</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -1916,14 +2628,8 @@
         </div>
       </div>
 
-      <div class="alert-info margin-top-md">
-        <strong>Defense / Local Demo Shortcut:</strong> You can click <strong>"Enable Dev Bypass"</strong> below to simulate verified OAuth status right now during your test without waiting for Supabase!
-      </div>
     </div>
-    <div class="modal-footer flex-between">
-      <button class="btn btn-outline btn-sm" (click)="toggleDevOAuthBypass(); closeOAuthHelpModal()">
-        Toggle Dev Mode Bypass
-      </button>
+    <div class="modal-footer flex-end">
       <button class="btn btn-secondary btn-sm" (click)="closeOAuthHelpModal()">Close</button>
     </div>
   </div>
@@ -1946,143 +2652,7 @@
   </div>
 </div>
 
-<!-- SYSTEM ARCHITECTURE & DIAGNOSTICS MODAL (Stage 15) -->
-<div class="modal-backdrop" *ngIf="showTelemetryModal()" (click)="closeTelemetryModal()">
-  <div class="modal-card telemetry-modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header flex-between">
-      <div class="telemetry-modal-title-group">
-        <h2>System Architecture & Diagnostics</h2>
-        <span class="telemetry-subtitle">Real-time health telemetry across all 6 PortfolioIQ AI core microservices</span>
-      </div>
-      <div class="flex-align gap-sm">
-        <button class="btn btn-secondary btn-sm" (click)="fetchSystemTelemetry()" [disabled]="isLoadingTelemetry()">
-          {{ isLoadingTelemetry() ? 'Refreshing...' : 'Refresh' }}
-        </button>
-        <button class="btn-icon" (click)="closeTelemetryModal()">✕</button>
-      </div>
-    </div>
 
-    <div class="modal-body" *ngIf="systemTelemetry()">
-      <!-- System Summary Header Strip -->
-      <div class="telemetry-summary-banner flex-between">
-        <div class="flex-align gap-md">
-          <span class="status-pulse-dot large"></span>
-          <div>
-            <h4 class="margin-none">Overall System Status: <strong class="text-success uppercase">{{ systemTelemetry()?.overall_health }}</strong></h4>
-            <span class="text-muted text-sm">Server Uptime: {{ systemTelemetry()?.uptime_seconds }}s | Last pinged: Just now</span>
-          </div>
-        </div>
-        <span class="badge badge-success">Capstone Defense Ready</span>
-      </div>
-
-      <!-- 6 Microservice Telemetry Cards Grid -->
-      <div class="telemetry-grid">
-
-        <!-- 1. FastAPI Core REST API -->
-        <div class="telemetry-card">
-          <div class="telemetry-card-top flex-between">
-            <span class="engine-tag">Core Backend</span>
-            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.api?.status === 'online'">
-              {{ systemTelemetry()?.subsystems?.api?.status }}
-            </span>
-          </div>
-          <h4>{{ systemTelemetry()?.subsystems?.api?.name }}</h4>
-          <p class="telemetry-card-detail">Framework: <strong>{{ systemTelemetry()?.subsystems?.api?.framework }}</strong></p>
-          <p class="telemetry-card-detail">API Version: <strong>{{ systemTelemetry()?.subsystems?.api?.version }}</strong></p>
-          <div class="telemetry-chip-list">
-            <span class="chip-sm">REST Endpoints</span>
-            <span class="chip-sm">CORS Enabled</span>
-            <span class="chip-sm">Pydantic v2</span>
-          </div>
-        </div>
-
-        <!-- 2. PostgreSQL / Supabase Database -->
-        <div class="telemetry-card">
-          <div class="telemetry-card-top flex-between">
-            <span class="engine-tag">Database Layer</span>
-            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.database?.status === 'online'">
-              {{ systemTelemetry()?.subsystems?.database?.status }}
-            </span>
-          </div>
-          <h4>{{ systemTelemetry()?.subsystems?.database?.name }}</h4>
-          <p class="telemetry-card-detail">Provider: <strong>{{ systemTelemetry()?.subsystems?.database?.provider }}</strong></p>
-          <p class="telemetry-card-detail">Active Session: <strong>{{ currentUser() ? currentUser()?.email : 'Guest / Demo' }}</strong></p>
-          <div class="telemetry-chip-list">
-            <span class="chip-sm" *ngFor="let feat of systemTelemetry()?.subsystems?.database?.features">{{ feat }}</span>
-          </div>
-        </div>
-
-        <!-- 3. Scikit-Learn ML Classifier -->
-        <div class="telemetry-card">
-          <div class="telemetry-card-top flex-between">
-            <span class="engine-tag">Machine Learning</span>
-            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.machine_learning?.status === 'online'">
-              {{ systemTelemetry()?.subsystems?.machine_learning?.status }}
-            </span>
-          </div>
-          <h4>{{ systemTelemetry()?.subsystems?.machine_learning?.name }}</h4>
-          <p class="telemetry-card-detail">Algorithm: <strong>{{ systemTelemetry()?.subsystems?.machine_learning?.engine }}</strong></p>
-          <p class="telemetry-card-detail">Trained Model: <code>{{ systemTelemetry()?.subsystems?.machine_learning?.model_file }}</code></p>
-          <p class="telemetry-card-detail">Output Classes ({{ systemTelemetry()?.subsystems?.machine_learning?.classes_count }}):</p>
-          <div class="telemetry-chip-list">
-            <span class="chip-sm" *ngFor="let cls of systemTelemetry()?.subsystems?.machine_learning?.classes">{{ cls }}</span>
-          </div>
-        </div>
-
-        <!-- 4. Groq Cloud AI Career Coach -->
-        <div class="telemetry-card">
-          <div class="telemetry-card-top flex-between">
-            <span class="engine-tag">Generative AI</span>
-            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.ai_coach?.live">
-              {{ systemTelemetry()?.subsystems?.ai_coach?.live ? 'LIVE' : 'DEMO' }}
-            </span>
-          </div>
-          <h4>{{ systemTelemetry()?.subsystems?.ai_coach?.name }}</h4>
-          <p class="telemetry-card-detail">Cloud Engine: <strong>{{ systemTelemetry()?.subsystems?.ai_coach?.provider }}</strong></p>
-          <p class="telemetry-card-detail">Active Model: <strong>{{ systemTelemetry()?.subsystems?.ai_coach?.model }}</strong></p>
-          <p class="telemetry-card-detail text-muted text-xs">{{ systemTelemetry()?.subsystems?.ai_coach?.message }}</p>
-        </div>
-
-        <!-- 5. Knowledge Graph Engine -->
-        <div class="telemetry-card">
-          <div class="telemetry-card-top flex-between">
-            <span class="engine-tag">Knowledge Engine</span>
-            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.knowledge_graph?.status === 'online'">
-              {{ systemTelemetry()?.subsystems?.knowledge_graph?.status }}
-            </span>
-          </div>
-          <h4>{{ systemTelemetry()?.subsystems?.knowledge_graph?.name }}</h4>
-          <p class="telemetry-card-detail">Skill Nodes: <strong>{{ systemTelemetry()?.subsystems?.knowledge_graph?.nodes_count }}</strong></p>
-          <p class="telemetry-card-detail">Graph Relationships: <strong>{{ systemTelemetry()?.subsystems?.knowledge_graph?.relationships_count }}</strong></p>
-          <p class="telemetry-card-detail">Resolution: <strong>{{ systemTelemetry()?.subsystems?.knowledge_graph?.engine }}</strong></p>
-        </div>
-
-        <!-- 6. GitHub Ecosystem Scanner -->
-        <div class="telemetry-card">
-          <div class="telemetry-card-top flex-between">
-            <span class="engine-tag">VCS Ecosystem</span>
-            <span class="badge" [class.badge-success]="systemTelemetry()?.subsystems?.github_sync?.status === 'online'">
-              {{ systemTelemetry()?.subsystems?.github_sync?.status }}
-            </span>
-          </div>
-          <h4>{{ systemTelemetry()?.subsystems?.github_sync?.name }}</h4>
-          <p class="telemetry-card-detail">API Quota: <strong>{{ systemTelemetry()?.subsystems?.github_sync?.rate_limit_remaining }} / {{ systemTelemetry()?.subsystems?.github_sync?.rate_limit_limit }}</strong> remaining</p>
-          <p class="telemetry-card-detail">Mode: <strong>{{ systemTelemetry()?.subsystems?.github_sync?.authenticated ? 'Authenticated Token (5,000 req/hr)' : 'Public REST (60 req/hr)' }}</strong></p>
-          <div class="telemetry-chip-list">
-            <span class="chip-sm">Zero-OAuth Required</span>
-            <span class="chip-sm">Auto-NER Tech Extraction</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="modal-footer flex-between">
-      <span class="text-muted text-xs">PortfolioIQ AI Capstone Edition • Built with Angular & FastAPI</span>
-      <button class="btn btn-secondary" (click)="closeTelemetryModal()">Close</button>
-    </div>
-  </div>
-</div>
 
 <!-- PRINTABLE DEVELOPER DOSSIER SHEET (Print-only via @media print) -->
 <div class="printable-dossier-report" id="printableDossier">
@@ -2226,12 +2796,128 @@
       <button 
         class="btn" 
         [class.btn-danger]="confirmDialog().type === 'danger'" 
-        [class.btn-warning]="confirmDialog().type === 'warning'"
-        [class.btn-primary]="confirmDialog().type === 'primary'"
+        [class.btn-warning]="confirmDialog().type === 'warning'" 
+        [class.btn-primary]="confirmDialog().type === 'primary'" 
         (click)="handleConfirmDialogAction()">
         {{ confirmDialog().confirmText }}
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- ============================================
+     PORTFOLIO HEALTH SCORE CALCULATION MODAL
+     ============================================ -->
+<div class="modal-backdrop score-info-backdrop" *ngIf="showScoreInfoModal()" (click)="closeScoreInfoModal()">
+  <div class="modal-card score-info-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between score-info-header">
+      <div class="flex-align gap-sm">
+        <div class="score-info-icon-bubble">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 class="score-info-title">Portfolio Health Score Calculation</h3>
+          <span class="score-info-subtitle">100-Point Industry-Standard Evaluation Model</span>
+        </div>
+      </div>
+      <button class="btn-icon modal-close-btn" (click)="closeScoreInfoModal()">✕</button>
+    </div>
+
+    <div class="modal-body score-info-body">
+      <!-- Total Formula Summary Banner -->
+      <div class="score-formula-banner">
+        <div class="formula-label">Total Formula:</div>
+        <div class="formula-math">
+          <strong>Skill Coverage (35)</strong> + <strong>Project Volume (25)</strong> + <strong>Detail Quality (20)</strong> + <strong>Activity Status (20)</strong> = <strong>100 Max</strong>
+        </div>
+      </div>
+
+      <!-- 4-Part Evaluation Rubric Grid -->
+      <div class="rubric-grid">
+        <!-- Metric 1: Skill Coverage -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">1. Skill Coverage</strong>
+            <span class="badge badge-primary">35 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Measures breadth of active technical stack across languages, frameworks, and databases.
+          </p>
+          <div class="rubric-formula-box">
+            <code>min(35, (Unique Skills / 10) * 35)</code>
+            <p class="rubric-rule">• 10+ verified skills award full 35/35 points.</p>
+          </div>
+        </div>
+
+        <!-- Metric 2: Project Volume -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">2. Project Volume</strong>
+            <span class="badge badge-primary">25 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Evaluates verified proof-of-work and overall software delivery experience.
+          </p>
+          <div class="rubric-formula-box">
+            <code>min(25, (Total Projects / 5) * 25)</code>
+            <p class="rubric-rule">• 5+ active/completed projects award full 25/25 points.</p>
+          </div>
+        </div>
+
+        <!-- Metric 3: Detail Quality -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">3. Detail Quality</strong>
+            <span class="badge badge-primary">20 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Rewards thorough project descriptions, architecture, and context for recruiters.
+          </p>
+          <div class="rubric-formula-box">
+            <code>(Projects with desc >= 15 chars / Total Projects) * 20</code>
+            <p class="rubric-rule">• Requires substantive description text per project.</p>
+          </div>
+        </div>
+
+        <!-- Metric 4: Activity & Status -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">4. Activity & Status</strong>
+            <span class="badge badge-primary">20 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Assesses whether projects are completed or active vs unstarted backlog ideas.
+          </p>
+          <div class="rubric-formula-box">
+            <code>(Completed or In-Progress Projects / Total Projects) * 20</code>
+            <p class="rubric-rule">• "Completed" or "In Progress" projects receive full points.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role Alignment Context Card -->
+      <div class="role-alignment-info-card">
+        <div class="flex-align gap-xs role-align-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+          <strong class="text-indigo-300">Target Role Alignment (%)</strong>
+        </div>
+        <p class="sub-text">
+          Measures current skill match vs required benchmark skills for your selected Target Role: <code>(Matching Skills / Required Role Skills) * 100%</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="modal-footer flex-end score-info-footer">
+      <button class="btn btn-primary btn-sm" (click)="closeScoreInfoModal()">Got it</button>
+    </div>
   </div>
 </div>

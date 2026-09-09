@@ -146,7 +146,7 @@ class GitHubClient:
             confidence = 80.0
             if ML_AVAILABLE:
                 try:
-                    ml_result = classifier_instance.predict(name, f"{description} {' '.join(detected_skills)}")
+                    ml_result = classifier_instance.predict(name, description, detected_skills)
                     predicted_category = ml_result.get("predicted_category", "Full-Stack Web")
                     confidence = ml_result.get("confidence_score", 80.0)
                 except Exception:

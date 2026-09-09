@@ -1,151 +1,301 @@
 text,category
-"AI-powered portfolio analytics platform using natural language processing and Machine Learning","AI / Machine Learning"
-"Image classification system using PyTorch convolutional neural networks for medical imaging","AI / Machine Learning"
-"Sentiment analysis tool using BERT transformer model and Scikit-Learn text vectorizer","AI / Machine Learning"
-"Predictive churn model using Random Forest and XGBoost machine learning algorithms","AI / Machine Learning"
-"LLM chatbot assistant using Groq AI and RAG knowledge retrieval pipeline","AI / Machine Learning"
-"Speech recognition and voice command processing software using deep neural networks","AI / Machine Learning"
-"Recommendation engine using collaborative filtering and matrix factorization","AI / Machine Learning"
-"Computer vision object detection system using YOLOv8 and OpenCV for traffic monitoring","AI / Machine Learning"
-"Autonomous self-driving vehicle simulation using reinforcement learning in Q-learning","AI / Machine Learning"
-"Generative AI image synthesizer using Stable Diffusion and PyTorch model weights","AI / Machine Learning"
-"Natural language translation model using Transformer encoder decoder architecture","AI / Machine Learning"
-"Anomaly detection pipeline for cybersecurity logs using Autoencoder neural networks","AI / Machine Learning"
-"Handwritten digit recognizer built using Convolutional Neural Networks CNN in Keras","AI / Machine Learning"
-"Real-time face recognition and attendance tracking application using OpenCV and Dlib","AI / Machine Learning"
-"Spam detection classifier built with TF-IDF vectorizer and Naive Bayes in Scikit-Learn","AI / Machine Learning"
-"Deep Q-network DQN agent trained to play Retro Arcade games using PyTorch","AI / Machine Learning"
-"Customer segmentation clustering model using K-Means and Principal Component Analysis PCA","AI / Machine Learning"
-"Text summarization pipeline using pretrained Hugging Face Transformers and BART","AI / Machine Learning"
-"Credit card fraud detection model using Logistic Regression and SMOTE oversampling","AI / Machine Learning"
-"Facial emotion recognition system using Transfer Learning with ResNet50","AI / Machine Learning"
-"Stock price movement predictor using Long Short-Term Memory LSTM neural networks","AI / Machine Learning"
-"Chatbot engine built with Rasa NLU for automated customer service support","AI / Machine Learning"
-"Medical diagnosis helper using Random Forest classifier on patient health metrics","AI / Machine Learning"
-"Audio sound classification system using Librosa spectral features and SVM","AI / Machine Learning"
-"Object tracking and counting system for industrial assembly lines using OpenCV","AI / Machine Learning"
-"Full-stack e-commerce web application built with Angular frontend and FastAPI backend","Web Development"
-"Real-time messaging dashboard using React, Node.js, Express, and WebSocket protocol","Web Development"
-"Responsive portfolio website created with HTML5, CSS3, JavaScript, and Tailwind CSS","Web Development"
-"Content management system CMS with PostgreSQL database and RESTful API endpoints","Web Development"
-"SaaS customer billing portal built using Next.js and Supabase authentication","Web Development"
-"Online learning management portal with Angular UI and Django REST framework backend","Web Development"
-"Vue.js dashboard panel with Vuex state management and Axios API integration","Web Development"
-"Server-rendered blog platform using Nuxt.js, GraphQL API, and Headless CMS","Web Development"
-"Progressive Web App PWA for offline task management using Service Workers","Web Development"
-"RESTful API gateway built with Node.js Express and JWT authentication middleware","Web Development"
-"Single page web app SPA using React Router, Redux Toolkit, and Material UI","Web Development"
-"Customer relationship management CRM web portal built with ASP.NET Core and SQL Server","Web Development"
-"Online video streaming web platform built with HTML5 Video API, Node.js, and HLS","Web Development"
-"Job search portal web application built with Ruby on Rails and PostgreSQL","Web Development"
-"Real estate listing web portal using SvelteKit, Prisma ORM, and Supabase Database","Web Development"
-"E-learning quiz platform built with Angular, RxJS, and Firebase Realtime Database","Web Development"
-"Restaurant food ordering web app built with React, Redux, and Express API","Web Development"
-"Social blogging web platform with markdown editor built with Next.js and Tailwind","Web Development"
-"Hotel reservation management dashboard built with Vue 3, Pinia, at Typescript","Web Development"
-"Inventory tracking web system built with Laravel, Blade templates, at MySQL","Web Development"
-"Event ticket booking web application built with Spring Boot and Angular","Web Development"
-"Developer portfolio showcase web template built with HTML5, CSS3, and JavaScript","Web Development"
-"Online survey web app built with React, Node.js, and MongoDB","Web Development"
-"Digital storefront e-commerce web application built with Angular and Express","Web Development"
-"Web-based code editor and snippet sharing platform using React and WebAssembly","Web Development"
-"Cross-platform mobile application built with React Native for iOS and Android devices","Mobile Development"
-"Flutter mobile app for fitness tracking and calorie counting with offline SQLite sync","Mobile Development"
-"Native Android application developed using Kotlin, Jetpack Compose, and Retrofit HTTP client","Mobile Development"
-"iOS mobile app built using Swift and SwiftUI for local restaurant discovery","Mobile Development"
-"Mobile wallet and payment app for Android and iOS using Flutter framework","Mobile Development"
-"Mobile social network client built with React Native, Firebase Auth, and Push Notifications","Mobile Development"
-"GPS location tracking mobile app using Native Android SDK and Google Maps API","Mobile Development"
-"Mobile food delivery application built with Flutter, Provider, and Firebase","Mobile Development"
-"Task management mobile app for iOS and Android built with React Native and Expo","Mobile Development"
-"Weather forecast mobile app built with Swift, CoreLocation, and OpenWeather API","Mobile Development"
-"Personal budget tracker mobile app built with Kotlin, Room Database, and MVVM","Mobile Development"
-"Music streaming player mobile app built with Flutter, JustAudio, and AudioService","Mobile Development"
-"E-book reader mobile app built with React Native and Async Storage","Mobile Development"
-"Language learning flashcard mobile app built with Flutter and Hive Database","Mobile Development"
-"Ride-hailing mobile app client built with React Native, Redux, and Mapbox","Mobile Development"
-"Mobile recipe finder app built with Android Kotlin, Coroutines, and Dagger Hilt","Mobile Development"
-"Habit tracker mobile application built with iOS SwiftUI and CoreData","Mobile Development"
-"Mobile notes app with biometric authentication built with React Native","Mobile Development"
-"Smart home IoT controller mobile app built with Flutter and MQTT protocol","Mobile Development"
-"Medication reminder mobile app built with Android Kotlin and AlarmManager","Mobile Development"
-"Mobile expense splitter app built with React Native and Firebase Firestore","Mobile Development"
-"Barcode scanner mobile shopping app built with Flutter and MobileScanner","Mobile Development"
-"Event companion mobile app built with Swift and EventKit for iOS","Mobile Development"
-"Mobile podcast player app built with Flutter, RxJava, and AudioPlayers","Mobile Development"
-"Mobile workout planner app built with React Native, Reanimated, and SQLite","Mobile Development"
-"Data visualization dashboard created with Python Pandas, Matplotlib, and Streamlit","Data Science & Analytics"
-"ETL data pipeline for aggregating financial transactions and generating monthly reporting metrics","Data Science & Analytics"
-"Exploratory data analysis project inspecting global temperature trends using Jupyter Notebooks","Data Science & Analytics"
-"Big Data processing script using PySpark and SQL queries for web log analytics","Data Science & Analytics"
-"Interactive business intelligence dashboard built with Dash, Plotly, and Pandas DataFrames","Data Science & Analytics"
-"Automated web scraper and data processing pipeline using BeautifulSoup and Scrapy","Data Science & Analytics"
-"Customer churn prediction dataset analysis using Seaborn, Pandas, and SciPy","Data Science & Analytics"
-"Stock market data analysis notebook evaluating moving averages and RSI indicators","Data Science & Analytics"
-"Healthcare data pipeline cleaning patient records using Python Polars and DuckDB","Data Science & Analytics"
-"Social media sentiment data analysis pipeline using Pandas and WordCloud","Data Science & Analytics"
-"E-commerce sales revenue analysis dashboard using PowerBI and Python data processing","Data Science & Analytics"
-"Real-time sensor data aggregation pipeline using Apache Kafka and Apache Spark","Data Science & Analytics"
-"COVID-19 epidemiological data visualization pipeline using Plotly and Folium","Data Science & Analytics"
-"Financial fraud detection data analytics using SQL queries and Python Pandas","Data Science & Analytics"
-"Customer lifetime value analytics notebook using Scikit-Learn and Lifelines","Data Science & Analytics"
-"Web traffic clickstream data processing pipeline using AWS Athena and Python","Data Science & Analytics"
-"Retail inventory analytics script calculating reorder points and demand forecasting","Data Science & Analytics"
-"Credit risk evaluation data analytics notebook using Pandas and Statsmodels","Data Science & Analytics"
-"Energy consumption forecasting pipeline using Python and Prophet time series","Data Science & Analytics"
-"Supply chain delay data analysis pipeline using Jupyter Notebooks and Seaborn","Data Science & Analytics"
-"User cohort retention rate data analysis script using SQL and Python DataFrames","Data Science & Analytics"
-"Product reviews text analytics pipeline using NLTK and Pandas","Data Science & Analytics"
-"Flight delay analytics pipeline processing aviation datasets with PySpark","Data Science & Analytics"
-"Hotel pricing analytics script calculating dynamic pricing metrics with Python","Data Science & Analytics"
-"Housing market trend data analytics using Python, Geopandas, and Folium","Data Science & Analytics"
-"Automated CI/CD deployment pipeline using GitHub Actions, Docker containers, and AWS EC2","Cloud & DevOps"
-"Microservices infrastructure orchestration using Kubernetes and Helm charts","Cloud & DevOps"
-"Infrastructure as Code IaC automation using Terraform and Ansible for cloud provisioning","Cloud & DevOps"
-"Serverless API deployment using AWS Lambda, API Gateway, and CloudWatch monitoring","Cloud & DevOps"
-"Dockerized application stack with Docker Compose and Nginx reverse proxy","Cloud & DevOps"
-"Centralized log management pipeline using ElasticSearch, Logstash, and Kibana ELK stack","Cloud & DevOps"
-"Cloud infrastructure monitoring system using Prometheus and Grafana dashboards","Cloud & DevOps"
-"Automated cloud backup and disaster recovery script for AWS S3 and RDS","Cloud & DevOps"
-"Continuous integration CI pipeline for automated unit testing using Jenkins","Cloud & DevOps"
-"Kubernetes ingress controller setup with Cert-Manager and Let Encrypt SSL","Cloud & DevOps"
-"Infrastructure automation playbook using Ansible for Linux server hardening","Cloud & DevOps"
-"AWS CloudFormation template for multi-region VPC and EC2 auto-scaling groups","Cloud & DevOps"
-"GitOps deployment automation using ArgoCD and Kubernetes clusters","Cloud & DevOps"
-"Cloud security compliance auditor for AWS IAM roles and Security Groups","Cloud & DevOps"
-"Multi-cloud deployment orchestration using Pulumi and TypeScript","Cloud & DevOps"
-"Container image security vulnerability scanner using Trivy and Docker","Cloud & DevOps"
-"Automated SSL certificate renewal script using Certbot and Nginx","Cloud & DevOps"
-"Azure DevOps pipeline for automated build, test, and release management","Cloud & DevOps"
-"High-availability MySQL database cluster orchestration using Docker Swarm","Cloud & DevOps"
-"Cloud cost optimization script identifying unattached AWS EBS volumes and EC2","Cloud & DevOps"
-"Serverless event-driven architecture built with GCP Cloud Functions and Pub/Sub","Cloud & DevOps"
-"Infrastructure automation testing script using Testinfra and Docker","Cloud & DevOps"
-"Kubernetes cluster deployment automation using Kubeadm and Calico CNI","Cloud & DevOps"
-"Edge computing deployment pipeline using K3s and Raspberry Pi nodes","Cloud & DevOps"
-"Cloud service mesh configuration using Istio, Envoy, and Kubernetes","Cloud & DevOps"
-"Network packet sniffer and port scanner built with C++ and socket programming","Cybersecurity & Systems"
-"Vulnerability scanner and password security auditor written in Python","Cybersecurity & Systems"
-"Operating system kernel driver and low-level memory management simulation in C","Cybersecurity & Systems"
-"Cryptographic file encryption tool using AES-256 and RSA public key infrastructure","Cybersecurity & Systems"
-"Intrusion detection system IDS monitoring network traffic anomalies in C++","Cybersecurity & Systems"
-"Malware reverse engineering and static analysis toolkit using Python and Volatility","Cybersecurity & Systems"
-"Web application firewall WAF filtering SQL injection and XSS attacks","Cybersecurity & Systems"
-"Embedded systems firmware for ARM Cortex-M microcontrollers using C and FreeRTOS","Cybersecurity & Systems"
-"Wireless network security auditor testing WPA2 handshake capture in Python","Cybersecurity & Systems"
-"Secure password manager using Argon2 key derivation and AES-GCM encryption","Cybersecurity & Systems"
-"Linux kernel module for monitoring process creation and syscall auditing","Cybersecurity & Systems"
-"Hardware Security Module HSM integration library written in C++","Cybersecurity & Systems"
-"Network vulnerability scanner utilizing Nmap scripts and Python reporting","Cybersecurity & Systems"
-"Embedded IoT microcontroller firmware written in Rust for ESP32 hardware","Cybersecurity & Systems"
-"Zero-trust authentication proxy enforcing mTLS mutual TLS certificates","Cybersecurity & Systems"
-"Buffer overflow exploit mitigation demonstrator and shellcode lab in C","Cybersecurity & Systems"
-"Penetration testing payload generator written in Python and Bash","Cybersecurity & Systems"
-"Secure VPN tunnel client using WireGuard protocol in C","Cybersecurity & Systems"
-"Steganography tool hiding encrypted payload messages inside PNG images","Cybersecurity & Systems"
-"Active Directory security auditor analyzing Kerberoasting and BloodHound paths","Cybersecurity & Systems"
-"Firmware update verification tool using SHA-256 cryptographic signatures","Cybersecurity & Systems"
-"Network protocol analyzer and dissector written in C for Wireshark","Cybersecurity & Systems"
-"Keylogger detection and prevention software for Windows using C++ WinAPI","Cybersecurity & Systems"
-"Rootkit detector checking Linux kernel symbol table integrity","Cybersecurity & Systems"
-"SIEM log analyzer detecting brute-force SSH login attempts in Python","Cybersecurity & Systems"
+AI-powered portfolio analytics platform using natural language processing and Machine Learning,AI / Machine Learning
+Image classification system using PyTorch convolutional neural networks for medical imaging,AI / Machine Learning
+Sentiment analysis tool using BERT transformer model and Scikit-Learn text vectorizer,AI / Machine Learning
+Predictive churn model using Random Forest and XGBoost machine learning algorithms,AI / Machine Learning
+LLM chatbot assistant using Groq AI and RAG knowledge retrieval pipeline,AI / Machine Learning
+Speech recognition and voice command processing software using deep neural networks,AI / Machine Learning
+Recommendation engine using collaborative filtering and matrix factorization,AI / Machine Learning
+Computer vision object detection system using YOLOv8 and OpenCV for traffic monitoring,AI / Machine Learning
+Autonomous self-driving vehicle simulation using reinforcement learning in Q-learning,AI / Machine Learning
+Generative AI image synthesizer using Stable Diffusion and PyTorch model weights,AI / Machine Learning
+Natural language translation model using Transformer encoder decoder architecture,AI / Machine Learning
+Anomaly detection pipeline for cybersecurity logs using Autoencoder neural networks,AI / Machine Learning
+Handwritten digit recognizer built using Convolutional Neural Networks CNN in Keras,AI / Machine Learning
+Real-time face recognition and attendance tracking application using OpenCV and Dlib,AI / Machine Learning
+Spam detection classifier built with TF-IDF vectorizer and Naive Bayes in Scikit-Learn,AI / Machine Learning
+Deep Q-network DQN agent trained to play Retro Arcade games using PyTorch,AI / Machine Learning
+Customer segmentation clustering model using K-Means and Principal Component Analysis PCA,AI / Machine Learning
+Text summarization pipeline using pretrained Hugging Face Transformers and BART,AI / Machine Learning
+Credit card fraud detection model using Logistic Regression and SMOTE oversampling,AI / Machine Learning
+Facial emotion recognition system using Transfer Learning with ResNet50,AI / Machine Learning
+Stock price movement predictor using Long Short-Term Memory LSTM neural networks,AI / Machine Learning
+Chatbot engine built with Rasa NLU for automated customer service support,AI / Machine Learning
+Medical diagnosis helper using Random Forest classifier on patient health metrics,AI / Machine Learning
+Audio sound classification system using Librosa spectral features and SVM,AI / Machine Learning
+Object tracking and counting system for industrial assembly lines using OpenCV,AI / Machine Learning
+Real-time AI asset management platform using Computer Vision and PyTorch inference pipeline,AI / Machine Learning
+Multi-modal AI vision-language model for image captioning using CLIP and PyTorch,AI / Machine Learning
+Zero-shot document classification engine using Large Language Models and LangChain,AI / Machine Learning
+AI semantic search and vector similarity retrieval engine using ChromaDB and Sentence Transformers,AI / Machine Learning
+Deep reinforcement learning agent for algorithmic stock trading using PPO and Gymnasium,AI / Machine Learning
+Real-time pose estimation and fitness exercise counter using MediaPipe and OpenCV,AI / Machine Learning
+Automated question answering system fine-tuned on RoBERTa with PyTorch Lightning,AI / Machine Learning
+Graph Neural Network GNN for molecular property prediction using PyTorch Geometric,AI / Machine Learning
+Real-time AI background removal and video segmentation using DeepLabV3+,AI / Machine Learning
+Knowledge graph embeddings and entity resolution using Node2Vec and PyTorch,AI / Machine Learning
+End-to-end speech-to-text transcription engine using OpenAI Whisper and PyTorch,AI / Machine Learning
+Time series anomaly detection using Temporal Convolutional Networks TCN,AI / Machine Learning
+Self-supervised representation learning for audio classification using Wav2Vec2,AI / Machine Learning
+AI code completion engine using fine-tuned CodeLlama and Hugging Face Transformers,AI / Machine Learning
+Automated defect detection on manufacturing surfaces using Vision Transformers ViT,AI / Machine Learning
+Few-shot learning classifier for low-resource NLP tasks using Prototypical Networks,AI / Machine Learning
+Retrieval-Augmented Generation RAG system with reranking using Cohere and LlamaIndex,AI / Machine Learning
+Real-time neural style transfer application applying artistic styles using PyTorch,AI / Machine Learning
+Bayesian optimization framework for machine learning hyperparameter tuning,AI / Machine Learning
+Edge AI inference pipeline optimized for ONNX Runtime and TensorRT,AI / Machine Learning
+Deepfake video detection model using 3D Convolutional Neural Networks and PyTorch,AI / Machine Learning
+AI prompt evaluation and automated jailbreak vulnerability scanner using LLMs,AI / Machine Learning
+Medical ECG arrhythmia classification using 1D CNN and Bidirectional LSTM,AI / Machine Learning
+Autonomous drone path planning and obstacle avoidance using Deep Q-Learning,AI / Machine Learning
+Language identification classifier for 50 languages using fastText and Scikit-Learn,AI / Machine Learning
+Full-stack e-commerce web application built with Angular frontend and FastAPI backend,Web Development
+"Real-time messaging dashboard using React, Node.js, Express, and WebSocket protocol",Web Development
+"Responsive portfolio website created with HTML5, CSS3, JavaScript, and Tailwind CSS",Web Development
+Content management system CMS with PostgreSQL database and RESTful API endpoints,Web Development
+SaaS customer billing portal built using Next.js and Supabase authentication,Web Development
+Online learning management portal with Angular UI and Django REST framework backend,Web Development
+Vue.js dashboard panel with Vuex state management and Axios API integration,Web Development
+"Server-rendered blog platform using Nuxt.js, GraphQL API, and Headless CMS",Web Development
+Progressive Web App PWA for offline task management using Service Workers,Web Development
+RESTful API gateway built with Node.js Express and JWT authentication middleware,Web Development
+"Single page web app SPA using React Router, Redux Toolkit, and Material UI",Web Development
+Customer relationship management CRM web portal built with ASP.NET Core and SQL Server,Web Development
+"Online video streaming web platform built with HTML5 Video API, Node.js, and HLS",Web Development
+Job search portal web application built with Ruby on Rails and PostgreSQL,Web Development
+Social media timeline feed web app built with SvelteKit and Firebase Firestore,Web Development
+Collaborative digital whiteboard web application using HTML5 Canvas and Socket.io,Web Development
+Enterprise resource planning ERP web portal built with Spring Boot and Angular,Web Development
+Subscription payment billing integration web service using Stripe API and Express,Web Development
+Markdown note-taking web application with local storage synchronization in TypeScript,Web Development
+Event booking and ticket reservation web application using Laravel and MySQL,Web Development
+Real-time multiplayer browser chess game using WebSockets and Node.js backend,Web Development
+Doctor appointment scheduling web portal with calendar views in React and Tailwind,Web Development
+Decentralized web3 crypto portfolio tracker built with Web3.js and React frontend,Web Development
+Hotel room reservation booking web portal using Django and Bootstrap UI,Web Development
+Micro-frontend architecture portal for enterprise dashboards using Webpack Module Federation,Web Development
+SaaS multi-tenant project management dashboard with Angular 17 Standalone Components and Signals,Web Development
+B2B wholesale ordering platform built with Next.js 14 App Router and Prisma ORM,Web Development
+"Real-time collaborative code editor web app using Monaco Editor, Node.js, and WebSockets",Web Development
+Developer portfolio generator and template builder built with React and Tailwind CSS,Web Development
+GraphQL API server for social networking platform using Apollo Server and PostgreSQL,Web Development
+Modern admin dashboard UI template with dark mode using Angular and PrimeNG,Web Development
+Online food delivery ordering system web application with Express backend and MongoDB,Web Development
+"Inventory management and barcode tracking web app built with Vue 3, Vite, and Pinia",Web Development
+Real estate property listing portal with interactive map filtering using Mapbox and React,Web Development
+"Peer-to-peer video conferencing web application built with WebRTC, Node.js, and Socket.io",Web Development
+Customizable CMS blog engine with MDX support built with Astro and Tailwind CSS,Web Development
+FastAPI asynchronous microservice backend with Pydantic validation and PostgreSQL asyncpg,Web Development
+Serverless web application on AWS Lambda and API Gateway with React frontend,Web Development
+HR payroll and employee attendance management web portal using Spring Boot and React,Web Development
+Interactive survey and form builder web application with drag-and-drop UI in Svelte,Web Development
+"Automated email campaign marketing platform with Node.js, BullMQ, and Redis",Web Development
+Gym membership and fitness class booking web system built with Laravel and Blade,Web Development
+Online auction and bidding platform with real-time WebSocket updates and Stripe Checkout,Web Development
+Customer feedback widget and satisfaction survey embed script in vanilla TypeScript,Web Development
+API documentation viewer and interactive playground built with OpenAPI and React,Web Development
+Cloud file storage drive web application with drag-and-drop upload and Supabase storage,Web Development
+"Multi-vendor digital marketplace web app using Next.js, Stripe Connect, and Tailwind",Web Development
+Kanban sprint board web application with real-time team synchronization in React and Firebase,Web Development
+Web-based audio synthesizer and beat sequencer using Web Audio API and Vue.js,Web Development
+Freelance services marketplace platform with messaging and milestone payments in Angular,Web Development
+Cross-platform fitness tracking mobile app built with Flutter and Firebase Firestore,Mobile Development
+Native iOS budgeting and personal finance app written in Swift and SwiftUI,Mobile Development
+Android cryptocurrency wallet and price alert app built with Kotlin and Jetpack Compose,Mobile Development
+Cross-platform social networking mobile app built with React Native and Expo,Mobile Development
+Offline-first task management mobile application using SQLite and Flutter Dart,Mobile Development
+Meditation and mindfulness mobile app with ambient audio player in React Native,Mobile Development
+Recipe and meal planner mobile application built with Swift and CoreData for iOS,Mobile Development
+Android music player app with custom equalizer and Android MediaSession API,Mobile Development
+Real-time GPS delivery tracking mobile app using Google Maps API and Flutter,Mobile Development
+Language learning flashcard mobile app with spaced repetition using React Native,Mobile Development
+Habit tracker mobile application with interactive widgets in SwiftUI and iOS WidgetKit,Mobile Development
+Mobile barcode and QR code scanner app using Kotlin CameraX on Android,Mobile Development
+Cross-platform podcast streaming mobile app built with Flutter and AudioPlayers,Mobile Development
+Smart home IoT device controller mobile app using React Native and MQTT protocol,Mobile Development
+Augmented Reality AR interior design mobile app built with ARKit and Swift on iOS,Mobile Development
+Ride-sharing passenger and driver mobile app with live routing in Flutter,Mobile Development
+Android wallpaper gallery mobile application built with Kotlin Coroutines and Glide,Mobile Development
+Expense splitting and bill sharing mobile app using React Native and Firebase Auth,Mobile Development
+Mobile document scanner app with image perspective correction in Swift and VisionKit,Mobile Development
+Offline dictionary and vocabulary builder mobile application in Flutter,Mobile Development
+Personal journal and diary mobile application with biometric FaceID unlock in SwiftUI,Mobile Development
+Android health and step counter app using Google Fit API and Kotlin Room database,Mobile Development
+Food ordering and delivery mobile app built with React Native and Redux Toolkit,Mobile Development
+Mobile weather forecasting application with radar maps in Flutter and OpenWeatherMap,Mobile Development
+Mobile password vault application with secure enclave hardware encryption in Swift,Mobile Development
+E-commerce shopping mobile app with Apple Pay and Google Pay integration in Flutter,Mobile Development
+Native Android note-taking app with stylus support and Jetpack Compose canvas,Mobile Development
+Cross-platform real estate property finder mobile app with React Native and Mapbox,Mobile Development
+Mobile video editing and filter app using Metal shaders and AVFoundation in Swift,Mobile Development
+Blood pressure and vital signs logging mobile app for patients in Kotlin,Mobile Development
+Mobile flashcard quiz game app with multiplayer Bluetooth connectivity in Flutter,Mobile Development
+Travel itinerary organizer and offline packing checklist mobile app in SwiftUI,Mobile Development
+Mobile parking space reservation app with QR code gate pass in React Native,Mobile Development
+Android battery health monitor and charging speed tracker in Kotlin,Mobile Development
+Mobile crypto portfolio tracker with customizable home screen widgets in Flutter,Mobile Development
+Sleep cycle tracker and smart alarm mobile application using CoreMotion in Swift,Mobile Development
+Cross-platform plant care reminder mobile app with photo log in React Native,Mobile Development
+Mobile water drinking tracker with dynamic push notifications in Flutter,Mobile Development
+Android podcast player with offline download caching using Kotlin and ExoPlayer,Mobile Development
+Mobile event ticket wallet with PassKit Apple Wallet integration in Swift,Mobile Development
+Real-time chat mobile app with end-to-end Signal protocol encryption in Flutter,Mobile Development
+Mobile workout logger with custom rest timer and sound cues in React Native,Mobile Development
+Native iOS white noise sleep sound generator app with background audio in Swift,Mobile Development
+Android file manager and zip archive extractor app in Kotlin,Mobile Development
+Cross-platform car rental booking mobile app with Flutter and Supabase,Mobile Development
+Mobile barcode price comparison app with local SQLite cache in React Native,Mobile Development
+Mobile pet health records and vet appointment scheduler in SwiftUI,Mobile Development
+Android voice recorder app with audio waveform visualizer in Kotlin,Mobile Development
+Cross-platform real estate virtual tour mobile app in Flutter and WebView,Mobile Development
+Mobile golf scorecard and GPS rangefinder app in React Native,Mobile Development
+Exploratory data analysis EDA of global housing market trends using Pandas and Seaborn,Data Science & Analytics
+Customer lifetime value CLV prediction pipeline using statistical regression in Python,Data Science & Analytics
+Interactive COVID-19 epidemiological data dashboard using Plotly Dash and Pandas,Data Science & Analytics
+Automated ETL data pipeline extracting web metrics into PostgreSQL using Apache Airflow,Data Science & Analytics
+A/B testing experimentation statistical analysis framework with Python and SciPy,Data Science & Analytics
+Financial market risk assessment and Value-at-Risk VaR calculation using Monte Carlo,Data Science & Analytics
+Healthcare patient electronic health records EHR data cleaning and imputation pipeline,Data Science & Analytics
+E-commerce sales revenue forecasting dashboard using Prophet and Streamlit,Data Science & Analytics
+Geospatial spatial analysis of urban traffic congestion using GeoPandas and Folium,Data Science & Analytics
+Big data analytics processing pipeline over billion-row clickstream dataset using PySpark,Data Science & Analytics
+Supply chain demand forecasting pipeline using ARIMA time series modeling,Data Science & Analytics
+HR employee turnover predictive analysis using Logistic Regression and Decision Trees,Data Science & Analytics
+Social media trend sentiment analytics dashboard built with Streamlit and Pandas,Data Science & Analytics
+Credit scoring risk assessment model using scorecard methods and WOE binning in Python,Data Science & Analytics
+Automated data quality validation and schema testing pipeline using Great Expectations,Data Science & Analytics
+Retail market basket analysis using Apriori algorithm and association rule mining,Data Science & Analytics
+Sports player performance analytics and expected goals xG model using Statsmodels,Data Science & Analytics
+Energy consumption anomaly analysis and peak demand forecasting with Pandas,Data Science & Analytics
+Customer cohort retention analysis and churn heatmap visualization using Python,Data Science & Analytics
+Flight delay prediction and statistical root-cause analysis using Scikit-Learn,Data Science & Analytics
+Data warehouse modeling and transformation pipeline using dbt and Snowflake,Data Science & Analytics
+Real estate price index calculation and hedonic regression modeling in R and Python,Data Science & Analytics
+Streaming telemetry data aggregation and anomaly alert pipeline using Apache Kafka,Data Science & Analytics
+Web scraping and data extraction pipeline for job postings using Scrapy and Pandas,Data Science & Analytics
+Clinical trial statistical survival analysis using Kaplan-Meier and Cox Proportional Hazards,Data Science & Analytics
+Marketing attribution multi-touch modeling pipeline using Markov Chains in Python,Data Science & Analytics
+Cryptocurrency liquidity pool analysis and impermanent loss simulator using Pandas,Data Science & Analytics
+"SaaS product metric dashboard tracking MRR, ARR, and churn using Streamlit and DuckDB",Data Science & Analytics
+Supply chain inventory optimization using safety stock calculations and SciPy,Data Science & Analytics
+E-commerce product recommendation data pipeline using collaborative matrix factorization,Data Science & Analytics
+Call center audio sentiment analytics and keyword frequency dashboard with Pandas,Data Science & Analytics
+Hotel booking cancellation statistical prediction using Random Forest and Pandas,Data Science & Analytics
+Macroeconomic indicator forecasting and inflation analysis using Vector Autoregression VAR,Data Science & Analytics
+"Automated financial report generation script using Python, Pandas, and ReportLab PDF",Data Science & Analytics
+Sensor data time-series filtering and spectral analysis using SciPy signal processing,Data Science & Analytics
+User clickstream funnel analysis and drop-off rate visualization in Python,Data Science & Analytics
+Automated feature engineering pipeline for tabular datasets using Featuretools,Data Science & Analytics
+"Data lake ingestion architecture using Apache Iceberg, PySpark, and AWS S3",Data Science & Analytics
+Retail pricing elasticity modeling and optimal discount calculator in Python,Data Science & Analytics
+Telecom network latency analytics and outage prediction using Pandas and Seaborn,Data Science & Analytics
+Bank loan default probability scoring model using XGBoost and SHAP explainability,Data Science & Analytics
+Public transit bus arrival delay statistical modeling using GeoPandas,Data Science & Analytics
+Customer satisfaction CSAT score survey text clustering using TF-IDF and K-Means,Data Science & Analytics
+Insurance claims fraud pattern analysis and outlier detection using Isolation Forest,Data Science & Analytics
+Air quality index AQI historical trend analysis and seasonal decomposition with Statsmodels,Data Science & Analytics
+Website conversion rate optimization A/B test power analysis calculator in Python,Data Science & Analytics
+Server cluster CPU and memory resource utilization forecasting using ARIMA,Data Science & Analytics
+B2B sales lead qualification scoring model using Scikit-Learn and Pandas,Data Science & Analytics
+Retail store foot traffic analysis using WiFi sensor logs and Matplotlib,Data Science & Analytics
+Hospital emergency room patient wait time regression model using Pandas and Statsmodels,Data Science & Analytics
+"Automated CI/CD deployment pipeline using GitHub Actions, Docker, and AWS ECS",Cloud & DevOps
+Infrastructure as Code IaC provisioning for multi-region AWS VPC using Terraform,Cloud & DevOps
+"Kubernetes cluster monitoring and alerting stack using Prometheus, Grafana, and Alertmanager",Cloud & DevOps
+Zero-downtime blue-green deployment script for microservices on Kubernetes,Cloud & DevOps
+"Serverless application deployment framework using AWS Lambda, API Gateway, and CDK",Cloud & DevOps
+GitOps continuous delivery workflow using ArgoCD and Kubernetes Helm charts,Cloud & DevOps
+Automated Docker container vulnerability scanning in GitLab CI using Trivy,Cloud & DevOps
+"Centralized log aggregation pipeline using ELK Stack Elasticsearch, Logstash, and Kibana",Cloud & DevOps
+Multi-cloud infrastructure deployment automation using Terraform on AWS and GCP,Cloud & DevOps
+High-availability PostgreSQL database cluster setup with automatic failover and Patroni,Cloud & DevOps
+Kubernetes auto-scaling configuration using Horizontal Pod Autoscaler HPA and KEDA,Cloud & DevOps
+Secure secret management integration using HashiCorp Vault and Kubernetes secrets,Cloud & DevOps
+Distributed tracing and performance monitoring setup using OpenTelemetry and Jaeger,Cloud & DevOps
+Automated backup and disaster recovery replication script for AWS S3 and RDS,Cloud & DevOps
+"Ansible playbook automation for Linux server provisioning, hardening, and patching",Cloud & DevOps
+Cloud-native API gateway and reverse proxy routing using Traefik and Docker Compose,Cloud & DevOps
+Continuous security compliance auditing tool for AWS using AWS Config and Boto3,Cloud & DevOps
+Nginx reverse proxy and SSL TLS automated certificate renewal using Let's Encrypt Certbot,Cloud & DevOps
+High-availability MySQL database cluster orchestration using Docker Swarm,Cloud & DevOps
+Cloud cost optimization script identifying unattached AWS EBS volumes and EC2,Cloud & DevOps
+Serverless event-driven architecture built with GCP Cloud Functions and Pub/Sub,Cloud & DevOps
+Infrastructure automation testing script using Testinfra and Docker,Cloud & DevOps
+Kubernetes cluster deployment automation using Kubeadm and Calico CNI,Cloud & DevOps
+Edge computing deployment pipeline using K3s and Raspberry Pi nodes,Cloud & DevOps
+"Cloud service mesh configuration using Istio, Envoy, and Kubernetes",Cloud & DevOps
+Automated Kubernetes disaster recovery and backup orchestration using Velero,Cloud & DevOps
+AWS CloudFormation template generator for multi-tier microservice architecture,Cloud & DevOps
+Docker image optimization multi-stage build scripts reducing container image sizes,Cloud & DevOps
+Terraform module for deploying scalable elastic Kubernetes clusters EKS on AWS,Cloud & DevOps
+Automated canary release deployment controller using Flagger and Linkerd,Cloud & DevOps
+Serverless cron job scheduling and worker queue processing on Google Cloud Tasks,Cloud & DevOps
+Chaos engineering experiment runner for testing Kubernetes resiliency with Chaos Mesh,Cloud & DevOps
+Cloud security posture management CSPM compliance checker for Azure with Terraform,Cloud & DevOps
+Automated staging environment ephemeral preview deployment bot for GitHub Pull Requests,Cloud & DevOps
+Distributed caching layer deployment using Redis Cluster on Kubernetes with Helm,Cloud & DevOps
+Network ingress controller setup on Kubernetes with NGINX Ingress and cert-manager,Cloud & DevOps
+Automated database migration runner and schema sync pipeline in Docker container,Cloud & DevOps
+Cloud cost anomaly detection and Slack alert notification system using AWS Cost Explorer API,Cloud & DevOps
+Self-hosted GitHub Actions runner autoscaling on Kubernetes using actions-runner-controller,Cloud & DevOps
+Multi-region DNS failover routing configuration using AWS Route 53 and health checks,Cloud & DevOps
+Kafka cluster deployment and topic partition management on Kubernetes with Strimzi,Cloud & DevOps
+Ansible automated zero-downtime rolling update deployment for Django web servers,Cloud & DevOps
+Elasticsearch cluster backup snapshot automation to AWS S3 using Curator,Cloud & DevOps
+Kubernetes policy enforcement and admission webhook using Open Policy Agent OPA Gatekeeper,Cloud & DevOps
+Container runtime security monitoring daemon using Falco and eBPF,Cloud & DevOps
+"Automated static site hosting pipeline on AWS S3, CloudFront CDN, and Route 53",Cloud & DevOps
+Grafana enterprise dashboard templates for microservice latency and error rate tracking,Cloud & DevOps
+Automated SSL certificate expiry monitoring and Slack alert daemon in Python,Cloud & DevOps
+GCP BigQuery infrastructure deployment automation using Terraform and Cloud Build,Cloud & DevOps
+HashiCorp Nomad cluster job scheduler setup for lightweight container orchestration,Cloud & DevOps
+Network packet sniffer and port scanner built with C++ and socket programming,Cybersecurity & Systems
+Vulnerability scanner and password security auditor written in Python,Cybersecurity & Systems
+Operating system kernel driver and low-level memory management simulation in C,Cybersecurity & Systems
+Cryptographic file encryption tool using AES-256 and RSA public key infrastructure,Cybersecurity & Systems
+Intrusion detection system IDS monitoring network traffic anomalies in C++,Cybersecurity & Systems
+Malware reverse engineering and static analysis toolkit using Python and Volatility,Cybersecurity & Systems
+Web application firewall WAF filtering SQL injection and XSS attacks,Cybersecurity & Systems
+Embedded systems firmware for ARM Cortex-M microcontrollers using C and FreeRTOS,Cybersecurity & Systems
+Wireless network security auditor testing WPA2 handshake capture in Python,Cybersecurity & Systems
+Secure password manager using Argon2 key derivation and AES-GCM encryption,Cybersecurity & Systems
+Linux kernel module for monitoring process creation and syscall auditing,Cybersecurity & Systems
+Hardware Security Module HSM integration library written in C++,Cybersecurity & Systems
+Network vulnerability scanner utilizing Nmap scripts and Python reporting,Cybersecurity & Systems
+Embedded IoT microcontroller firmware written in Rust for ESP32 hardware,Cybersecurity & Systems
+Zero-trust authentication proxy enforcing mTLS mutual TLS certificates,Cybersecurity & Systems
+Buffer overflow exploit mitigation demonstrator and shellcode lab in C,Cybersecurity & Systems
+Penetration testing payload generator written in Python and Bash,Cybersecurity & Systems
+Secure VPN tunnel client using WireGuard protocol in C,Cybersecurity & Systems
+Steganography tool hiding encrypted payload messages inside PNG images,Cybersecurity & Systems
+Active Directory security auditor analyzing Kerberoasting and BloodHound paths,Cybersecurity & Systems
+Firmware update verification tool using SHA-256 cryptographic signatures,Cybersecurity & Systems
+Network protocol analyzer and dissector written in C for Wireshark,Cybersecurity & Systems
+Keylogger detection and prevention software for Windows using C++ WinAPI,Cybersecurity & Systems
+Rootkit detector checking Linux kernel symbol table integrity,Cybersecurity & Systems
+SIEM log analyzer detecting brute-force SSH login attempts in Python,Cybersecurity & Systems
+Zero-day vulnerability fuzzer for network protocols written in Rust,Cybersecurity & Systems
+Cross-platform memory forensicator and RAM dump analyzer in C++,Cybersecurity & Systems
+Low-level bootloader and x86 operating system kernel written in Assembly and C,Cybersecurity & Systems
+DDoS attack mitigation proxy with rate-limiting token bucket in Rust,Cybersecurity & Systems
+Elliptic-curve cryptography ECC key exchange implementation in C,Cybersecurity & Systems
+Process injection and DLL hijacking detection engine for Windows in C++,Cybersecurity & Systems
+Static code analysis security scanner finding hardcoded API keys in Python,Cybersecurity & Systems
+DNS tunneling detection and exfiltration prevention tool in Go and Python,Cybersecurity & Systems
+Custom TCP/IP networking stack implementation in C on raw sockets,Cybersecurity & Systems
+Ransomware behavior analyzer monitoring filesystem entropy changes in C#,Cybersecurity & Systems
+Secure multi-party computation protocol demonstrator in Python,Cybersecurity & Systems
+Bluetooth Low Energy BLE security auditor for IoT devices in Python,Cybersecurity & Systems
+Linux eBPF kernel tracing tool for tracking malicious socket connections,Cybersecurity & Systems
+Automated security header and SSL TLS cipher suite scanner in Python,Cybersecurity & Systems
+USB Rubber Ducky payload emulator and keystroke injection tool on Raspberry Pi Pico,Cybersecurity & Systems
+Homomorphic encryption prototype for privacy-preserving computations,Cybersecurity & Systems
+Sandbox malware execution analyzer logging system API calls in Python,Cybersecurity & Systems
+Firmware reverse engineering disassembler and string extractor in Python,Cybersecurity & Systems
+Network arp spoofing and MITM attack detection alert daemon in C,Cybersecurity & Systems
+Secure cryptographic token generator based on HMAC-SHA512 in C++,Cybersecurity & Systems
+Windows registry persistence analyzer for post-exploitation detection,Cybersecurity & Systems
+Virtual machine hypervisor memory isolation demonstrator in C,Cybersecurity & Systems
+Quantum-resistant post-quantum cryptography Kyber algorithm implementation in Rust,Cybersecurity & Systems
+Automated phishing URL classification engine using certificate and WHOIS features,Cybersecurity & Systems
+Linux PAM module for biometric fingerprint authentication in C,Cybersecurity & Systems

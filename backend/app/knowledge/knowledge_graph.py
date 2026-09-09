@@ -86,28 +86,28 @@ ROLE_PROFILES: Dict[str, Dict[str, Any]] = {
     "UI/UX Designer": {
         "category": "User Experience & Interface Design",
         "description": "Crafts intuitive digital journeys, design systems, wireframes, and responsive component libraries that maximize developer handoff and usability.",
-        "prereqs": ["HTML/CSS", "Tailwind CSS", "JavaScript"],
-        "unlocks": ["Frontend Developer", "Mobile Developer"],
+        "prereqs": ["Figma", "UI/UX Design", "Wireframing & Prototyping", "Design Systems", "HTML/CSS", "Tailwind CSS", "Responsive Web Design"],
+        "unlocks": ["Frontend Developer", "Mobile Developer", "Product Manager"],
         "complements": ["Frontend Developer", "Mobile Developer", "Product Manager"]
     },
     "QA Engineer": {
         "category": "Quality Engineering & Testing",
         "description": "Designs automated end-to-end and regression test suites, establishes CI/CD test gates, and ensures software meets production quality standards.",
-        "prereqs": ["Git", "CI/CD", "REST API", "Python"],
+        "prereqs": ["Automated Testing", "Postman", "Git", "CI/CD", "REST API", "Python"],
         "unlocks": ["Software Engineer", "DevOps Engineer"],
         "complements": ["Software Engineer", "Full-Stack Developer", "DevOps Engineer"]
     },
     "Product Manager": {
         "category": "Technical Product Strategy",
         "description": "Bridges user needs, business goals, and engineering velocity by managing backlogs, user analytics, and technical product feature roadmaps.",
-        "prereqs": ["Git", "SQL", "REST API"],
+        "prereqs": ["Product Management", "Agile / Scrum", "SQL", "Git", "REST API"],
         "unlocks": ["System Architect", "Full-Stack Developer"],
         "complements": ["Software Engineer", "UI/UX Designer", "Data Scientist", "Frontend Developer"]
     },
     "Security Engineer": {
         "category": "Cloud & Infrastructure Security",
         "description": "Ensures systems remain resilient against vulnerabilities through threat modeling, container security, zero-trust cloud architecture, and compliance.",
-        "prereqs": ["Linux", "Cloud Computing", "Docker", "Git"],
+        "prereqs": ["Cybersecurity", "Vulnerability Assessment", "Linux", "Cloud Computing", "Docker", "Git", "CI/CD"],
         "unlocks": ["DevOps Engineer", "System Architect"],
         "complements": ["DevOps Engineer", "Backend Developer", "System Architect"]
     }

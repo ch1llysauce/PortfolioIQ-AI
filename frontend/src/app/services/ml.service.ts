@@ -18,13 +18,14 @@ export class MlService {
   constructor(private http: HttpClient) {}
 
   // Predict project category using ML Scikit-Learn Model
-  classifyProject(name: string, description: string): Observable<ClassifyProjectResponse> {
+  classifyProject(name: string, description: string = '', skills: string[] = []): Observable<ClassifyProjectResponse> {
     return this.http.post<ClassifyProjectResponse>(`${this.apiUrl}/classify-project`, {
       name,
-      description
+      description,
+      skills
     }).pipe(
       map(res => {
-        if (!res || res.confidence_score <= 30 || res.needs_details) {
+        if (!res || res.confidence_score <= 28 || res.needs_details) {
           return {
             ...res,
             predicted_category: 'Needs More Details',
