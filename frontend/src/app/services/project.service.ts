@@ -15,7 +15,7 @@ export class ProjectService {
   async createProject(
     name: string,
     description: string,
-    status: string = 'active'
+    status: string = 'completed'
   ) {
 
     const {

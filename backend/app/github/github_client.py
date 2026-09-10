@@ -3,6 +3,7 @@ import sys
 from typing import Dict, List, Any, Optional
 from collections import Counter
 import httpx
+import certifi
 from dotenv import load_dotenv
 
 # Load env variables for optional GITHUB_TOKEN
@@ -43,7 +44,7 @@ class GitHubClient:
         """Checks GitHub API availability and current rate limits."""
         headers = self._get_headers()
         try:
-            with httpx.Client(timeout=8.0) as client:
+            with httpx.Client(timeout=8.0, verify=certifi.where()) as client:
                 res = client.get(f"{self.BASE_URL}/rate_limit", headers=headers)
                 if res.status_code == 200:
                     data = res.json()
@@ -74,7 +75,7 @@ class GitHubClient:
 
         headers = self._get_headers()
         
-        with httpx.Client(timeout=15.0) as client:
+        with httpx.Client(timeout=15.0, verify=certifi.where()) as client:
             # 1. Fetch User Profile
             profile_res = client.get(f"{self.BASE_URL}/users/{clean_user}", headers=headers)
             if profile_res.status_code == 404:

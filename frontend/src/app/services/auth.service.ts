@@ -143,4 +143,19 @@ export class AuthService {
         const { data } = this.supabase.storage.from('resumes').getPublicUrl(filePath);
         return { publicUrl: data.publicUrl, error: null };
     }
+
+    async updateUserProfile(displayName: string) {
+        return await this.supabase.auth.updateUser({
+            data: {
+                display_name: displayName,
+                full_name: displayName
+            }
+        });
+    }
+
+    async updatePassword(password: string) {
+        return await this.supabase.auth.updateUser({
+            password
+        });
+    }
 }

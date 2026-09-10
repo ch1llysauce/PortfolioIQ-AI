@@ -1,5 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
-
+/* Global Dashboard Typography & Reset */
 @import 'tailwindcss';
 
 html, body {
@@ -8,4 +7,283 @@ html, body {
   padding: 0;
   overflow: hidden;
   background-color: #0f172a;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+/* Global Styles for Dynamically Injected Chat Markdown (innerHTML) */
+.chat-rendered-markdown {
+  font-size: 0.94rem;
+  line-height: 1.65;
+  color: #e2e8f0;
+}
+
+.chat-rendered-markdown strong {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.chat-rendered-markdown .chat-h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  margin: 14px 0 6px 0;
+}
+
+.chat-rendered-markdown .chat-h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #c7d2fe;
+  margin: 12px 0 4px 0;
+}
+
+.chat-rendered-markdown .chat-h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 12px 0 6px 0;
+}
+
+.chat-rendered-markdown .chat-numbered-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 16px 0 6px 0;
+  line-height: 1.6;
+}
+
+.chat-rendered-markdown > .chat-numbered-heading:first-child,
+.chat-rendered-markdown .chat-numbered-heading:first-of-type {
+  margin-top: 10px;
+}
+
+.chat-numbered-heading .num-badge {
+  color: #818cf8;
+  font-size: 1.02rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.chat-rendered-markdown .star-label {
+  color: #38bdf8;
+  font-weight: 700;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.chat-rendered-markdown .chat-ul,
+.chat-rendered-markdown .chat-ol {
+  margin: 10px 0 14px 0;
+  padding-left: 20px;
+}
+
+.chat-rendered-markdown .chat-li,
+.chat-rendered-markdown .chat-oli {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.chat-inline-code {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fbcfe8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85em;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Sleek Code Blocks with Copy Button */
+.chat-code-block {
+  background: #080c14;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  margin: 16px 0;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.chat-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-lang-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #a5b4fc;
+  letter-spacing: 0.06em;
+}
+
+.copy-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #c7d2fe;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.copy-code-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.copy-code-btn.copied {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.chat-code-block pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.chat-code-block pre code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.chat-paragraph-gap {
+  height: 16px;
+}
+
+/* Markdown Tables */
+.chat-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  margin: 16px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(11, 17, 33, 0.95);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.chat-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.chat-table th {
+  background: rgba(30, 41, 59, 0.98);
+  color: #c7d2fe;
+  font-weight: 700;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 2px solid rgba(99, 102, 241, 0.6);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.chat-table td {
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #f1f5f9;
+  vertical-align: top;
+  line-height: 1.6;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.chat-table th:first-child,
+.chat-table td:first-child {
+  white-space: nowrap !important;
+  font-weight: 700;
+  color: #a5b4fc;
+  min-width: 110px;
+  width: 110px;
+}
+
+.chat-table th:nth-child(2),
+.chat-table td:nth-child(2) {
+  min-width: 200px;
+  width: 200px;
+  white-space: normal;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.chat-table th:nth-child(3),
+.chat-table td:nth-child(3) {
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.chat-table th:nth-child(4),
+.chat-table td:nth-child(4) {
+  min-width: 260px;
+  max-width: 380px;
+}
+
+.chat-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.chat-table tbody tr:hover td {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.chat-blockquote {
+  border-left: 3px solid #6366f1;
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: 0 8px 8px 0;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.chat-hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 18px 0;
 }

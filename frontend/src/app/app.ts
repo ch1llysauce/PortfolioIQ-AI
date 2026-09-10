@@ -30,8 +30,8 @@ export interface ConfirmModalState {
   message: string;
   confirmText: string;
   cancelText: string;
-  type: 'danger' | 'warning' | 'primary';
-  icon: 'logout' | 'delete' | 'warning' | 'info';
+  type: 'danger' | 'warning' | 'primary' | 'success';
+  icon: 'logout' | 'delete' | 'warning' | 'info' | 'success';
   onConfirm: () => void;
 }
 
@@ -104,16 +104,69 @@ export class App implements OnInit {
   forgotLoading = signal<boolean>(false);
   forgotSuccessMsg = signal<string>('');
   showOtpInput = signal<boolean>(false);
+  isRecoveringPassword = signal<boolean>(false);
+
+  // Rate Limiting State
+  resendCooldown = signal<number>(0);           // seconds remaining in resend cooldown
+  private resendCooldownTimer: any = null;
+  otpAttempts = signal<number>(0);              // wrong OTP attempts in current session
+  readonly OTP_MAX_ATTEMPTS = 5;
+  loginFailCount = signal<number>(0);           // consecutive failed login attempts
+  loginLockoutUntil = signal<number>(0);        // timestamp when lockout expires
+  readonly LOGIN_LOCKOUT_AFTER = 5;             // lock after 5 failures
+  readonly LOGIN_LOCKOUT_SECONDS = 60;          // lockout duration in seconds
+  codeExpiry = signal<number>(0);              // seconds until current OTP code expires
+  private codeExpiryTimer: any = null;
+  readonly CODE_EXPIRY_SECONDS = 3600;          // match Supabase OTP expiry (1 hour default)
 
   // Form Inputs
   authEmail = '';
   authPassword = '';
   authDisplayName = '';
+  showAuthPassword = signal<boolean>(false);
+  showForgotNewPassword = signal<boolean>(false);
+  showForgotConfirmPassword = signal<boolean>(false);
+
+  // First-Time Quick Onboarding Modal State
+  showOnboardingModal = signal<boolean>(false);
+  onboardingSelectedRoleId = signal<string>('');
+  onboardingSaving = signal<boolean>(false);
+  onboardingGitHubUsername = '';
   
   newProjectName = '';
   newProjectDesc = '';
   newProjectStatus: 'idea' | 'active' | 'completed' = 'idea';
   repoImportStatuses = signal<{ [repoId: string]: 'completed' | 'active' | 'idea' }>({});
+  
+  // GitHub Import Modal State
+  importModalRepo = signal<GitHubRepository | null>(null);
+  importModalName = '';
+  importModalDesc = '';
+  importModalStatus: 'completed' | 'active' | 'idea' = 'completed';
+  isImportingModal = signal<boolean>(false);
+
+  // GitHub Batch Import Modal State
+  batchImportModalOpen = signal<boolean>(false);
+  batchImportStatus: 'completed' | 'active' | 'idea' = 'completed';
+  isBatchImporting = signal<boolean>(false);
+
+  // Developer Profile Modal State
+  showProfileModal = signal<boolean>(false);
+  profileDisplayName = '';
+  initialProfileDisplayName = '';
+  profileSelectedRoleId = '';
+  initialProfileRoleId = '';
+  profileCurrentPassword = '';
+  profileNewPassword = '';
+  profileConfirmPassword = '';
+  showCurrentPassword = signal<boolean>(false);
+  showNewPassword = signal<boolean>(false);
+  showConfirmPassword = signal<boolean>(false);
+  passwordErrorMessage = signal<string>('');
+  showProfilePasswordSection = signal<boolean>(false);
+  isSavingProfile = signal<boolean>(false);
+  isUpdatingProfilePassword = signal<boolean>(false);
+
   expandedProjectSkills = signal<{ [projectId: string]: boolean }>({});
   expandedProjectDescs = signal<{ [projectId: string]: boolean }>({});
   showAddProjectForm = signal<boolean>(false);
@@ -254,6 +307,16 @@ export class App implements OnInit {
           this.showToast('GitHub sign-in expired. Please try again.', 'warning');
         }, 500);
       }
+
+      // Pre-check: If loading with password recovery link, mark recovery active immediately
+      const hash = window.location.hash || '';
+      if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+        this.isRecoveringPassword.set(true);
+        this.authMode.set('forgot');
+        this.forgotStep.set(3);
+        this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
+        this.showAuthModal.set(true);
+      }
     }
 
     // Set up listener BEFORE loading user — so if the page loaded from an OAuth redirect,
@@ -294,8 +357,8 @@ export class App implements OnInit {
     message: string;
     confirmText?: string;
     cancelText?: string;
-    type?: 'danger' | 'warning' | 'primary';
-    icon?: 'logout' | 'delete' | 'warning' | 'info';
+    type?: 'danger' | 'warning' | 'primary' | 'success';
+    icon?: 'logout' | 'delete' | 'warning' | 'info' | 'success';
     onConfirm: () => void;
   }) {
     this.confirmDialog.set({
@@ -303,20 +366,25 @@ export class App implements OnInit {
       title: options.title,
       message: options.message,
       confirmText: options.confirmText || 'Confirm',
-      cancelText: options.cancelText || 'Cancel',
+      cancelText: options.cancelText !== undefined ? options.cancelText : 'Cancel',
       type: options.type || 'danger',
-      icon: options.icon || (options.type === 'primary' ? 'info' : 'delete'),
+      icon: options.icon || (options.type === 'primary' ? 'info' : (options.type === 'success' ? 'success' : 'delete')),
       onConfirm: options.onConfirm
     });
   }
 
-  closeConfirmDialog() {
+  closeConfirmDialog(forceAction = false) {
+    const isSingleAction = !this.confirmDialog().cancelText;
+    const action = this.confirmDialog().onConfirm;
     this.confirmDialog.update(s => ({ ...s, isOpen: false }));
+    if (forceAction && isSingleAction && action) {
+      action();
+    }
   }
 
   handleConfirmDialogAction() {
     const action = this.confirmDialog().onConfirm;
-    this.closeConfirmDialog();
+    this.closeConfirmDialog(false);
     if (action) {
       action();
     }
@@ -371,9 +439,106 @@ export class App implements OnInit {
 
   async loadCurrentUser() {
     const user = await this.authService.getUser();
+    // During password recovery, Supabase creates a session but we don't want
+    // to show the authenticated dashboard yet — only the reset-password modal.
+    if (this.isRecoveringPassword()) {
+      return;
+    }
     this.currentUser.set(user);
     this.checkOAuthGitHubIdentity(user);
     this.loadCloudResume(user);
+    if (user) {
+      this.checkFirstTimeOnboarding(user);
+    }
+  }
+
+  checkFirstTimeOnboarding(user: any) {
+    if (!user) return;
+    const isCompleted = user.user_metadata?.onboarding_completed || 
+      (typeof localStorage !== 'undefined' && localStorage.getItem(`portfolioiq_onboarded_${user.id}`) === 'true');
+    
+    if (!isCompleted) {
+      const roles = this.careerRoles();
+      if (roles.length > 0 && !this.onboardingSelectedRoleId()) {
+        this.onboardingSelectedRoleId.set(this.selectedRoleId() || roles[0].id);
+      }
+      // Auto-fill GitHub username from OAuth identity — no need to re-enter it
+      if (!this.onboardingGitHubUsername) {
+        const githubUsername = this.authService.extractGitHubUsername(user);
+        if (githubUsername) {
+          this.onboardingGitHubUsername = githubUsername;
+        }
+      }
+      this.showOnboardingModal.set(true);
+    }
+  }
+
+  async completeOnboarding() {
+    const user = this.currentUser();
+    const roleId = this.onboardingSelectedRoleId() || this.selectedRoleId();
+    this.onboardingSaving.set(true);
+
+    try {
+      if (roleId) {
+        await this.selectCareerRole(roleId);
+      }
+
+      if (user) {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(`portfolioiq_onboarded_${user.id}`, 'true');
+        }
+        await this.authService.updateUserData({
+          onboarding_completed: true,
+          target_role_id: roleId
+        });
+      }
+
+      // Use onboarding GitHub input if provided, else fall back to verified/linked
+      const inputUsername = this.onboardingGitHubUsername.trim()
+        .replace(/^https?:\/\/github\.com\//i, '')
+        .replace(/^@+/, '')
+        .trim();
+      const targetUsername = inputUsername || this.verifiedGitHubUsername() || this.githubUsername;
+
+      if (inputUsername && user?.id) {
+        this.linkedGitHubUsername.set(inputUsername);
+        this.githubUsername = inputUsername;
+        localStorage.setItem(`portfolioiq_github_${user.id}`, inputUsername);
+      }
+
+      if (targetUsername && !this.isScanningGitHub()) {
+        this.scanGitHub(targetUsername);
+      }
+
+      this.showOnboardingModal.set(false);
+      this.showToast('Welcome to PortfolioIQ! Your AI portfolio analysis has started.', 'success');
+    } catch (err: any) {
+      console.warn('Error saving onboarding data:', err);
+      this.showOnboardingModal.set(false);
+    } finally {
+      this.onboardingSaving.set(false);
+    }
+  }
+
+  getOnboardingName(): string {
+    const user = this.currentUser();
+    if (!user) return 'Developer';
+    return user.user_metadata?.full_name || 
+           user.user_metadata?.name || 
+           user.user_metadata?.user_name || 
+           (user.email ? user.email.split('@')[0] : 'Developer');
+  }
+
+  getOnboardingAvatar(): string {
+    const user = this.currentUser();
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url;
+    }
+    const gh = this.verifiedGitHubUsername() || this.githubUsername;
+    if (gh) {
+      return `https://github.com/${gh}.png`;
+    }
+    return '';
   }
 
   loadCloudResume(user: any) {
@@ -454,12 +619,19 @@ export class App implements OnInit {
     this.showAuthModal.set(false);
     this.authError.set('');
     this.forgotSuccessMsg.set('');
+    this.showAuthPassword.set(false);
+    this.showForgotNewPassword.set(false);
+    this.showForgotConfirmPassword.set(false);
+    this.isRecoveringPassword.set(false);
+    this.stopResendCooldown();
+    this.stopCodeExpiry();
   }
 
   switchAuthMode(mode: 'login' | 'register' | 'forgot') {
     this.authMode.set(mode);
     this.authError.set('');
     this.forgotSuccessMsg.set('');
+    this.showAuthPassword.set(false);
     if (mode === 'forgot') {
       this.resetForgotFlow();
     }
@@ -475,6 +647,78 @@ export class App implements OnInit {
     this.forgotSuccessMsg.set('');
     this.authError.set('');
     this.showOtpInput.set(false);
+    this.isRecoveringPassword.set(false);
+    // Reset OTP rate limiting state
+    this.otpAttempts.set(0);
+    this.stopResendCooldown();
+    this.stopCodeExpiry();
+  }
+
+  // --- Rate Limiting Helpers ---
+
+  startResendCooldown(seconds = 60) {
+    this.stopResendCooldown();
+    this.resendCooldown.set(seconds);
+    this.stopResendCooldown();
+    this.resendCooldownTimer = setInterval(() => {
+      const remaining = this.resendCooldown() - 1;
+      if (remaining <= 0) {
+        this.stopResendCooldown();
+      } else {
+        this.resendCooldown.set(remaining);
+      }
+    }, 1000);
+  }
+
+  stopResendCooldown() {
+    if (this.resendCooldownTimer) {
+      clearInterval(this.resendCooldownTimer);
+      this.resendCooldownTimer = null;
+    }
+    this.resendCooldown.set(0);
+  }
+
+  loginLockoutRemaining(): number {
+    const until = this.loginLockoutUntil();
+    if (!until) return 0;
+    const remaining = Math.ceil((until - Date.now()) / 1000);
+    return remaining > 0 ? remaining : 0;
+  }
+
+  isLoginLocked(): boolean {
+    return this.loginLockoutRemaining() > 0;
+  }
+
+  startCodeExpiry(seconds = this.CODE_EXPIRY_SECONDS) {
+    this.stopCodeExpiry();
+    this.codeExpiry.set(seconds);
+    this.codeExpiryTimer = setInterval(() => {
+      const remaining = this.codeExpiry() - 1;
+      if (remaining <= 0) {
+        this.stopCodeExpiry();
+      } else {
+        this.codeExpiry.set(remaining);
+      }
+    }, 1000);
+  }
+
+  stopCodeExpiry() {
+    if (this.codeExpiryTimer) {
+      clearInterval(this.codeExpiryTimer);
+      this.codeExpiryTimer = null;
+    }
+    this.codeExpiry.set(0);
+  }
+
+  formatExpiry(seconds: number): string {
+    if (seconds <= 0) return '0:00';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   toggleOtpInput(show: boolean) {
@@ -485,6 +729,15 @@ export class App implements OnInit {
     this.forgotStep.set(step);
     this.authError.set('');
     this.showOtpInput.set(false);
+  }
+
+  onOtpInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target) {
+      const sanitized = target.value.replace(/\D/g, '').slice(0, 8);
+      this.forgotOtp = sanitized;
+      target.value = sanitized;
+    }
   }
 
   // 3-Step Forgot Password Flow
@@ -509,6 +762,8 @@ export class App implements OnInit {
       } else {
         this.forgotSuccessMsg.set(`Password reset email sent to ${email}. Check your inbox!`);
         this.forgotStep.set(2);
+        this.startResendCooldown(60);
+        this.startCodeExpiry();
       }
     } catch (err: any) {
       this.authError.set(err.message || 'Failed to send recovery code.');
@@ -520,8 +775,15 @@ export class App implements OnInit {
   async verifyForgotOtp() {
     const email = this.forgotEmail.trim();
     const token = this.forgotOtp.trim();
-    if (!token || token.length < 6) {
-      this.authError.set('Please enter the valid 6-digit verification code.');
+
+    // Block if max attempts reached
+    if (this.otpAttempts() >= this.OTP_MAX_ATTEMPTS) {
+      this.authError.set('Too many incorrect attempts. Please request a new code.');
+      return;
+    }
+
+    if (!token || token.length < 4) {
+      this.authError.set('Please enter the verification code from your email.');
       return;
     }
 
@@ -530,8 +792,20 @@ export class App implements OnInit {
     try {
       const { error } = await this.authService.verifyRecoveryOtp(email, token);
       if (error) {
-        this.authError.set(error.message);
+        const attempts = this.otpAttempts() + 1;
+        this.otpAttempts.set(attempts);
+        const remaining = this.OTP_MAX_ATTEMPTS - attempts;
+        if (remaining <= 0) {
+          this.authError.set('Too many incorrect attempts. Please request a new code.');
+        } else {
+          this.authError.set(`Incorrect code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`);
+        }
       } else {
+        // Mark as recovering so the dashboard stays hidden during Step 3
+        this.isRecoveringPassword.set(true);
+        this.otpAttempts.set(0);
+        this.stopCodeExpiry();
+        this.stopResendCooldown();
         this.forgotSuccessMsg.set('Code verified successfully! Now set your new password.');
         this.forgotStep.set(3);
       }
@@ -543,7 +817,7 @@ export class App implements OnInit {
   }
 
   async resendForgotOtp() {
-    if (this.forgotLoading()) return;
+    if (this.forgotLoading() || this.resendCooldown() > 0) return;
     const email = this.forgotEmail.trim();
     if (!email) return;
 
@@ -554,7 +828,12 @@ export class App implements OnInit {
       if (error) {
         this.authError.set(error.message);
       } else {
-        this.forgotSuccessMsg.set('A new reset link has been sent to your email.');
+        // Reset OTP attempts and start 60s cooldown
+        this.otpAttempts.set(0);
+        this.forgotOtp = '';
+        this.forgotSuccessMsg.set('A new code has been sent to your email.');
+        this.startResendCooldown(60);
+        this.startCodeExpiry();
       }
     } catch (err: any) {
       this.authError.set(err.message || 'Failed to resend code.');
@@ -580,9 +859,10 @@ export class App implements OnInit {
       if (error) {
         this.authError.set(error.message);
       } else {
+        this.isRecoveringPassword.set(false);
         this.forgotSuccessMsg.set('Password updated successfully! Logging you in...');
-        if (typeof window !== 'undefined' && window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (typeof window !== 'undefined' && (window.location.hash || window.location.search)) {
+          window.history.replaceState(null, '', window.location.pathname);
         }
         await this.loadCurrentUser();
         if (this.currentUser()) {
@@ -590,6 +870,7 @@ export class App implements OnInit {
         }
         setTimeout(() => {
           this.closeAuthModal();
+          this.showToast('Password updated successfully! Welcome back.', 'success');
         }, 1200);
       }
     } catch (err: any) {
@@ -600,8 +881,35 @@ export class App implements OnInit {
   }
 
   setupAuthRecoveryListener() {
+    const isUrlRecovery = typeof window !== 'undefined' && 
+      ((window.location.hash || '').includes('type=recovery') || (window.location.search || '').includes('type=recovery'));
+    if (isUrlRecovery) {
+      this.isRecoveringPassword.set(true);
+    }
+
     // 1. Listen for Supabase auth state change events
     this.authService.onAuthStateChange(async (event, session) => {
+      // Check if this event is part of password recovery flow
+      const inRecovery = event === 'PASSWORD_RECOVERY' || this.isRecoveringPassword() ||
+        (typeof window !== 'undefined' && ((window.location.hash || '').includes('type=recovery') || (window.location.search || '').includes('type=recovery')));
+
+      if (inRecovery) {
+        this.isRecoveringPassword.set(true);
+        const user = session?.user ?? null;
+        if (user) {
+          // Only store email for the forgot-password form — do NOT set currentUser
+          // so the authenticated dashboard stays hidden behind the modal.
+          this.authEmail = user.email || '';
+          this.forgotEmail = user.email || '';
+        }
+        this.authMode.set('forgot');
+        this.forgotStep.set(3);
+        this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
+        this.authError.set('');
+        this.showAuthModal.set(true);
+        return; // NEVER close auth modal or show sign-in toast during recovery!
+      }
+
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
         const user = session?.user ?? null;
         if (user) {
@@ -614,6 +922,7 @@ export class App implements OnInit {
           this.checkOAuthGitHubIdentity(user);
           this.loadCloudResume(user);
           await this.fetchProjects();
+          this.checkFirstTimeOnboarding(user);
 
           // Only show toast on genuine sign-in event for newly signed in user
           if (event === 'SIGNED_IN' && isNewSignIn) {
@@ -654,13 +963,6 @@ export class App implements OnInit {
         if (typeof window !== 'undefined' && (window.location.hash || window.location.search)) {
           window.history.replaceState(null, '', window.location.pathname);
         }
-      } else if (event === 'PASSWORD_RECOVERY') {
-        this.currentUser.set(session?.user ?? null);
-        this.authMode.set('forgot');
-        this.forgotStep.set(3);
-        this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
-        this.authError.set('');
-        this.showAuthModal.set(true);
       }
     });
 
@@ -668,6 +970,27 @@ export class App implements OnInit {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash || '';
       const search = window.location.search || '';
+      const isRecovery = hash.includes('type=recovery') || search.includes('type=recovery');
+
+      if (isRecovery) {
+        this.isRecoveringPassword.set(true);
+        setTimeout(async () => {
+          const session = await this.authService.getSession();
+          const user = session?.user || await this.authService.getUser();
+          if (user) {
+            // Only store email — do NOT set currentUser during recovery
+            this.authEmail = user.email || '';
+            this.forgotEmail = user.email || '';
+          }
+          this.authMode.set('forgot');
+          this.forgotStep.set(3);
+          this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
+          this.authError.set('');
+          this.showAuthModal.set(true);
+        }, 150);
+        return; // CRITICAL: Stop here so GitHub OAuth block does not run!
+      }
+
       const hasOAuthCode = search.includes('code=');
       const hasImplicitToken = hash.includes('access_token=') || hash.includes('refresh_token=');
 
@@ -695,15 +1018,6 @@ export class App implements OnInit {
             window.history.replaceState(null, '', window.location.pathname);
           }
         }, 400);
-      } else if (hash.includes('type=recovery')) {
-        setTimeout(async () => {
-          await this.loadCurrentUser();
-          this.authMode.set('forgot');
-          this.forgotStep.set(3);
-          this.forgotSuccessMsg.set('Recovery link verified! Please enter your new password below.');
-          this.authError.set('');
-          this.showAuthModal.set(true);
-        }, 300);
       }
     }
   }
@@ -787,11 +1101,40 @@ export class App implements OnInit {
       this.authError.set('Please provide both email and password.');
       return;
     }
+
+    // Check if currently locked out
+    if (this.isLoginLocked()) {
+      const secs = this.loginLockoutRemaining();
+      this.authError.set(`Too many failed attempts. Please wait ${secs} second${secs === 1 ? '' : 's'} before trying again.`);
+      return;
+    }
+
     this.authError.set('');
     const { data, error } = await this.authService.signIn(this.authEmail, this.authPassword);
     if (error) {
-      this.authError.set(error.message);
+      const fails = this.loginFailCount() + 1;
+      this.loginFailCount.set(fails);
+      if (fails >= this.LOGIN_LOCKOUT_AFTER) {
+        this.loginLockoutUntil.set(Date.now() + this.LOGIN_LOCKOUT_SECONDS * 1000);
+        this.loginFailCount.set(0);
+        // Keep lockout message refreshed — but only while still on login screen
+        const tick = setInterval(() => {
+          if (!this.isLoginLocked()) {
+            clearInterval(tick);
+            if (this.authMode() === 'login') this.authError.set('');
+          } else if (this.authMode() === 'login') {
+            const secs = this.loginLockoutRemaining();
+            this.authError.set(`Too many failed attempts. Please wait ${secs} second${secs === 1 ? '' : 's'} before trying again.`);
+          }
+        }, 1000);
+        this.authError.set(`Too many failed attempts. Please wait ${this.LOGIN_LOCKOUT_SECONDS} seconds before trying again.`);
+      } else {
+        const remaining = this.LOGIN_LOCKOUT_AFTER - fails;
+        this.authError.set(`${error.message} (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout)`);
+      }
     } else {
+      this.loginFailCount.set(0);
+      this.loginLockoutUntil.set(0);
       this.closeAuthModal();
       this.showToast('Welcome back! Signed in successfully.', 'success');
       await this.loadCurrentUser();
@@ -800,7 +1143,7 @@ export class App implements OnInit {
   }
 
 
-  async logout() {
+  async logout(silent = false) {
     // 1. Clean URL parameters first so background listener does not re-authenticate
     if (typeof window !== 'undefined' && (window.location.hash || window.location.search)) {
       window.history.replaceState(null, '', window.location.pathname);
@@ -825,7 +1168,10 @@ export class App implements OnInit {
     this.resumePdfUrlSafe.set(null);
     this.showResumeModal.set(false);
     this.closeAuthModal();
-    this.showToast('You have been signed out.', 'info');
+    this.closeProfileModal();
+    if (!silent) {
+      this.showToast('You have been signed out.', 'info');
+    }
   }
 
   getUserDisplayName(): string {
@@ -840,6 +1186,261 @@ export class App implements OnInit {
   getUserInitial(): string {
     const name = this.getUserDisplayName();
     return name.charAt(0).toUpperCase();
+  }
+
+  getUserAvatar(): string {
+    const user = this.currentUser();
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url;
+    }
+    const gh = this.verifiedGitHubUsername() || this.githubUsername;
+    if (gh) {
+      return `https://github.com/${gh}.png?size=64`;
+    }
+    return '';
+  }
+
+  openProfileModal() {
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+    this.profileDisplayName = this.getUserDisplayName();
+    this.initialProfileDisplayName = this.profileDisplayName;
+    this.profileSelectedRoleId = this.selectedRole()?.id || '';
+    this.initialProfileRoleId = this.profileSelectedRoleId;
+    this.profileCurrentPassword = '';
+    this.profileNewPassword = '';
+    this.profileConfirmPassword = '';
+    this.showCurrentPassword.set(false);
+    this.showNewPassword.set(false);
+    this.showConfirmPassword.set(false);
+    this.passwordErrorMessage.set('');
+    this.showProfilePasswordSection.set(false);
+    this.showProfileModal.set(true);
+  }
+
+  hasUnsavedProfileChanges(): boolean {
+    if (!this.showProfileModal()) return false;
+    const nameChanged = this.profileDisplayName.trim() !== this.initialProfileDisplayName.trim();
+    const roleChanged = (this.profileSelectedRoleId || '') !== (this.initialProfileRoleId || '');
+    const passwordEntered = !!(this.profileCurrentPassword.trim() || this.profileNewPassword || this.profileConfirmPassword);
+    return nameChanged || roleChanged || passwordEntered;
+  }
+
+  handleCloseProfileModal() {
+    if (this.hasUnsavedProfileChanges()) {
+      this.openConfirmDialog({
+        title: 'Discard Unsaved Changes?',
+        message: 'You have modified your profile details. If you leave now, your changes will not be saved.',
+        confirmText: 'Discard Changes',
+        cancelText: 'Keep Editing',
+        type: 'warning',
+        icon: 'warning',
+        onConfirm: () => {
+          this.closeProfileModal();
+        }
+      });
+    } else {
+      this.closeProfileModal();
+    }
+  }
+
+  closeProfileModal() {
+    this.showProfileModal.set(false);
+    this.profileCurrentPassword = '';
+    this.profileNewPassword = '';
+    this.profileConfirmPassword = '';
+    this.passwordErrorMessage.set('');
+    this.showProfilePasswordSection.set(false);
+    this.isSavingProfile.set(false);
+    this.isUpdatingProfilePassword.set(false);
+  }
+
+  async saveProfileChanges() {
+    const user = this.currentUser();
+    if (!user) return;
+
+    const trimmedName = this.profileDisplayName.trim();
+    if (!trimmedName) {
+      this.showToast('Display name cannot be empty.', 'warning');
+      return;
+    }
+    if (trimmedName.length < 2) {
+      this.showToast('Display name must be at least 2 characters.', 'warning');
+      return;
+    }
+    if (trimmedName.length > 32) {
+      this.showToast('Display name cannot exceed 32 characters.', 'warning');
+      return;
+    }
+
+    const hasPasswordInput = !!(this.profileCurrentPassword || this.profileNewPassword || this.profileConfirmPassword);
+
+    // If password fields are populated, validate them first before saving anything
+    if (hasPasswordInput) {
+      if (!this.profileCurrentPassword) {
+        this.showProfilePasswordSection.set(true);
+        this.passwordErrorMessage.set('Please enter your current password.');
+        return;
+      }
+      if (!this.profileNewPassword || this.profileNewPassword.length < 6) {
+        this.showProfilePasswordSection.set(true);
+        this.passwordErrorMessage.set('New password must be at least 6 characters.');
+        return;
+      }
+      if (this.profileNewPassword === this.profileCurrentPassword) {
+        this.showProfilePasswordSection.set(true);
+        this.passwordErrorMessage.set('New password cannot be the same as your current password.');
+        return;
+      }
+      if (this.profileNewPassword !== this.profileConfirmPassword) {
+        this.showProfilePasswordSection.set(true);
+        this.passwordErrorMessage.set('Confirm password does not match new password.');
+        return;
+      }
+    }
+
+    this.isSavingProfile.set(true);
+    try {
+      const { data, error } = await this.authService.updateUserProfile(trimmedName);
+      if (error) throw error;
+
+      if (data && data.user) {
+        this.currentUser.set(data.user);
+      }
+
+      // If career role was changed in profile modal, update it
+      if (this.profileSelectedRoleId && this.profileSelectedRoleId !== this.selectedRole()?.id) {
+        await this.selectCareerRole(this.profileSelectedRoleId);
+      }
+
+      // If password was also provided, execute password update now
+      if (hasPasswordInput) {
+        const passSuccess = await this.updateAccountPassword();
+        if (!passSuccess) {
+          // Password update failed (e.g. current pass was wrong)
+          return;
+        }
+        // If successful, updateAccountPassword already logged out and opened the confirm dialog
+        return;
+      }
+
+      this.showToast('Profile updated successfully!', 'success');
+      this.closeProfileModal();
+    } catch (err: any) {
+      console.error('Update profile error:', err);
+      this.showToast('Failed to update profile: ' + (err.message || ''), 'error');
+    } finally {
+      this.isSavingProfile.set(false);
+    }
+  }
+
+  async updateAccountPassword(): Promise<boolean> {
+    const user = this.currentUser();
+    if (!user || !user.email) {
+      this.passwordErrorMessage.set('You must be signed in to update your password.');
+      return false;
+    }
+
+    this.passwordErrorMessage.set('');
+
+    const currentPass = this.profileCurrentPassword;
+    const newPass = this.profileNewPassword;
+    const confirmPass = this.profileConfirmPassword;
+
+    if (!currentPass) {
+      this.showProfilePasswordSection.set(true);
+      this.passwordErrorMessage.set('Please enter your current password.');
+      return false;
+    }
+
+    if (!newPass || newPass.length < 6) {
+      this.showProfilePasswordSection.set(true);
+      this.passwordErrorMessage.set('New password must be at least 6 characters.');
+      return false;
+    }
+
+    if (newPass === currentPass) {
+      this.showProfilePasswordSection.set(true);
+      this.passwordErrorMessage.set('New password cannot be the same as your current password.');
+      return false;
+    }
+
+    if (newPass !== confirmPass) {
+      this.showProfilePasswordSection.set(true);
+      this.passwordErrorMessage.set('Confirm password does not match new password.');
+      return false;
+    }
+
+    this.isUpdatingProfilePassword.set(true);
+    try {
+      const userEmail = (user.email || '').trim();
+
+      // Ensure pending profile updates (display name) are saved if valid
+      const trimmedName = this.profileDisplayName.trim();
+      if (trimmedName && trimmedName !== (user.user_metadata?.display_name || user.user_metadata?.full_name)) {
+        try {
+          await this.authService.updateUserProfile(trimmedName);
+        } catch (nameErr) {
+          console.warn('Could not save display name prior to password change:', nameErr);
+        }
+      }
+
+      // 1. Verify current password by verifying credentials with Supabase
+      const { data: signInData, error: signInErr } = await this.authService.signIn(userEmail, currentPass);
+      if (signInErr) {
+        console.warn('Password verification failed:', signInErr.message);
+        this.showProfilePasswordSection.set(true);
+        this.passwordErrorMessage.set('Current password is incorrect. Please verify and try again.');
+        return false;
+      }
+
+      // 2. If verified, update to new password in Supabase
+      const { data: updateData, error: updateErr } = await this.authService.updatePassword(newPass);
+      if (updateErr) {
+        console.error('Supabase update password error:', updateErr);
+        throw updateErr;
+      }
+
+      // Clear password form fields
+      this.profileCurrentPassword = '';
+      this.profileNewPassword = '';
+      this.profileConfirmPassword = '';
+      this.passwordErrorMessage.set('');
+      this.showProfilePasswordSection.set(false);
+      this.closeProfileModal();
+
+      // Sign out IMMEDIATELY to terminate the session as requested by Option A
+      await this.logout(true);
+
+      // Show Success Confirmation Prompt
+      this.openConfirmDialog({
+        title: 'Password Updated Successfully',
+        message: 'Your account password has been updated. You have been signed out for security. Please sign in with your new password to continue.',
+        confirmText: 'Sign In Now',
+        cancelText: '', // single action
+        type: 'success',
+        icon: 'success',
+        onConfirm: () => {
+          this.authEmail = userEmail;
+          this.authPassword = '';
+          this.authMode.set('login');
+          this.authError.set('');
+          this.forgotSuccessMsg.set('Password changed successfully! Please enter your new password.');
+          this.showAuthModal.set(true);
+        }
+      });
+      return true;
+    } catch (err: any) {
+      console.error('Update password error:', err);
+      const msg = err.message || 'Failed to update password.';
+      this.showProfilePasswordSection.set(true);
+      this.passwordErrorMessage.set(msg);
+      return false;
+    } finally {
+      this.isUpdatingProfilePassword.set(false);
+    }
   }
 
   // Skills Operations
@@ -2314,17 +2915,10 @@ export class App implements OnInit {
   auditResumeWithCoach() {
     const meta = this.savedResumeMeta();
     const fileName = meta?.fileName || 'Uploaded Resume';
-    const skills = this.getResumeExtractedSkills();
-    const projects = this.getResumeExtractedProjects();
-    const targetRole = this.currentUser()?.target_role || 'Software Engineer';
-
-    let projectContext = '';
-    if (projects && projects.length > 0) {
-      projectContext = ` Extracted candidate projects from resume: ${projects.map(p => `${p.name} (${p.description || 'Production system'})`).join('; ')}.`;
-    }
+    const targetRole = this.selectedRole()?.title || this.currentUser()?.target_role || 'Software Engineer';
 
     this.setTab('coach');
-    const auditPrompt = `Please conduct an executive ATS audit and technical resume optimization for my uploaded profile ("${fileName}"). Target Role: ${targetRole}. Extracted Skills: ${skills.join(', ')}.${projectContext} Evaluate ATS keyword coverage, technical depth, and generate 3 concrete, high-impact STAR-format resume bullet points with quantifiable engineering metrics and architectural scope.`;
+    const auditPrompt = `Please audit my uploaded resume ("${fileName}") for the ${targetRole} role and provide 3 high-impact STAR bullet points.`;
     this.sendCoachMessage(auditPrompt);
   }
 
@@ -2883,20 +3477,27 @@ export class App implements OnInit {
       skills: (p.project_skills || []).map((ps: any) => ps.skills?.name).filter(Boolean)
     }));
     const userSkillNames = this.skills().map(s => s.name);
+    const resumeSkills = this.getResumeExtractedSkills();
+    const combinedSkills = Array.from(new Set([...userSkillNames, ...resumeSkills]));
+
+    const resumeProjects = this.getResumeExtractedProjects();
+    const projectsToPass = currentProjects.length > 0
+      ? currentProjects
+      : (resumeProjects.length > 0 ? resumeProjects.map((p: any) => ({ name: p.name || 'Project', category: 'Project', skills: p.detected_skills || [] })) : []);
 
     return {
-      target_role: role?.title || 'Software Engineer',
+      target_role: role?.title || this.currentUser()?.target_role || 'Software Engineer',
       match_score: gap?.match_percentage || 0,
       health_score: score?.overall_health_score || 0,
       missing_skills: gap?.missing_skills || [],
-      acquired_skills: userSkillNames,
+      acquired_skills: combinedSkills.length > 0 ? combinedSkills : userSkillNames,
       pillars: {
         completeness: score?.metrics?.project_volume_score || 0,
         tech_stack: score?.metrics?.skill_diversity_score || 0,
         quality: score?.metrics?.detail_quality_score || 0,
         diversity: score?.metrics?.activity_status_score || 0
       },
-      projects: currentProjects
+      projects: projectsToPass
     };
   }
 
@@ -3036,6 +3637,32 @@ export class App implements OnInit {
     });
   }
 
+  @HostListener('click', ['$event'])
+  onGlobalClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const copyBtn = target?.closest('.copy-code-btn') as HTMLButtonElement | null;
+    if (copyBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const codeBlock = copyBtn.closest('.chat-code-block');
+      const codeEl = codeBlock?.querySelector('pre code');
+      if (codeEl) {
+        const textToCopy = codeEl.textContent || '';
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const originalHtml = copyBtn.innerHTML;
+          copyBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied!</span>`;
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.innerHTML = originalHtml;
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        }).catch(() => {
+          this.showToast('Copied to clipboard', 'info');
+        });
+      }
+    }
+  }
+
   formatCoachMarkdown(rawText: string): SafeHtml {
     if (!rawText) return '';
 
@@ -3062,12 +3689,14 @@ export class App implements OnInit {
 
     const blocks: string[] = [];
 
-    // 1. Extract Code Blocks into isolated placeholders
-    text = text.replace(/```([\w-]*)\r?\n([\s\S]*?)```/g, (_m, lang, code) => {
-      const languageBadge = lang ? `<span class="code-lang-tag">${lang}</span>` : '';
-      const formatted = `<div class="chat-code-block">${languageBadge}<pre><code>${code.trim()}</code></pre></div>`;
+    // 1. Extract Code Blocks into isolated placeholders (both closed and unclosed)
+    text = text.replace(/```([\w-]*)[ \t]*\r?\n([\s\S]*?)(?:```|$)/g, (_m, lang, code) => {
+      if (!code.trim() && !_m.includes('\n')) return _m;
+      const displayLang = (lang || 'code').trim();
+      const headerHtml = `<div class="chat-code-header"><span class="code-lang-tag">${displayLang}</span><button class="copy-code-btn" type="button" title="Copy code snippet"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span>Copy</span></button></div>`;
+      const formatted = `<div class="chat-code-block">${headerHtml}<pre><code>${code.trim()}</code></pre></div>`;
       blocks.push(formatted);
-      return `@@BLOCK_${blocks.length - 1}@@`;
+      return `%%%PIQBLOCK${blocks.length - 1}%%%`;
     });
 
     // 2. Extract and Parse Tables into isolated placeholders
@@ -3107,16 +3736,29 @@ export class App implements OnInit {
 
       tableHtml += '</tbody></table></div>';
       blocks.push(tableHtml);
-      return `@@BLOCK_${blocks.length - 1}@@`;
+      return `%%%PIQBLOCK${blocks.length - 1}%%%`;
     });
 
     // 3. Process Blockquotes
     text = text.replace(/^>\s?(.*$)/gim, '<blockquote class="chat-blockquote">$1</blockquote>');
 
     // 4. Horizontal Rules
-    text = text.replace(/^\s*(?:---+|\*\*\*+)\s*$/gm, '<hr class="chat-hr"/>');
+    text = text.replace(/^\s*(?:---+|\*\*\*+|___+)\s*$/gm, '<hr class="chat-hr"/>');
 
-    // 5. Headers
+    // 4b. Ensure generous separation and convert ANY numbered section headers (e.g., "1. Title", "**1. Title**", "***1. Title***")
+    // into dedicated block headers with clear spacing
+    text = text.replace(/^[ \t]*[*_#]*[ \t]*(\d+\.)[ \t]+([^\n\r]+?)[ \t]*$/gm, (_m, num, content) => {
+      const clean = content.replace(/^[*_]+|[*_]+$/g, '').trim();
+      return `\n\n<div class="chat-numbered-heading"><span class="num-badge">${num}</span> ${parseInline(clean)}</div>\n\n`;
+    });
+
+    // Highlight STAR format labels if present on a line (Situation:, Task:, Action:, Result:)
+    text = text.replace(/^[ \t]*(Situation|Task|Action|Result):[ \t]*/gim, '<strong class="star-label">$1:</strong> ');
+
+    // 5. Headers (from h6 down to h1)
+    text = text.replace(/^###### (.*$)/gim, '<h6 class="chat-h6">$1</h6>');
+    text = text.replace(/^##### (.*$)/gim, '<h5 class="chat-h5">$1</h5>');
+    text = text.replace(/^#### (.*$)/gim, '<h4 class="chat-h4">$1</h4>');
     text = text.replace(/^### (.*$)/gim, '<h4 class="chat-h4">$1</h4>');
     text = text.replace(/^## (.*$)/gim, '<h3 class="chat-h3">$1</h3>');
     text = text.replace(/^# (.*$)/gim, '<h2 class="chat-h2">$1</h2>');
@@ -3128,16 +3770,20 @@ export class App implements OnInit {
     text = text.replace(/^\s*[\-\*]\s+(.*$)/gim, '<li class="chat-li">$1</li>');
     text = text.replace(/((?:<li class="chat-li">.*?<\/li>(?:\r?\n|<br\/>)?)+)/g, '<ul class="chat-ul">$1</ul>');
 
-    // 8. Numbered lists
+    // 8. Numbered lists (for any remaining standard list items)
     text = text.replace(/^\s*\d+\.\s+(.*$)/gim, '<li class="chat-oli">$1</li>');
     text = text.replace(/((?:<li class="chat-oli">.*?<\/li>(?:\r?\n|<br\/>)?)+)/g, '<ol class="chat-ol">$1</ol>');
 
     // 9. Paragraphs and line breaks
-    text = text.replace(/\r?\n\r?\n/g, '<div class="chat-paragraph-gap"></div>');
+    text = text.replace(/\r?\n\r?\n+/g, '<div class="chat-paragraph-gap"></div>');
     text = text.replace(/\r?\n/g, '<br/>');
 
+    // Clean up unnecessary <br/> right before or after numbered headings
+    text = text.replace(/(?:<br\/>|<div class="chat-paragraph-gap"><\/div>)+\s*(<div class="chat-numbered-heading">)/g, '$1');
+    text = text.replace(/(<\/div>)\s*(?:<br\/>|<div class="chat-paragraph-gap"><\/div>)+/g, '$1<div class="chat-paragraph-gap"></div>');
+
     // 10. Restore extracted Code Blocks and Tables cleanly
-    text = text.replace(/@@BLOCK_(\d+)@@/g, (_m, idx) => {
+    text = text.replace(/%%%PIQBLOCK(\d+)%%%/g, (_m, idx) => {
       return blocks[Number(idx)] || '';
     });
 
@@ -3243,7 +3889,134 @@ export class App implements OnInit {
     return this.repoImportStatuses()[repoId] || 'completed';
   }
 
-  async importRepoToPortfolio(repo: GitHubRepository, statusOverride?: 'completed' | 'active' | 'idea') {
+  openImportRepoModal(repo: GitHubRepository) {
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+
+    if (!this.isGitHubOAuthVerified()) {
+      this.githubError.set(
+        `OAuth Verification Required: To prevent unauthorized imports and prove you own this repository, please verify via GitHub OAuth before importing.`
+      );
+      this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
+      return;
+    }
+
+    if (!this.isScannedAccountLinked()) {
+      this.githubError.set(
+        `Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
+      );
+      return;
+    }
+
+    this.importModalRepo.set(repo);
+    this.importModalName = repo.name || '';
+    const cleanDesc = repo.description ? repo.description.trim() : '';
+    this.importModalDesc = cleanDesc 
+      ? `${cleanDesc} (Imported from GitHub: ${repo.html_url})` 
+      : `Imported from GitHub: ${repo.html_url}`;
+    this.importModalStatus = this.getRepoImportStatus(repo.id) || 'completed';
+    this.isImportingModal.set(false);
+  }
+
+  closeImportRepoModal() {
+    this.importModalRepo.set(null);
+    this.importModalName = '';
+    this.importModalDesc = '';
+    this.isImportingModal.set(false);
+  }
+
+  async confirmImportRepo() {
+    const repo = this.importModalRepo();
+    if (!repo) return;
+
+    const trimmedName = this.importModalName.trim();
+    if (!trimmedName) {
+      this.showToast('Project title cannot be empty.', 'warning');
+      return;
+    }
+
+    this.isImportingModal.set(true);
+    await this.importRepoToPortfolio(repo, this.importModalStatus, trimmedName, this.importModalDesc.trim());
+    this.isImportingModal.set(false);
+    this.closeImportRepoModal();
+  }
+
+  openBatchImportModal() {
+    if (!this.currentUser()) {
+      this.openAuthModal('login');
+      return;
+    }
+
+    if (!this.isGitHubOAuthVerified()) {
+      this.githubError.set(
+        `OAuth Verification Required: To prevent unauthorized imports and prove you own these repositories, please verify via GitHub OAuth before importing.`
+      );
+      this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
+      return;
+    }
+
+    if (!this.isScannedAccountLinked()) {
+      this.githubError.set(
+        `Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
+      );
+      return;
+    }
+
+    if (this.githubNotImportedCount() === 0) {
+      this.showToast('All scanned repositories are already in your portfolio!', 'info');
+      return;
+    }
+
+    this.batchImportStatus = 'completed';
+    this.batchImportModalOpen.set(true);
+  }
+
+  closeBatchImportModal() {
+    this.batchImportModalOpen.set(false);
+    this.isBatchImporting.set(false);
+  }
+
+  async confirmBatchImport() {
+    const data = this.githubScanData();
+    if (!data || !data.repos || data.repos.length === 0) return;
+
+    const unimported = data.repos.filter(r => !this.isRepoAlreadyImported(r.name));
+    if (unimported.length === 0) {
+      this.showToast('All scanned repositories are already imported!', 'info');
+      this.closeBatchImportModal();
+      return;
+    }
+
+    this.isBatchImporting.set(true);
+    const targetStatus = this.batchImportStatus;
+    const statusLabel = targetStatus === 'completed' ? 'Completed' : (targetStatus === 'active' ? 'In Progress' : 'Idea');
+
+    this.githubImportSuccessMsg.set(`Importing ${unimported.length} repositories as ${statusLabel}...`);
+    let count = 0;
+    for (const repo of unimported) {
+      try {
+        await this.importRepoToPortfolio(repo, targetStatus);
+        count++;
+      } catch (e) {
+        console.warn('Batch import error for', repo.name, e);
+      }
+    }
+    await this.fetchSkills();
+    await this.fetchProjects();
+    this.isBatchImporting.set(false);
+    this.closeBatchImportModal();
+    this.githubImportSuccessMsg.set(`Batch import complete! Added ${count} new repositories as ${statusLabel} to your portfolio.`);
+    this.showToast(`Successfully imported ${count} repositories (${statusLabel})!`, 'success');
+  }
+
+  async importRepoToPortfolio(
+    repo: GitHubRepository,
+    statusOverride?: 'completed' | 'active' | 'idea',
+    nameOverride?: string,
+    descOverride?: string
+  ) {
     if (!this.currentUser()) {
       this.openAuthModal('login');
       return;
@@ -3270,14 +4043,17 @@ export class App implements OnInit {
     this.githubImportSuccessMsg.set('');
 
     try {
-      const description = repo.description 
-        ? `${repo.description} (Imported from GitHub: ${repo.html_url})` 
-        : `Imported from GitHub: ${repo.html_url}`;
+      const projectName = (nameOverride && nameOverride.trim()) || repo.name;
+      const description = descOverride !== undefined 
+        ? descOverride 
+        : (repo.description 
+          ? `${repo.description} (Imported from GitHub: ${repo.html_url})` 
+          : `Imported from GitHub: ${repo.html_url}`);
 
       const targetStatus = statusOverride || this.getRepoImportStatus(repo.id);
 
       const { data: newProject, error: projErr } = await this.projectService.createProject(
-        repo.name,
+        projectName,
         description,
         targetStatus
       );
@@ -3314,8 +4090,9 @@ export class App implements OnInit {
       await this.fetchSkills();
       await this.fetchProjects();
 
-      this.githubImportSuccessMsg.set(`Successfully imported "${repo.name}" with ${repo.detected_skills?.length || 0} skills into your portfolio!`);
-      this.showToast(`Imported ${repo.name}!`, 'success');
+      const statusLabel = targetStatus === 'completed' ? 'Completed' : (targetStatus === 'active' ? 'In Progress' : 'Idea');
+      this.githubImportSuccessMsg.set(`Successfully imported "${projectName}" as ${statusLabel} with ${repo.detected_skills?.length || 0} skills into your portfolio!`);
+      this.showToast(`Imported ${projectName} (${statusLabel})!`, 'success');
     } catch (err: any) {
       console.error('Import repo error:', err);
       this.githubError.set(err.message || 'Import failed.');
@@ -3329,50 +4106,7 @@ export class App implements OnInit {
   }
 
   async importAllScannedRepos() {
-    const data = this.githubScanData();
-    if (!data || !data.repos || data.repos.length === 0) return;
-    if (!this.currentUser()) {
-      this.openAuthModal('login');
-      return;
-    }
-
-    // Option 3 Security Check: Require GitHub OAuth verification to import
-    if (!this.isGitHubOAuthVerified()) {
-      this.githubError.set(
-        `OAuth Verification Required: To prevent unauthorized imports and prove you own these repositories, please verify via GitHub OAuth before importing.`
-      );
-      this.showToast('Please connect your GitHub account via OAuth to verify ownership.', 'warning');
-      return;
-    }
-
-    if (!this.isScannedAccountLinked()) {
-      this.githubError.set(
-        `Import Restricted: You are authenticated as @${this.verifiedGitHubUsername()}. You cannot import repositories owned by @${this.githubScanData()?.profile?.username}.`
-      );
-      return;
-    }
-
-    const unimported = data.repos.filter(r => !this.isRepoAlreadyImported(r.name));
-    if (unimported.length === 0) {
-      this.githubImportSuccessMsg.set('All scanned repositories are already in your portfolio!');
-      this.showToast('All scanned repositories are already imported!', 'info');
-      return;
-    }
-
-    this.githubImportSuccessMsg.set(`Importing ${unimported.length} repositories...`);
-    let count = 0;
-    for (const repo of unimported) {
-      try {
-        await this.importRepoToPortfolio(repo);
-        count++;
-      } catch (e) {
-        console.warn('Batch import error for', repo.name, e);
-      }
-    }
-    await this.fetchSkills();
-    await this.fetchProjects();
-    this.githubImportSuccessMsg.set(`Batch import complete! Added ${count} new repositories to your portfolio.`);
-    this.showToast(`Successfully imported ${count} repositories!`, 'success');
+    this.openBatchImportModal();
   }
 
   // GitHub UI Polish Helpers

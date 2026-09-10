@@ -81,26 +81,61 @@
           <svg class="nav-svg" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
         <div class="header-title">
-          <h1 *ngIf="activeTab() === 'dashboard'">Developer Portfolio Dashboard</h1>
-          <h1 *ngIf="activeTab() === 'projects'">My Developer Projects</h1>
-          <h1 *ngIf="activeTab() === 'skills'">Developer Skills Profile</h1>
-          <h1 *ngIf="activeTab() === 'career'">Target Career Role & Portfolio Optimizer</h1>
-          <h1 *ngIf="activeTab() === 'knowledge'">Developer Knowledge Graph & Skill Trees</h1>
-          <h1 *ngIf="activeTab() === 'resume'">AI Resume PDF Extractor</h1>
-          <h1 *ngIf="activeTab() === 'coach'">Groq AI Developer Career Coach</h1>
-          <h1 *ngIf="activeTab() === 'github'">GitHub Integration & 1-Click Importer</h1>
+          <h1 *ngIf="activeTab() === 'dashboard'">
+            <span class="desktop-title">Portfolio Dashboard</span>
+            <span class="mobile-title">Dashboard</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'projects'">
+            <span class="desktop-title">My Projects</span>
+            <span class="mobile-title">Projects</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'skills'">
+            <span class="desktop-title">Skills Profile</span>
+            <span class="mobile-title">Skills</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'career'">
+            <span class="desktop-title">Career Optimizer</span>
+            <span class="mobile-title">Career</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'knowledge'">
+            <span class="desktop-title">Knowledge Graph</span>
+            <span class="mobile-title">Knowledge Graph</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'resume'">
+            <span class="desktop-title">Resume Extractor</span>
+            <span class="mobile-title">Resume</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'coach'">
+            <span class="desktop-title">AI Career Coach</span>
+            <span class="mobile-title">AI Coach</span>
+          </h1>
+          <h1 *ngIf="activeTab() === 'github'">
+            <span class="desktop-title">GitHub Integration</span>
+            <span class="mobile-title">GitHub Sync</span>
+          </h1>
         </div>
       </div>
 
       <div class="user-auth-bar">
         <ng-container *ngIf="currentUser(); else authButtons">
           <div class="user-profile-widget flex-align gap-sm">
-            <div class="user-profile-badge" [title]="'Signed in as ' + currentUser()?.email">
-              <div class="user-avatar-initial">{{ getUserInitial() }}</div>
+            <div 
+              class="user-profile-badge clickable-profile-badge" 
+              (click)="openProfileModal()" 
+              role="button"
+              tabindex="0"
+              title="Click to view & edit Developer Profile">
+              <div class="user-avatar-initial">
+                <img *ngIf="getUserAvatar()" [src]="getUserAvatar()" alt="Avatar" class="user-avatar-img" />
+                <span *ngIf="!getUserAvatar()">{{ getUserInitial() }}</span>
+              </div>
               <div class="user-profile-info">
                 <span class="user-display-name">{{ getUserDisplayName() }}</span>
                 <span class="user-email-subtitle">{{ currentUser()?.email }}</span>
               </div>
+              <svg class="profile-chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </div>
             <button class="btn btn-outline btn-sm header-signout-btn" (click)="confirmSignOut()" title="Sign out of your account">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -120,42 +155,6 @@
         </ng-template>
       </div>
     </header>
-
-    <!-- MOBILE HORIZONTAL FEATURES QUICK-BAR (Stage 16 Responsive) -->
-    <div class="mobile-features-bar">
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'dashboard'" (click)="setTab('dashboard')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
-        <span>Dashboard</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'projects'" (click)="setTab('projects')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
-        <span>Projects</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'skills'" (click)="setTab('skills')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/><circle cx="12" cy="12" r="3.5"/></svg>
-        <span>Skills</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'coach'" (click)="setTab('coach')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M12 4v4"></path><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M9 13v2"></path><path d="M15 13v2"></path></svg>
-        <span>AI Coach</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'resume'" (click)="setTab('resume')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
-        <span>Resume</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'career'" (click)="setTab('career')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-        <span>Optimizer</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'knowledge'" (click)="setTab('knowledge')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-        <span>Knowledge</span>
-      </button>
-      <button class="mobile-feature-chip" [class.active]="activeTab() === 'github'" (click)="setTab('github')">
-        <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-        <span>GitHub</span>
-      </button>
-    </div>
 
     <!-- CONTENT BODY -->
     <main class="content-container">
@@ -301,7 +300,7 @@
               <input 
                 type="text" 
                 class="project-search-input" 
-                placeholder="Search projects by name, tech stack, or ML domain..." 
+                placeholder="Search projects or tech stack..." 
                 [ngModel]="projectSearchQuery()" 
                 (ngModelChange)="projectSearchQuery.set($event)" 
               />
@@ -615,14 +614,29 @@
                   <input 
                     type="text" 
                     class="form-input skill-search-input" 
-                    placeholder="Search verified skills or projects..." 
+                    placeholder="Search skills or projects..." 
                     [(ngModel)]="skillSearchQuery" 
                   />
                   <button *ngIf="skillSearchQuery()" class="btn-clear-search" (click)="skillSearchQuery.set('')" title="Clear search">✕</button>
                 </div>
 
-                <!-- Category Filter Pills -->
-                <div class="skill-category-pills flex-align gap-xs">
+                <!-- Mobile Category Filter Dropdown (<= 768px) -->
+                <div class="skill-category-select-wrapper">
+                  <svg class="category-select-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                  <select 
+                    class="skill-category-select"
+                    [ngModel]="skillCategoryFilter()"
+                    (ngModelChange)="setSkillCategoryFilter($event)">
+                    <option value="all">All Categories ({{ getUserSkillsDetailed().length }})</option>
+                    <option *ngFor="let cat of getSkillCategories()" [value]="cat">
+                      {{ cat }} ({{ getSkillCountByCategory(cat) }})
+                    </option>
+                  </select>
+                  <svg class="select-chevron-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+
+                <!-- Desktop Category Filter Pills (> 768px) -->
+                <div class="skill-category-pills">
                   <button 
                     class="filter-pill" 
                     [class.active]="skillCategoryFilter() === 'all'" 
@@ -842,11 +856,11 @@
             Choose between <strong>Mathematical Knapsack Optimization</strong> (highest ROI from curated blueprints) 
             or <strong>Dynamic AI Synthesis</strong> (100% bespoke project blueprint generated on-the-fly by Groq Llama-3).
           </p>
-          <div class="flex-align gap-sm justify-center margin-top-sm">
-            <button class="btn btn-primary btn-sm" (click)="runPortfolioOptimization()">
+          <div class="optimizer-empty-actions margin-top-sm">
+            <button class="btn btn-primary run-opt-btn" (click)="runPortfolioOptimization()">
               Run Portfolio Optimization
             </button>
-            <button class="btn btn-outline-ai btn-sm" (click)="generateDynamicAiBlueprint()">
+            <button class="btn btn-outline-ai generate-ai-btn" (click)="generateDynamicAiBlueprint()">
               Synthesize AI Dynamic Blueprint
             </button>
           </div>
@@ -914,22 +928,23 @@
 
           <!-- 1. AI Custom Generated Blueprint View -->
           <div class="custom-ai-blueprint-view" *ngIf="customAiBlueprint() && (activeBlueprintView() === 'ai_custom' || !optimizationResult())">
-            <div class="optimizer-section-heading flex-between">
-              <div>
-                <div class="flex-align gap-xs">
+            <div class="custom-ai-heading-card">
+              <div class="custom-ai-heading-content">
+                <div class="ai-badge-row flex-align gap-xs">
                   <span class="ai-generated-badge">Groq LLM Synthesized</span>
-                  <h3>{{ customAiBlueprint()?.title }}</h3>
                 </div>
-                <p>100% custom-tailored project blueprint designed on-the-fly for your exact profile.</p>
+                <h3 class="custom-ai-title">{{ customAiBlueprint()?.title }}</h3>
+                <p class="custom-ai-sub">100% custom-tailored project blueprint designed on-the-fly for your exact profile.</p>
               </div>
-              <button class="btn btn-outline-ai btn-sm" (click)="generateDynamicAiBlueprint()" [disabled]="isGeneratingCustomBlueprint()">
-                Re-Synthesize New AI Idea
+              <button class="btn btn-outline-ai btn-sm custom-ai-resynth-btn" (click)="generateDynamicAiBlueprint()" [disabled]="isGeneratingCustomBlueprint()">
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                <span>Re-Synthesize New AI Idea</span>
               </button>
             </div>
 
             <div class="card custom-ai-blueprint-card">
-              <div class="rec-card-header flex-between">
-                <div class="flex-align gap-xs">
+              <div class="rec-card-header">
+                <div class="rec-tags-cloud">
                   <span class="domain-tag">{{ customAiBlueprint()?.domain }}</span>
                   <span class="difficulty-tag diff-intermediate">{{ customAiBlueprint()?.difficulty }}</span>
                   <span class="model-tag">{{ customAiBlueprint()?.model || 'Groq Llama-3' }}</span>
@@ -975,9 +990,9 @@
                 </div>
               </div>
 
-              <div class="rec-card-footer flex-between margin-top-md">
+              <div class="rec-card-footer margin-top-md">
                 <span class="custom-ai-label text-secondary">Ready to start building this project?</span>
-                <button class="btn btn-primary btn-sm" (click)="adoptRecommendedProject(customAiBlueprint()!)">
+                <button class="btn btn-primary btn-sm btn-adopt-blueprint" (click)="adoptRecommendedProject(customAiBlueprint()!)">
                   + Add to My Projects
                 </button>
               </div>
@@ -993,8 +1008,8 @@
 
             <div class="rec-projects-grid">
               <div class="card rec-project-card" *ngFor="let rec of optimizationResult()?.recommended_projects">
-                <div class="rec-card-header flex-between">
-                  <div class="flex-align gap-xs">
+                <div class="rec-card-header">
+                  <div class="rec-tags-cloud">
                     <span class="domain-tag">{{ rec.domain }}</span>
                     <span class="difficulty-tag" [class]="'diff-' + rec.difficulty.toLowerCase()">{{ rec.difficulty }}</span>
                   </div>
@@ -1026,11 +1041,11 @@
                   </div>
                 </div>
 
-                <div class="rec-card-footer flex-between">
+                <div class="rec-card-footer">
                   <div class="rec-stats">
                     <span class="efficiency-badge" title="Gain per hour">ROI Efficiency: {{ rec.efficiency_score }}x</span>
                   </div>
-                  <button class="btn btn-primary btn-sm" (click)="adoptRecommendedProject(rec)">
+                  <button class="btn btn-primary btn-sm btn-adopt-blueprint" (click)="adoptRecommendedProject(rec)">
                     + Add to My Projects
                   </button>
                 </div>
@@ -1130,7 +1145,7 @@
                 </div>
               </div>
 
-              <div class="flex-align gap-sm flex-wrap">
+              <div class="saved-resume-actions">
                 <button class="btn btn-primary btn-sm" (click)="openResumeViewer()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                   <span>View PDF</span>
@@ -1184,7 +1199,7 @@
               
               <!-- Card 1: AI ATS Score & Format Health -->
               <div class="card resume-ats-card">
-                <div class="flex-between margin-bottom-sm">
+                <div class="card-header-row margin-bottom-sm">
                   <div class="flex-align gap-xs">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     <h4>ATS Compatibility Score</h4>
@@ -1232,7 +1247,7 @@
 
               <!-- Card 2: Target Role Keyword Alignment -->
               <div class="card resume-alignment-card" *ngIf="getResumeRoleAlignment() as roleAlign">
-                <div class="flex-between margin-bottom-sm">
+                <div class="card-header-row margin-bottom-sm">
                   <div class="flex-align gap-xs">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
                     <h4>Target Role Alignment</h4>
@@ -1377,6 +1392,20 @@
           <!-- Role Selector Bar (for Role Tree View) -->
           <div class="role-selector-bar" *ngIf="knowledgeViewMode() === 'tree'">
             <span class="bar-label">Explore Career Skill Tree:</span>
+
+            <!-- Mobile Dropdown Selector (<= 768px) -->
+            <div class="knowledge-role-select-wrapper">
+              <select 
+                class="form-select modern-knowledge-select" 
+                [ngModel]="selectedKnowledgeRole()" 
+                (ngModelChange)="selectRoleTree($event)">
+                <option *ngFor="let r of careerRoles()" [value]="r.title">
+                  Role: {{ r.title }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Desktop Pills Scroll (> 768px) -->
             <div class="role-pill-scroll">
               <button 
                 type="button" 
@@ -1497,13 +1526,11 @@
         <div class="entity-inspector-view" *ngIf="knowledgeViewMode() === 'inspector'">
           
           <div class="card inspector-search-card">
-            <div class="form-row flex-between flex-wrap gap-md">
-              <div class="flex-align flex-1">
-                <label class="control-label">Explore Skill Connections (General Info):</label>
-                <select class="form-select" [ngModel]="inspectedNodeName()" (ngModelChange)="inspectNode($event)">
-                  <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
-                </select>
-              </div>
+            <div class="knowledge-search-group">
+              <label class="knowledge-search-label">Explore Skill Connections (General Info):</label>
+              <select class="form-select modern-knowledge-select" [ngModel]="inspectedNodeName()" (ngModelChange)="inspectNode($event)">
+                <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
+              </select>
             </div>
           </div>
 
@@ -1574,9 +1601,9 @@
         <div class="path-solver-view" *ngIf="knowledgeViewMode() === 'path'">
           
           <div class="card path-search-card">
-            <div class="form-row flex-align">
-              <label class="control-label">Calculate My Personal Learning Path for:</label>
-              <select class="form-select" [ngModel]="goalSkillInput()" (ngModelChange)="calculateGoalSkillPath($event)">
+            <div class="knowledge-search-group">
+              <label class="knowledge-search-label">Calculate My Personal Learning Path for:</label>
+              <select class="form-select modern-knowledge-select" [ngModel]="goalSkillInput()" (ngModelChange)="calculateGoalSkillPath($event)">
                 <option *ngFor="let n of knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
               </select>
             </div>
@@ -1586,19 +1613,19 @@
             
             <!-- Readiness Status Banner -->
             <div class="readiness-banner" [class.ready]="goalSkillRoadmap()?.is_ready_to_learn" [class.not-ready]="!goalSkillRoadmap()?.is_ready_to_learn">
-              <div style="width: 100%;">
-                <div class="flex-between margin-bottom-sm">
-                  <span class="badge" [class.badge-success]="goalSkillRoadmap()?.is_ready_to_learn" [class.badge-warning]="!goalSkillRoadmap()?.is_ready_to_learn">
+              <div class="readiness-banner-content">
+                <div class="readiness-header-row">
+                  <span class="badge readiness-status-badge" [class.badge-success]="goalSkillRoadmap()?.is_ready_to_learn" [class.badge-warning]="!goalSkillRoadmap()?.is_ready_to_learn">
                     {{ goalSkillRoadmap()?.is_ready_to_learn ? 'Learning Path Ready' : 'Prerequisites Required' }}
                   </span>
-                  <span style="font-size: 0.75rem; color: #94a3b8;">Evaluated against {{ getUserSkillNames().length }} verified skills</span>
+                  <span class="readiness-eval-text">Evaluated against {{ getUserSkillNames().length }} verified skills</span>
                 </div>
-                <h3 *ngIf="goalSkillRoadmap()?.is_ready_to_learn">You Are Ready to Learn {{ goalSkillRoadmap()?.goal_skill }}!</h3>
-                <h3 *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">Prerequisites Needed Before Learning {{ goalSkillRoadmap()?.goal_skill }}</h3>
-                <p *ngIf="goalSkillRoadmap()?.is_ready_to_learn">
+                <h3 class="readiness-title" *ngIf="goalSkillRoadmap()?.is_ready_to_learn">You Are Ready to Learn {{ goalSkillRoadmap()?.goal_skill }}!</h3>
+                <h3 class="readiness-title" *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">Prerequisites Needed Before Learning {{ goalSkillRoadmap()?.goal_skill }}</h3>
+                <p class="readiness-desc" *ngIf="goalSkillRoadmap()?.is_ready_to_learn">
                   Your portfolio projects already demonstrate all foundational prerequisites needed.
                 </p>
-                <p *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">
+                <p class="readiness-desc" *ngIf="!goalSkillRoadmap()?.is_ready_to_learn">
                   You are missing {{ goalSkillRoadmap()?.missing_prerequisites_in_order?.length }} prerequisite(s). Learning them in sequence will maximize your retention.
                 </p>
               </div>
@@ -1671,7 +1698,7 @@
               <div>
                 <h2 class="coach-title">PortfolioIQ AI Developer Coach</h2>
                 <p class="coach-subtitle">
-                  Real-time career mentor powered by 
+                  Real-time career mentor powered by
                   <strong class="text-accent">{{ coachStatus()?.provider || 'Groq Llama-3' }}</strong>
                   <span class="live-model-pill" *ngIf="coachStatus()?.live">
                     <span class="live-dot"></span>
@@ -1684,25 +1711,22 @@
 
             <!-- Quick Action Buttons on Right -->
             <div class="coach-header-actions">
-              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestExecutiveCritique()" [disabled]="coachLoading()">
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestExecutiveCritique()" [disabled]="coachLoading()" title="Request Executive AI Critique">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <span>Request Critique</span>
+                <span>Critique</span>
               </button>
-              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestProjectRecommendations()" [disabled]="coachLoading()">
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestProjectRecommendations()" [disabled]="coachLoading()" title="Recommend High-Impact Project Blueprints">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <span>Recommend Blueprints</span>
+                <span>Blueprints</span>
               </button>
-              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="scrollCoachToTop(true)" title="Scroll to the first message / top of chat">
+              <button class="btn-icon coach-icon-btn" (click)="scrollCoachToTop(true)" title="Scroll to top">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                <span>Jump to Start</span>
               </button>
-              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="scrollCoachToBottom(true)" title="Scroll to latest message / bottom">
+              <button class="btn-icon coach-icon-btn" (click)="scrollCoachToBottom(true)" title="Scroll to latest message">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                <span>Latest</span>
               </button>
-              <button class="btn btn-outline btn-sm coach-action-btn" (click)="clearCoachChat()" title="Reset conversation">
+              <button class="btn-icon coach-icon-btn coach-clear-btn" (click)="clearCoachChat()" title="Clear chat / Reset conversation">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                <span>Clear Chat</span>
               </button>
             </div>
           </div>
@@ -1808,15 +1832,6 @@
               <p class="section-subtitle">
                 Analyze public developer profiles, discover repositories, extract tech stacks using automated NLP entity recognition, and classify project domains with machine learning.
               </p>
-            </div>
-            <!-- Rate Limit & API Status Badge -->
-            <div class="gh-status-badge-container">
-              <span class="badge" [class.badge-success]="githubStatus()?.authenticated" [class.badge-secondary]="!githubStatus()?.authenticated">
-                {{ githubStatus()?.authenticated ? 'Authenticated API (5,000 req/hr)' : 'Public API (60 req/hr)' }}
-              </span>
-              <span class="gh-rate-remaining" *ngIf="githubStatus()?.rate_limit_remaining !== undefined">
-                Remaining: <strong>{{ githubStatus()?.rate_limit_remaining }}</strong> / {{ githubStatus()?.rate_limit_limit }}
-              </span>
             </div>
           </div>
 
@@ -1925,8 +1940,14 @@
                 </div>
                 <p class="gh-bio">{{ githubScanData()?.profile?.bio || 'Passionate software developer building open source software.' }}</p>
                 <div class="gh-extra-meta">
-                  <span *ngIf="githubScanData()?.profile?.location">{{ githubScanData()?.profile?.location }}</span>
-                  <span *ngIf="githubScanData()?.profile?.blog"><a [href]="githubScanData()?.profile?.blog" target="_blank" rel="noopener noreferrer">{{ githubScanData()?.profile?.blog }}</a></span>
+                  <span *ngIf="githubScanData()?.profile?.location" class="gh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ githubScanData()?.profile?.location }}</span>
+                  </span>
+                  <span *ngIf="githubScanData()?.profile?.blog" class="gh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <a [href]="githubScanData()?.profile?.blog" target="_blank" rel="noopener noreferrer">{{ githubScanData()?.profile?.blog }}</a>
+                  </span>
                 </div>
               </div>
             </div>
@@ -2064,7 +2085,7 @@
               <p class="gh-card-desc text-muted" *ngIf="!isScannedAccountLinked()">Browsing external profile for skill benchmarking & exploration (Read-Only).</p>
             </div>
             <div class="gh-repos-header-actions">
-              <button *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()" class="btn btn-secondary btn-sm" (click)="importAllScannedRepos()" [disabled]="importingRepoId() !== null || githubNotImportedCount() === 0">
+              <button *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()" class="btn btn-secondary btn-sm" (click)="openBatchImportModal()" [disabled]="isBatchImporting() || importingRepoId() !== null || githubNotImportedCount() === 0">
                 Import All Repositories ({{ githubNotImportedCount() }})
               </button>
               <button *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()" class="btn btn-warning btn-sm" (click)="connectGitHubOAuth()">
@@ -2083,7 +2104,7 @@
               <input 
                 type="text" 
                 class="form-input gh-repo-search-input" 
-                placeholder="Search repositories by name, skill, language, or topic..." 
+                placeholder="Search repositories or skills..." 
                 [ngModel]="githubRepoSearchQuery()" 
                 (ngModelChange)="githubRepoSearchQuery.set($event)" 
               />
@@ -2175,22 +2196,9 @@
                   <ng-container *ngIf="isScannedAccountLinked()">
                     <ng-container *ngIf="isGitHubOAuthVerified()">
                       <div class="gh-import-group flex-align gap-xs" *ngIf="!isRepoAlreadyImported(repo.name)">
-                        <div class="proj-status-dropdown-wrapper" [class]="'wrapper-status-' + getRepoImportStatus(repo.id)">
-                          <span class="status-dot"></span>
-                          <select 
-                            [ngModel]="getRepoImportStatus(repo.id)" 
-                            (ngModelChange)="setRepoImportStatus(repo.id, $event)"
-                            class="modern-status-select gh-status-select" 
-                            [class]="'select-status-' + getRepoImportStatus(repo.id)"
-                            title="Select Phase to Import as">
-                            <option value="completed">Completed</option>
-                            <option value="active">In Progress</option>
-                            <option value="idea">Idea</option>
-                          </select>
-                        </div>
                         <button 
                           class="btn btn-primary btn-sm gh-import-btn" 
-                          (click)="importRepoToPortfolio(repo)" 
+                          (click)="openImportRepoModal(repo)" 
                           [disabled]="importingRepoId() === repo.id">
                           <span *ngIf="importingRepoId() !== repo.id">+ Import</span>
                           <span *ngIf="importingRepoId() === repo.id">Importing...</span>
@@ -2390,6 +2398,462 @@
   </div>
 </div>
 
+<!-- GITHUB REPOSITORY IMPORT MODAL DIALOG -->
+<div class="modal-backdrop" *ngIf="importModalRepo()" (click)="closeImportRepoModal()">
+  <div class="modal-card import-repo-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+          <path d="M9 18c-4.51 2-5-2-7-2"></path>
+        </svg>
+        <h2>Import Repository to Portfolio</h2>
+      </div>
+      <button class="btn-icon" (click)="closeImportRepoModal()">✕</button>
+    </div>
+
+    <!-- Repository Metadata Banner -->
+    <div class="import-repo-banner" *ngIf="importModalRepo() as r">
+      <div class="import-repo-banner-info">
+        <span class="import-repo-banner-name">{{ r.name }}</span>
+        <a [href]="r.html_url" target="_blank" rel="noopener noreferrer" class="gh-repo-link-icon" title="View repository on GitHub">↗</a>
+      </div>
+      <div class="import-repo-banner-badges">
+        <span class="gh-lang-pill" *ngIf="r.language" [style.border-left-color]="getLanguageColor(r.language)">
+          {{ r.language }}
+        </span>
+        <span class="gh-ml-category-badge" *ngIf="r.predicted_category">
+          {{ r.predicted_category }}
+        </span>
+      </div>
+    </div>
+
+    <form (ngSubmit)="confirmImportRepo()" class="modal-body">
+      <div class="form-group margin-bottom-md">
+        <label class="form-label" for="importRepoTitle">Project Title / Name <span class="text-danger">*</span></label>
+        <input
+          id="importRepoTitle"
+          type="text"
+          class="form-input"
+          [(ngModel)]="importModalName"
+          name="importModalName"
+          placeholder="e.g. MediaHub"
+          required
+        />
+      </div>
+
+      <div class="form-group margin-bottom-md">
+        <label class="form-label" for="importRepoDesc">Project Description</label>
+        <textarea
+          id="importRepoDesc"
+          class="form-textarea"
+          rows="5"
+          [(ngModel)]="importModalDesc"
+          name="importModalDesc"
+          placeholder="Describe your project, key features, and implementation..."
+        ></textarea>
+      </div>
+
+      <!-- Phase Selector: Key User Requirement -->
+      <div class="form-group margin-bottom-md">
+        <label class="form-label">Project Status / Phase <span class="text-danger">*</span></label>
+        <div class="phase-selector-group">
+          <button 
+            type="button" 
+            class="phase-btn phase-completed" 
+            [class.active]="importModalStatus === 'completed'" 
+            (click)="importModalStatus = 'completed'">
+            <span class="status-dot dot-completed"></span> Completed
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-active" 
+            [class.active]="importModalStatus === 'active'" 
+            (click)="importModalStatus = 'active'">
+            <span class="status-dot dot-active"></span> In Progress
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-idea" 
+            [class.active]="importModalStatus === 'idea'" 
+            (click)="importModalStatus = 'idea'">
+            <span class="status-dot dot-idea"></span> Idea
+          </button>
+        </div>
+        <small class="text-muted" style="margin-top: 6px; display: block; font-size: 0.8rem;">
+          Select whether this GitHub project is already completed, currently in development, or an early prototype.
+        </small>
+      </div>
+
+      <!-- Detected Skills Preview -->
+      <div class="form-group margin-bottom-md" *ngIf="importModalRepo()?.detected_skills?.length">
+        <label class="form-label">Detected Skills to Link ({{ importModalRepo()?.detected_skills?.length }})</label>
+        <div class="gh-repo-skills-row" style="margin-top: 4px;">
+          <span class="gh-repo-skill-tag" *ngFor="let s of importModalRepo()?.detected_skills">
+            {{ s }}
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-footer flex-between">
+        <button type="button" class="btn btn-secondary" (click)="closeImportRepoModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isImportingModal() || !importModalName.trim()">
+          <span *ngIf="!isImportingModal()">Confirm & Import</span>
+          <span *ngIf="isImportingModal()">Importing Project...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- GITHUB BATCH REPOSITORY IMPORT MODAL DIALOG -->
+<div class="modal-backdrop" *ngIf="batchImportModalOpen()" (click)="closeBatchImportModal()">
+  <div class="modal-card import-repo-modal-card batch-import-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+        </svg>
+        <h2>Import All Repositories</h2>
+      </div>
+      <button class="btn-icon" (click)="closeBatchImportModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p style="margin-bottom: 16px; color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
+        You are about to import <strong>{{ githubNotImportedCount() }}</strong> repositories directly into your portfolio.
+        Please select the default status for these projects:
+      </p>
+
+      <div class="form-group margin-bottom-md">
+        <label class="form-label">Default Project Status / Phase <span class="text-danger">*</span></label>
+        <div class="phase-selector-group">
+          <button 
+            type="button" 
+            class="phase-btn phase-completed" 
+            [class.active]="batchImportStatus === 'completed'" 
+            (click)="batchImportStatus = 'completed'">
+            <span class="status-dot dot-completed"></span> Completed
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-active" 
+            [class.active]="batchImportStatus === 'active'" 
+            (click)="batchImportStatus = 'active'">
+            <span class="status-dot dot-active"></span> In Progress
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-idea" 
+            [class.active]="batchImportStatus === 'idea'" 
+            (click)="batchImportStatus = 'idea'">
+            <span class="status-dot dot-idea"></span> Idea
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer flex-between">
+      <button type="button" class="btn btn-secondary" (click)="closeBatchImportModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="confirmBatchImport()" [disabled]="isBatchImporting()">
+        <span *ngIf="!isBatchImporting()">Import {{ githubNotImportedCount() }} Repositories</span>
+        <span *ngIf="isBatchImporting()">Importing Repositories...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DEVELOPER PROFILE & ACCOUNT MODAL -->
+<div class="modal-backdrop" *ngIf="showProfileModal()" (click)="handleCloseProfileModal()">
+  <div class="modal-card profile-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <h2>Developer Profile & Account</h2>
+      </div>
+      <button class="btn-icon" (click)="handleCloseProfileModal()">✕</button>
+    </div>
+
+    <div class="modal-body profile-modal-body" [class.password-open]="showProfilePasswordSection()">
+      <!-- Top Hero Identity Card -->
+      <div class="profile-hero-card">
+        <div class="profile-hero-avatar">
+          <img *ngIf="getUserAvatar()" [src]="getUserAvatar()" alt="Avatar" class="profile-hero-avatar-img" />
+          <span *ngIf="!getUserAvatar()">{{ getUserInitial() }}</span>
+        </div>
+        <div class="profile-hero-details">
+          <h3 class="profile-hero-name">{{ getUserDisplayName() }}</h3>
+          <span class="profile-hero-email">{{ currentUser()?.email }}</span>
+          <div class="profile-hero-badges flex-align gap-xs">
+            <span class="badge badge-primary">{{ selectedRole()?.title || 'Developer' }}</span>
+            <span class="badge badge-success" *ngIf="isGitHubOAuthVerified()">GitHub Verified</span>
+            <span class="badge badge-secondary" *ngIf="!isGitHubOAuthVerified()">Standard Account</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Portfolio Statistics Grid -->
+      <div class="profile-stats-grid">
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ projects().length }}</span>
+          <span class="profile-stat-lbl">Projects</span>
+        </div>
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ getUserSkillNames().length }}</span>
+          <span class="profile-stat-lbl">Verified Skills</span>
+        </div>
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ portfolioScore()?.overall_health_score ?? 0 }}/100</span>
+          <span class="profile-stat-lbl">Health Score</span>
+        </div>
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ savedResumeMeta() ? 'Active' : 'Pending' }}</span>
+          <span class="profile-stat-lbl">Resume ATS</span>
+        </div>
+      </div>
+
+      <!-- Profile Edit Form -->
+      <form (ngSubmit)="saveProfileChanges()" class="profile-form">
+        <div class="profile-form-grid">
+          <div class="form-group profile-field-group">
+            <div class="flex-between">
+              <label class="form-label" for="profileDisplayNameInput">Display Name <span class="text-danger">*</span></label>
+              <small class="text-muted" style="font-size: 0.76rem;">{{ profileDisplayName.length }}/32</small>
+            </div>
+            <input
+              id="profileDisplayNameInput"
+              type="text"
+              class="form-input"
+              [(ngModel)]="profileDisplayName"
+              name="profileDisplayName"
+              placeholder="e.g. John Doe"
+              maxlength="32"
+              required
+            />
+            <small class="profile-field-hint">
+              Max 32 chars. Shown across dashboard & portfolio.
+            </small>
+          </div>
+
+          <div class="form-group profile-field-group">
+            <label class="form-label" for="profileRoleSelect">Target Career Role</label>
+            <select 
+              id="profileRoleSelect"
+              class="form-select"
+              [(ngModel)]="profileSelectedRoleId"
+              name="profileSelectedRoleId">
+              <option value="" disabled>Select Target Career Role</option>
+              <option *ngFor="let role of careerRoles()" [value]="role.id">
+                {{ role.title }}
+              </option>
+            </select>
+            <small class="profile-field-hint">
+              Used in AI Coach, ATS Audit & Skill Gap.
+            </small>
+          </div>
+        </div>
+
+        <!-- GitHub Integration Status Card -->
+        <div class="profile-section-card margin-bottom-sm">
+          <div class="flex-between">
+            <div class="flex-align gap-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              <div>
+                <span class="profile-section-title">GitHub Integration</span>
+                <span class="profile-section-sub" *ngIf="isGitHubOAuthVerified()">
+                  Connected as @{{ verifiedGitHubUsername() }}
+                </span>
+                <span class="profile-section-sub" *ngIf="!isGitHubOAuthVerified()">
+                  Not connected via OAuth
+                </span>
+              </div>
+            </div>
+            <div>
+              <span class="badge badge-success" *ngIf="isGitHubOAuthVerified()">Verified</span>
+              <button 
+                *ngIf="!isGitHubOAuthVerified()" 
+                type="button" 
+                class="btn btn-warning btn-sm" 
+                (click)="connectGitHubOAuth()" 
+                [disabled]="isOAuthConnecting()">
+                Connect
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Security & Password Toggle -->
+        <div class="profile-section-card margin-bottom-sm">
+          <div class="flex-between" style="cursor: pointer;" (click)="showProfilePasswordSection.set(!showProfilePasswordSection())">
+            <div class="flex-align gap-sm">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span class="profile-section-title">Account Security & Password</span>
+            </div>
+            <span class="profile-toggle-indicator">
+              {{ showProfilePasswordSection() ? '▲ Close' : '▼ Change' }}
+            </span>
+          </div>
+
+          <div class="profile-password-expand" *ngIf="showProfilePasswordSection()" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            
+            <!-- 1. Current Password -->
+            <div class="form-group margin-bottom-sm">
+              <label class="form-label" for="profileCurrentPasswordInput">Current Password <span class="text-danger">*</span></label>
+              <div class="password-input-wrapper">
+                <input
+                  id="profileCurrentPasswordInput"
+                  [type]="showCurrentPassword() ? 'text' : 'password'"
+                  class="form-input password-input"
+                  [(ngModel)]="profileCurrentPassword"
+                  (input)="passwordErrorMessage.set('')"
+                  name="profileCurrentPassword"
+                  placeholder="Enter your current password"
+                  required
+                />
+                <button 
+                  type="button" 
+                  class="password-eye-btn" 
+                  (click)="showCurrentPassword.set(!showCurrentPassword())"
+                  [title]="showCurrentPassword() ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!showCurrentPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="7" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="showCurrentPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. New Password -->
+            <div class="form-group margin-bottom-sm">
+              <label class="form-label" for="profileNewPasswordInput">New Password <span class="text-danger">*</span></label>
+              <div class="password-input-wrapper">
+                <input
+                  id="profileNewPasswordInput"
+                  [type]="showNewPassword() ? 'text' : 'password'"
+                  class="form-input password-input"
+                  [(ngModel)]="profileNewPassword"
+                  (input)="passwordErrorMessage.set('')"
+                  name="profileNewPassword"
+                  placeholder="Enter at least 6 characters"
+                  minlength="6"
+                  required
+                />
+                <button 
+                  type="button" 
+                  class="password-eye-btn" 
+                  (click)="showNewPassword.set(!showNewPassword())"
+                  [title]="showNewPassword() ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!showNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="7" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="showNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Confirm New Password -->
+            <div class="form-group margin-bottom-sm">
+              <label class="form-label" for="profileConfirmPasswordInput">Confirm New Password <span class="text-danger">*</span></label>
+              <div class="password-input-wrapper">
+                <input
+                  id="profileConfirmPasswordInput"
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  class="form-input password-input"
+                  [(ngModel)]="profileConfirmPassword"
+                  (input)="passwordErrorMessage.set('')"
+                  name="profileConfirmPassword"
+                  placeholder="Re-enter your new password"
+                  minlength="6"
+                  required
+                />
+                <button 
+                  type="button" 
+                  class="password-eye-btn" 
+                  (click)="showConfirmPassword.set(!showConfirmPassword())"
+                  [title]="showConfirmPassword() ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!showConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="7" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="showConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Password Rules Checklist -->
+            <div class="password-rules-list margin-bottom-sm">
+              <div class="password-rule-item" [class.rule-valid]="profileNewPassword.length >= 6">
+                <span class="rule-icon">{{ profileNewPassword.length >= 6 ? '✓' : '•' }}</span>
+                <span>At least 6 characters</span>
+              </div>
+              <div class="password-rule-item" [class.rule-valid]="profileNewPassword && profileCurrentPassword && profileNewPassword !== profileCurrentPassword">
+                <span class="rule-icon">{{ (profileNewPassword && profileCurrentPassword && profileNewPassword !== profileCurrentPassword) ? '✓' : '•' }}</span>
+                <span>Different from current password</span>
+              </div>
+              <div class="password-rule-item" [class.rule-valid]="profileConfirmPassword && profileNewPassword === profileConfirmPassword">
+                <span class="rule-icon">{{ (profileConfirmPassword && profileNewPassword === profileConfirmPassword) ? '✓' : '•' }}</span>
+                <span>Passwords match</span>
+              </div>
+            </div>
+
+            <!-- Inline Error Alert -->
+            <div class="password-error-alert" *ngIf="passwordErrorMessage() || (profileConfirmPassword && profileNewPassword && profileConfirmPassword.length >= profileNewPassword.length && profileNewPassword !== profileConfirmPassword)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ passwordErrorMessage() || 'Passwords do not match. Please re-enter your new password.' }}</span>
+            </div>
+
+            <button 
+              type="button" 
+              class="btn btn-primary btn-sm profile-update-pass-btn" 
+              (click)="updateAccountPassword()" 
+              [disabled]="isUpdatingProfilePassword()">
+              <span *ngIf="!isUpdatingProfilePassword()">Update Password</span>
+              <span *ngIf="isUpdatingProfilePassword()">Verifying & Updating...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-footer flex-between profile-modal-footer">
+          <button type="button" class="profile-btn profile-btn-signout" (click)="closeProfileModal(); confirmSignOut()">
+            Sign Out
+          </button>
+          <div class="profile-footer-actions">
+            <button type="button" class="profile-btn profile-btn-close" (click)="handleCloseProfileModal()">Close</button>
+            <button type="submit" class="profile-btn profile-btn-save" [disabled]="isSavingProfile() || isUpdatingProfilePassword() || !profileDisplayName.trim()">
+              <span *ngIf="!isSavingProfile() && !isUpdatingProfilePassword()">Save Changes</span>
+              <span *ngIf="isSavingProfile() || isUpdatingProfilePassword()">Saving...</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- AUTHENTICATION MODAL DIALOG -->
 <div class="modal-backdrop" *ngIf="showAuthModal()" (click)="closeAuthModal()">
   <div class="modal-card auth-modal-card" (click)="$event.stopPropagation()">
@@ -2439,8 +2903,11 @@
     <!-- STANDARD LOGIN / REGISTER FORMS -->
     <div class="auth-form-body" *ngIf="authMode() !== 'forgot'">
       <div class="form-group" *ngIf="authMode() === 'register'">
-        <label>Display Name</label>
-        <input type="text" placeholder="e.g. John Doe" [(ngModel)]="authDisplayName" class="form-input" />
+        <div class="flex-between">
+          <label>Display Name</label>
+          <small class="text-muted" style="font-size: 0.78rem;">{{ authDisplayName.length }}/32</small>
+        </div>
+        <input type="text" placeholder="e.g. John Doe" [(ngModel)]="authDisplayName" class="form-input" maxlength="32" />
       </div>
 
       <div class="form-group">
@@ -2455,7 +2922,29 @@
             Forgot Password?
           </a>
         </div>
-        <input type="password" placeholder="••••••••" [(ngModel)]="authPassword" class="form-input" (keydown.enter)="authMode() === 'login' ? login() : register()" />
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showAuthPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [(ngModel)]="authPassword" 
+            class="form-input password-input" 
+            (keydown.enter)="authMode() === 'login' ? login() : register()" 
+          />
+          <button 
+            type="button" 
+            class="password-eye-btn" 
+            (click)="showAuthPassword.set(!showAuthPassword())"
+            [title]="showAuthPassword() ? 'Hide password' : 'Show password'">
+            <svg *ngIf="!showAuthPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="7" r="3"></circle>
+            </svg>
+            <svg *ngIf="showAuthPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'login'" (click)="login()">
@@ -2499,68 +2988,102 @@
         <input type="email" placeholder="developer@example.com" [(ngModel)]="forgotEmail" class="form-input" (keydown.enter)="sendForgotOtp()" [disabled]="forgotLoading()" />
       </div>
 
-      <button class="btn btn-primary full-width-btn" (click)="sendForgotOtp()" [disabled]="forgotLoading()">
-        {{ forgotLoading() ? 'Sending Reset Link...' : 'Send Reset Link' }}
-      </button>
-
-      <div class="auth-modal-footer">
-        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">← Back to Sign In</a>
+      <div class="auth-btn-stack">
+        <button type="button" class="btn btn-primary full-width-btn" (click)="sendForgotOtp()" [disabled]="forgotLoading()">
+          {{ forgotLoading() ? 'Sending Reset Link...' : 'Send Reset Link' }}
+        </button>
+        <button type="button" class="btn btn-auth-back full-width-btn" (click)="switchAuthMode('login')" [disabled]="forgotLoading()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Sign In</span>
+        </button>
       </div>
     </div>
 
     <!-- Step 2: Verification / Email Check -->
     <div class="auth-form-body forgot-step2-container" *ngIf="authMode() === 'forgot' && forgotStep() === 2">
-      <h3 class="step2-title">Check Your Email</h3>
+      <h3 class="step2-title">Enter Verification Code</h3>
       <p class="forgot-instructions text-center">
-        We sent a password reset link to <strong>{{ forgotEmail }}</strong>.
+        We sent a verification code to <strong>{{ forgotEmail }}</strong>. Enter it below.
       </p>
 
-      <div class="step2-guide-box">
-        <div class="guide-item">
-          <span class="guide-badge">1</span>
-          <span>Open the reset email in your inbox.</span>
+      <!-- Code Expiry Timer Badge -->
+      <div class="code-expiry-badge" *ngIf="codeExpiry() > 0">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Code expires in <strong>{{ formatExpiry(codeExpiry()) }}</strong></span>
+      </div>
+      <div class="code-expiry-badge code-expired-badge" *ngIf="codeExpiry() === 0">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Code expired. Please click <strong>Resend Code</strong>.</span>
+      </div>
+
+      <!-- OTP Input Field -->
+      <div class="form-group" style="width:100%; margin-top: 4px;">
+        <label class="form-label">Verification Code</label>
+        <input
+          type="text"
+          class="form-input otp-input"
+          placeholder="000000"
+          maxlength="6"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="one-time-code"
+          [value]="forgotOtp"
+          (input)="onOtpInput($event)"
+          (keyup.enter)="verifyForgotOtp()"
+          [disabled]="otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0"
+        />
+      </div>
+
+      <!-- Verify Button -->
+      <button
+        type="button"
+        class="btn btn-primary full-width-btn"
+        style="margin-top: 4px;"
+        (click)="verifyForgotOtp()"
+        [disabled]="forgotLoading() || forgotOtp.length < 4 || otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0"
+      >
+        <span *ngIf="forgotLoading()">Verifying...</span>
+        <span *ngIf="!forgotLoading()">Verify Code</span>
+      </button>
+
+      <!-- Actions Card -->
+      <div class="step2-actions-card">
+        <div class="step2-actions-header">
+          <span>Didn't receive the code?</span>
         </div>
-        <div class="guide-item">
-          <span class="guide-badge">2</span>
-          <span>Click the <strong>Reset password</strong> link in the email.</span>
-        </div>
-        <div class="guide-item">
-          <span class="guide-badge">3</span>
-          <span>This window will automatically advance to <strong>Step 3: New Password</strong>!</span>
+        <div class="step2-actions-grid">
+          <button type="button" class="step2-action-btn" (click)="setForgotStep(1)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>Change Email</span>
+          </button>
+          <button type="button" class="step2-action-btn step2-action-btn-resend" (click)="resendForgotOtp()" [disabled]="forgotLoading() || resendCooldown() > 0">
+            <svg *ngIf="!forgotLoading() && resendCooldown() === 0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>{{ forgotLoading() ? 'Resending...' : (resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend Code') }}</span>
+          </button>
         </div>
       </div>
 
-      <div class="waiting-indicator">
-        <span class="pulse-indicator"></span>
-        <span class="waiting-text">Waiting for email verification...</span>
-      </div>
-
-      <!-- Optional: Toggle for 6-digit OTP code -->
-      <div class="otp-toggle-section" *ngIf="!showOtpInput()">
-        <button class="btn-text-link" (click)="toggleOtpInput(true)">
-          Have a 6-digit OTP code? Enter it here
+      <div class="auth-modal-footer" style="margin-top: 10px; width: 100%;">
+        <button type="button" class="btn btn-auth-back full-width-btn" (click)="switchAuthMode('login')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Sign In</span>
         </button>
-      </div>
-
-      <div class="otp-input-section" *ngIf="showOtpInput()">
-        <div class="form-group">
-          <label>6-Digit OTP Code</label>
-          <input type="text" maxlength="8" placeholder="123456" [(ngModel)]="forgotOtp" class="form-input otp-code-input" (keydown.enter)="verifyForgotOtp()" [disabled]="forgotLoading()" />
-        </div>
-        <button class="btn btn-primary full-width-btn" (click)="verifyForgotOtp()" [disabled]="forgotLoading()">
-          {{ forgotLoading() ? 'Verifying...' : 'Verify Code' }}
-        </button>
-      </div>
-
-      <div class="forgot-step-actions flex-between">
-        <a href="javascript:void(0)" (click)="setForgotStep(1)" class="auth-link-subtle">← Change email</a>
-        <button class="btn-text-link" (click)="resendForgotOtp()" [disabled]="forgotLoading()">
-          {{ forgotLoading() ? 'Resending...' : 'Resend email' }}
-        </button>
-      </div>
-
-      <div class="auth-modal-footer">
-        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">← Back to Sign In</a>
       </div>
     </div>
 
@@ -2571,22 +3094,163 @@
       </p>
       <div class="form-group">
         <label>New Password (min 6 characters)</label>
-        <input type="password" placeholder="••••••••" [(ngModel)]="forgotNewPassword" class="form-input" [disabled]="forgotLoading()" />
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showForgotNewPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [(ngModel)]="forgotNewPassword" 
+            class="form-input password-input" 
+            [disabled]="forgotLoading()" 
+          />
+          <button 
+            type="button" 
+            class="password-eye-btn" 
+            (click)="showForgotNewPassword.set(!showForgotNewPassword())"
+            [title]="showForgotNewPassword() ? 'Hide password' : 'Show password'">
+            <svg *ngIf="!showForgotNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="7" r="3"></circle>
+            </svg>
+            <svg *ngIf="showForgotNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="form-group">
         <label>Confirm New Password</label>
-        <input type="password" placeholder="••••••••" [(ngModel)]="forgotConfirmPassword" class="form-input" (keydown.enter)="submitNewPassword()" [disabled]="forgotLoading()" />
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showForgotConfirmPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [(ngModel)]="forgotConfirmPassword" 
+            class="form-input password-input" 
+            (keydown.enter)="submitNewPassword()" 
+            [disabled]="forgotLoading()" 
+          />
+          <button 
+            type="button" 
+            class="password-eye-btn" 
+            (click)="showForgotConfirmPassword.set(!showForgotConfirmPassword())"
+            [title]="showForgotConfirmPassword() ? 'Hide password' : 'Show password'">
+            <svg *ngIf="!showForgotConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="7" r="3"></circle>
+            </svg>
+            <svg *ngIf="showForgotConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <button class="btn btn-primary full-width-btn" (click)="submitNewPassword()" [disabled]="forgotLoading()">
-        {{ forgotLoading() ? 'Updating Password...' : 'Save New Password & Sign In' }}
-      </button>
-
-      <div class="auth-modal-footer">
-        <a href="javascript:void(0)" (click)="switchAuthMode('login')" class="auth-link">← Back to Sign In</a>
+      <div class="auth-btn-stack">
+        <button type="button" class="btn btn-primary full-width-btn" (click)="submitNewPassword()" [disabled]="forgotLoading()">
+          {{ forgotLoading() ? 'Updating Password...' : 'Save New Password & Sign In' }}
+        </button>
+        <button type="button" class="btn btn-auth-back full-width-btn" (click)="switchAuthMode('login')" [disabled]="forgotLoading()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Sign In</span>
+        </button>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- FIRST-TIME QUICK ONBOARDING MODAL -->
+<div class="modal-backdrop onboarding-backdrop" *ngIf="showOnboardingModal()">
+  <div class="modal-card onboarding-modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="onboarding-header text-center">
+      <div class="onboarding-avatar-wrapper">
+        <img 
+          *ngIf="getOnboardingAvatar()" 
+          [src]="getOnboardingAvatar()" 
+          alt="Avatar" 
+          class="onboarding-avatar"
+        />
+        <div *ngIf="!getOnboardingAvatar()" class="onboarding-avatar onboarding-avatar-fallback">
+          {{ getOnboardingName()[0].toUpperCase() }}
+        </div>
+        <div class="onboarding-verified-badge" title="Verified GitHub Developer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
+      </div>
+
+      <h2 class="onboarding-title">Welcome to PortfolioIQ, {{ getOnboardingName() }}!</h2>
+      <p class="onboarding-subtitle">
+        Let's personalize your AI analytics. Select your primary target developer role:
+      </p>
+    </div>
+
+    <!-- Role Selection Grid -->
+    <div class="onboarding-roles-container">
+      <div class="onboarding-roles-grid">
+        <div 
+          *ngFor="let role of careerRoles()"
+          class="onboarding-role-card"
+          [class.selected]="onboardingSelectedRoleId() === role.id"
+          (click)="onboardingSelectedRoleId.set(role.id)"
+        >
+          <div class="onboarding-role-radio">
+            <div class="onboarding-radio-dot" *ngIf="onboardingSelectedRoleId() === role.id"></div>
+          </div>
+          <div class="onboarding-role-info">
+            <div class="onboarding-role-title">{{ role.title }}</div>
+            <div class="onboarding-role-desc" *ngIf="role.description">{{ role.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GitHub Username Input -->
+    <div class="onboarding-github-section">
+      <label class="onboarding-github-label">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub Username <span class="onboarding-optional">(optional)</span>
+      </label>
+      <div class="onboarding-github-input-wrapper">
+        <span class="onboarding-github-prefix">github.com/</span>
+        <input
+          type="text"
+          class="form-input onboarding-github-input"
+          placeholder="your-username"
+          [(ngModel)]="onboardingGitHubUsername"
+          [disabled]="onboardingSaving()"
+        />
+      </div>
+      <p class="onboarding-github-hint">Auto-scan your repositories and detect your tech stack after setup.</p>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="onboarding-footer">
+      <button 
+        type="button" 
+        class="btn btn-primary onboarding-submit-btn full-width-btn" 
+        (click)="completeOnboarding()"
+        [disabled]="onboardingSaving() || !onboardingSelectedRoleId()"
+      >
+        <span *ngIf="onboardingSaving()">Setting up your portfolio...</span>
+        <span *ngIf="!onboardingSaving()" class="flex-center gap-xs">
+          <span>Get Started & Analyze Portfolio</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </button>
+      <p class="onboarding-hint text-center">
+        You can change your target role and customize skills anytime in the dashboard.
+      </p>
+    </div>
   </div>
 </div>
 
@@ -2768,11 +3432,15 @@
 <!-- ============================================
      GLOBAL CONFIRMATION DIALOG MODAL
      ============================================ -->
-<div class="modal-backdrop confirm-modal-backdrop" *ngIf="confirmDialog().isOpen" (click)="closeConfirmDialog()">
+<div class="modal-backdrop confirm-modal-backdrop" *ngIf="confirmDialog().isOpen" (click)="closeConfirmDialog(true)">
   <div class="modal-card confirm-modal-card" [class]="'confirm-' + confirmDialog().type" (click)="$event.stopPropagation()">
     
     <div class="confirm-modal-icon-row">
       <div class="confirm-icon-bubble" [class]="'bubble-' + confirmDialog().type">
+        <!-- Success Icon -->
+        <svg *ngIf="confirmDialog().icon === 'success'" class="confirm-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
         <!-- Logout Icon -->
         <svg *ngIf="confirmDialog().icon === 'logout'" class="confirm-svg" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         <!-- Delete Icon -->
@@ -2790,7 +3458,7 @@
     </div>
 
     <div class="confirm-modal-actions">
-      <button class="btn btn-secondary" (click)="closeConfirmDialog()">
+      <button class="btn btn-secondary" *ngIf="confirmDialog().cancelText" (click)="closeConfirmDialog(false)">
         {{ confirmDialog().cancelText }}
       </button>
       <button 
@@ -2798,6 +3466,7 @@
         [class.btn-danger]="confirmDialog().type === 'danger'" 
         [class.btn-warning]="confirmDialog().type === 'warning'" 
         [class.btn-primary]="confirmDialog().type === 'primary'" 
+        [class.btn-success]="confirmDialog().type === 'success'" 
         (click)="handleConfirmDialogAction()">
         {{ confirmDialog().confirmText }}
       </button>
