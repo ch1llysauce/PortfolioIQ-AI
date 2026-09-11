@@ -4823,7 +4823,8 @@
   line-height: 1.35;
   text-align: center;
   box-sizing: border-box;
-  max-width: 100%;
+  flex: 0 1 calc(50% - 4px);
+  max-width: calc(50% - 4px);
   word-break: break-word;
 }
 
