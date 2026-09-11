@@ -8393,13 +8393,16 @@
   .modal-backdrop {
     padding: 6px;
     align-items: center;
+    justify-content: center;
   }
 
   .modal-card {
     width: 96vw;
-    max-height: 92vh;
+    max-height: min(92vh, 88dvh);
     padding: 14px 10px;
     margin: 0 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal-header h2,
@@ -10314,8 +10317,10 @@
 @media (max-width: 640px) {
   .profile-modal-card {
     padding: 14px 16px;
-    max-height: 94vh;
+    max-height: min(94vh, 90dvh);
     width: 95%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .profile-modal-card .modal-header {
