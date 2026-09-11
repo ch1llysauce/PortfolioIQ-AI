@@ -12,7 +12,7 @@ import { AnalyticsService, SkillGapResponse, PortfolioScoreResponse } from './se
 import { MlService, ClassifyProjectResponse } from './services/ml.service';
 import { OptimizationService, OptimizationResponse, RecommendedProject } from './services/optimization.service';
 import { KnowledgeService, KnowledgeGraphData, RoleSkillTreeResponse, LearningPathResponse } from './services/knowledge.service';
-import { CoachService, ChatMessage, PortfolioContext, CoachStatus } from './services/coach.service';
+import { CoachService, ChatMessage, PortfolioContext, CoachStatus, formatSmartCoachTimestamp } from './services/coach.service';
 import { GitHubService, GitHubScanResponse, GitHubRepository, GitHubStatus } from './services/github.service';
 import { SystemService, SystemTelemetryResponse } from './services/system.service';
 
@@ -99,6 +99,7 @@ export class App implements OnInit {
   forgotStep = signal<1 | 2 | 3>(1);
   forgotEmail = '';
   forgotOtp = '';
+  otpDigits: string[] = ['', '', '', '', '', ''];
   forgotNewPassword = '';
   forgotConfirmPassword = '';
   forgotLoading = signal<boolean>(false);
@@ -137,12 +138,21 @@ export class App implements OnInit {
     typeof localStorage !== 'undefined' ? localStorage.getItem('portfolioiq_theme') !== 'light' : true
   );
 
+  updateFavicon(isDark: boolean) {
+    if (typeof document === 'undefined') return;
+    const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+    if (link) {
+      link.href = isDark ? 'portfolioiq.png' : 'portfolioiqlight.png';
+    }
+  }
+
   toggleTheme() {
     const next = !this.isDarkMode();
     this.isDarkMode.set(next);
     const theme = next ? 'dark' : 'light';
     if (typeof localStorage !== 'undefined') localStorage.setItem('portfolioiq_theme', theme);
     this.elRef.nativeElement.setAttribute('data-theme', theme);
+    this.updateFavicon(next);
   }
   
   newProjectName = '';
@@ -166,6 +176,8 @@ export class App implements OnInit {
   showProfileModal = signal<boolean>(false);
   profileDisplayName = '';
   initialProfileDisplayName = '';
+  profileAvatarUrl = '';
+  initialProfileAvatarUrl = '';
   profileSelectedRoleId = '';
   initialProfileRoleId = '';
   profileCurrentPassword = '';
@@ -188,6 +200,13 @@ export class App implements OnInit {
   
   newSkillName = '';
   newSkillCategory = 'Programming Language';
+  newSkillProjectId = '';
+  newSkillProjectIds: string[] = [];
+  showProjectMultiSelect = signal<boolean>(false);
+  projectDropdownSearch = '';
+  isExpandedSelectedProjects = false;
+  isAddingSkill = signal<boolean>(false);
+  showAddSkillForm = signal<boolean>(false);
   skillsSubView = signal<'my-skills' | 'catalog'>('my-skills');
   skillSearchQuery = signal<string>('');
   skillCategoryFilter = signal<string>('all');
@@ -244,6 +263,29 @@ export class App implements OnInit {
     this.attachSkillToProject(projectId, skillId);
     this.projectSkillSearch[projectId] = '';
     this.closeSkillPicker();
+  }
+
+  async createAndAttachSkill(projectId: string, skillName: string) {
+    const name = skillName.trim();
+    if (!name) return;
+    this.closeSkillPicker();
+    this.projectSkillSearch[projectId] = '';
+
+    // Add skill to portfolio (creates if not exists, canonicalizes)
+    const { data, error } = await this.skillService.createSkill(name, 'General');
+    if (error || !data?.id) {
+      // Try finding by name if create returned duplicate
+      const existing = this.skills().find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        await this.attachSkillToProject(projectId, existing.id);
+      } else {
+        this.showToast(`Could not create skill "${name}"`, 'error');
+      }
+      return;
+    }
+    await this.fetchSkills();
+    await this.attachSkillToProject(projectId, data.id);
+    this.showToast(`Created & attached "${data.name}"!`, 'success');
   }
 
   // Resume Parser Operations
@@ -311,6 +353,7 @@ export class App implements OnInit {
   isGitHubOAuthVerified = signal<boolean>(false);
   isOAuthConnecting = signal<boolean>(false);
   showOAuthHelpModal = signal<boolean>(false);
+  private initialSessionLoaded = false;
   isEditingLinkedGitHub = signal<boolean>(false);
   tempLinkedUsername = '';
   githubUsername = '';
@@ -405,6 +448,7 @@ export class App implements OnInit {
     this.loadGitHubStatus();
     this.fetchSystemTelemetry();
     this.elRef.nativeElement.setAttribute('data-theme', this.isDarkMode() ? 'dark' : 'light');
+    this.updateFavicon(this.isDarkMode());
     this.setupVisualViewport();
   }
 
@@ -694,10 +738,118 @@ export class App implements OnInit {
   }
 
   // Auth Modal Controls
-  openAuthModal(mode: 'login' | 'register' | 'forgot' = 'login') {
-    this.authMode.set(mode);
+  private authErrorTimeout: any = null;
+  private authSuccessTimeout: any = null;
+  private loginLockoutTimer: any = null;
+  private rateLimitCountdownTimer: any = null;
+
+  setAuthErrorMessage(msg: string, autoDismissMs = 6000) {
+    if (this.authErrorTimeout) clearTimeout(this.authErrorTimeout);
+    if (this.rateLimitCountdownTimer) {
+      clearInterval(this.rateLimitCountdownTimer);
+      this.rateLimitCountdownTimer = null;
+    }
+    this.forgotSuccessMsg.set(''); // Never stack with success msg
+
+    if (!msg) {
+      this.authError.set('');
+      return;
+    }
+
+    // Auto-detect rate limits / cooldowns with seconds (e.g. Supabase "after 54 seconds")
+    const match = msg.match(/^(.*?(?:after|wait|in)\s+)(\d+)(\s+seconds?)(.*)$/i);
+    if (match) {
+      const prefix = match[1];
+      let remainingSecs = parseInt(match[2], 10);
+      const extra = match[4];
+
+      // Sync resend button cooldown if in forgot step 2
+      if (this.forgotStep() === 2 && remainingSecs > this.resendCooldown()) {
+        this.startResendCooldown(remainingSecs);
+      }
+
+      const renderRateLimitMsg = (s: number) => {
+        const unit = s === 1 ? 'second' : 'seconds';
+        return `${prefix}${s} ${unit}${extra || '.'}`;
+      };
+
+      this.authError.set(renderRateLimitMsg(remainingSecs));
+
+      this.rateLimitCountdownTimer = setInterval(() => {
+        remainingSecs--;
+        if (remainingSecs <= 0) {
+          if (this.rateLimitCountdownTimer) {
+            clearInterval(this.rateLimitCountdownTimer);
+            this.rateLimitCountdownTimer = null;
+          }
+          this.authError.set('');
+        } else {
+          this.authError.set(renderRateLimitMsg(remainingSecs));
+        }
+      }, 1000);
+      return;
+    }
+
+    this.authError.set(msg);
+    if (autoDismissMs > 0) {
+      this.authErrorTimeout = setTimeout(() => {
+        this.authError.set('');
+      }, autoDismissMs);
+    }
+  }
+
+  setAuthSuccessMessage(msg: string, autoDismissMs = 6000) {
+    if (this.authSuccessTimeout) clearTimeout(this.authSuccessTimeout);
+    if (this.rateLimitCountdownTimer) {
+      clearInterval(this.rateLimitCountdownTimer);
+      this.rateLimitCountdownTimer = null;
+    }
+    this.authError.set(''); // Never stack with error msg
+    this.forgotSuccessMsg.set(msg);
+    if (msg && autoDismissMs > 0) {
+      this.authSuccessTimeout = setTimeout(() => {
+        this.forgotSuccessMsg.set('');
+      }, autoDismissMs);
+    }
+  }
+
+  startLoginLockoutCountdown() {
+    this.stopLoginLockoutCountdown();
+    const updateMsg = () => {
+      const secs = this.loginLockoutRemaining();
+      if (secs <= 0) {
+        this.stopLoginLockoutCountdown();
+        if (this.authMode() === 'login') this.clearAuthMessages();
+      } else if (this.authMode() === 'login') {
+        this.setAuthErrorMessage(`Too many failed attempts. Please wait ${secs} second${secs === 1 ? '' : 's'} before trying again.`, 0);
+      }
+    };
+    updateMsg();
+    this.loginLockoutTimer = setInterval(updateMsg, 1000);
+  }
+
+  stopLoginLockoutCountdown() {
+    if (this.loginLockoutTimer) {
+      clearInterval(this.loginLockoutTimer);
+      this.loginLockoutTimer = null;
+    }
+  }
+
+  clearAuthMessages() {
+    if (this.authErrorTimeout) clearTimeout(this.authErrorTimeout);
+    if (this.authSuccessTimeout) clearTimeout(this.authSuccessTimeout);
+    if (this.rateLimitCountdownTimer) {
+      clearInterval(this.rateLimitCountdownTimer);
+      this.rateLimitCountdownTimer = null;
+    }
+    this.stopLoginLockoutCountdown();
     this.authError.set('');
     this.forgotSuccessMsg.set('');
+  }
+
+  openAuthModal(mode: 'login' | 'register' | 'forgot' = 'login') {
+    this.authMode.set(mode);
+    this.clearAuthMessages();
     if (mode === 'forgot') {
       this.resetForgotFlow();
     }
@@ -706,8 +858,7 @@ export class App implements OnInit {
 
   closeAuthModal() {
     this.showAuthModal.set(false);
-    this.authError.set('');
-    this.forgotSuccessMsg.set('');
+    this.clearAuthMessages();
     this.showAuthPassword.set(false);
     this.showForgotNewPassword.set(false);
     this.showForgotConfirmPassword.set(false);
@@ -718,8 +869,7 @@ export class App implements OnInit {
 
   switchAuthMode(mode: 'login' | 'register' | 'forgot') {
     this.authMode.set(mode);
-    this.authError.set('');
-    this.forgotSuccessMsg.set('');
+    this.clearAuthMessages();
     this.showAuthPassword.set(false);
     if (mode === 'forgot') {
       this.resetForgotFlow();
@@ -730,11 +880,11 @@ export class App implements OnInit {
     this.forgotStep.set(1);
     this.forgotEmail = this.authEmail || '';
     this.forgotOtp = '';
+    this.otpDigits = ['', '', '', '', '', ''];
     this.forgotNewPassword = '';
     this.forgotConfirmPassword = '';
     this.forgotLoading.set(false);
-    this.forgotSuccessMsg.set('');
-    this.authError.set('');
+    this.clearAuthMessages();
     this.showOtpInput.set(false);
     this.isRecoveringPassword.set(false);
     // Reset OTP rate limiting state
@@ -816,46 +966,138 @@ export class App implements OnInit {
 
   setForgotStep(step: 1 | 2 | 3) {
     this.forgotStep.set(step);
-    this.authError.set('');
+    this.clearAuthMessages();
     this.showOtpInput.set(false);
+    if (step === 2) {
+      setTimeout(() => {
+        const firstBox = document.getElementById('otp-box-0') as HTMLInputElement;
+        if (firstBox) firstBox.focus();
+      }, 120);
+    }
   }
 
-  onOtpInput(event: Event) {
-    const target = event.target as HTMLInputElement;
-    if (target) {
-      const sanitized = target.value.replace(/\D/g, '').slice(0, 8);
-      this.forgotOtp = sanitized;
-      target.value = sanitized;
+  onOtpDigitInput(index: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value;
+    const digitsOnly = raw.replace(/\D/g, '');
+
+    if (digitsOnly.length > 1) {
+      this.handleOtpPaste(digitsOnly, index);
+      return;
     }
+
+    const singleDigit = digitsOnly.slice(-1);
+    this.otpDigits[index] = singleDigit;
+    input.value = singleDigit;
+    this.syncOtpValue();
+
+    if (singleDigit && index < 5) {
+      const nextInput = document.getElementById(`otp-box-${index + 1}`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
+    }
+  }
+
+  onOtpKeyDown(index: number, event: KeyboardEvent) {
+    if (event.key === 'Backspace') {
+      if (!this.otpDigits[index] && index > 0) {
+        event.preventDefault();
+        this.otpDigits[index - 1] = '';
+        this.syncOtpValue();
+        const prevInput = document.getElementById(`otp-box-${index - 1}`) as HTMLInputElement;
+        if (prevInput) {
+          prevInput.value = '';
+          prevInput.focus();
+          prevInput.select();
+        }
+      } else {
+        this.otpDigits[index] = '';
+        this.syncOtpValue();
+      }
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+      event.preventDefault();
+      const prevInput = document.getElementById(`otp-box-${index - 1}`) as HTMLInputElement;
+      if (prevInput) {
+        prevInput.focus();
+        prevInput.select();
+      }
+    } else if (event.key === 'ArrowRight' && index < 5) {
+      event.preventDefault();
+      const nextInput = document.getElementById(`otp-box-${index + 1}`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
+    }
+  }
+
+  onOtpPasteEvent(event: ClipboardEvent) {
+    event.preventDefault();
+    const pastedData = event.clipboardData?.getData('text') || '';
+    const digitsOnly = pastedData.replace(/\D/g, '').slice(0, 6);
+    this.handleOtpPaste(digitsOnly, 0);
+  }
+
+  handleOtpPaste(digits: string, startIndex = 0) {
+    if (!digits) return;
+    const chars = digits.split('');
+    let curr = startIndex;
+    for (const char of chars) {
+      if (curr < 6) {
+        this.otpDigits[curr] = char;
+        const box = document.getElementById(`otp-box-${curr}`) as HTMLInputElement;
+        if (box) box.value = char;
+        curr++;
+      }
+    }
+    this.syncOtpValue();
+    const targetIdx = Math.min(curr, 5);
+    const targetInput = document.getElementById(`otp-box-${targetIdx}`) as HTMLInputElement;
+    if (targetInput) {
+      targetInput.focus();
+      targetInput.select();
+    }
+  }
+
+  syncOtpValue() {
+    this.forgotOtp = this.otpDigits.join('');
   }
 
   // 3-Step Forgot Password Flow
   async sendForgotOtp() {
     const email = this.forgotEmail.trim();
     if (!email) {
-      this.authError.set('Please enter your email address.');
+      this.setAuthErrorMessage('Please enter your email address.');
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      this.authError.set('Please enter a valid email address.');
+      this.setAuthErrorMessage('Please enter a valid email address.');
       return;
     }
 
-    this.authError.set('');
+    this.clearAuthMessages();
     this.forgotLoading.set(true);
     try {
       const { error } = await this.authService.resetPasswordForEmail(email);
       if (error) {
-        this.authError.set(error.message);
+        this.setAuthErrorMessage(error.message);
       } else {
-        this.forgotSuccessMsg.set(`Password reset email sent to ${email}. Check your inbox!`);
+        this.setAuthSuccessMessage(`Password reset email sent to ${email}. Check your inbox!`);
+        this.otpDigits = ['', '', '', '', '', ''];
+        this.forgotOtp = '';
         this.forgotStep.set(2);
         this.startResendCooldown(60);
         this.startCodeExpiry();
+        setTimeout(() => {
+          const firstBox = document.getElementById('otp-box-0') as HTMLInputElement;
+          if (firstBox) firstBox.focus();
+        }, 150);
       }
     } catch (err: any) {
-      this.authError.set(err.message || 'Failed to send recovery code.');
+      this.setAuthErrorMessage(err.message || 'Failed to send recovery code.');
     } finally {
       this.forgotLoading.set(false);
     }
@@ -867,16 +1109,16 @@ export class App implements OnInit {
 
     // Block if max attempts reached
     if (this.otpAttempts() >= this.OTP_MAX_ATTEMPTS) {
-      this.authError.set('Too many incorrect attempts. Please request a new code.');
+      this.setAuthErrorMessage('Too many incorrect attempts. Please request a new code.');
       return;
     }
 
     if (!token || token.length < 4) {
-      this.authError.set('Please enter the verification code from your email.');
+      this.setAuthErrorMessage('Please enter the verification code from your email.');
       return;
     }
 
-    this.authError.set('');
+    this.clearAuthMessages();
     this.forgotLoading.set(true);
     try {
       const { error } = await this.authService.verifyRecoveryOtp(email, token);
@@ -885,9 +1127,9 @@ export class App implements OnInit {
         this.otpAttempts.set(attempts);
         const remaining = this.OTP_MAX_ATTEMPTS - attempts;
         if (remaining <= 0) {
-          this.authError.set('Too many incorrect attempts. Please request a new code.');
+          this.setAuthErrorMessage('Too many incorrect attempts. Please request a new code.');
         } else {
-          this.authError.set(`Incorrect code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`);
+          this.setAuthErrorMessage(`Incorrect code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`);
         }
       } else {
         // Mark as recovering so the dashboard stays hidden during Step 3
@@ -895,11 +1137,11 @@ export class App implements OnInit {
         this.otpAttempts.set(0);
         this.stopCodeExpiry();
         this.stopResendCooldown();
-        this.forgotSuccessMsg.set('Code verified successfully! Now set your new password.');
+        this.setAuthSuccessMessage('Code verified successfully! Now set your new password.');
         this.forgotStep.set(3);
       }
     } catch (err: any) {
-      this.authError.set(err.message || 'Verification failed.');
+      this.setAuthErrorMessage(err.message || 'Verification failed.');
     } finally {
       this.forgotLoading.set(false);
     }
@@ -910,22 +1152,27 @@ export class App implements OnInit {
     const email = this.forgotEmail.trim();
     if (!email) return;
 
-    this.authError.set('');
+    this.clearAuthMessages();
     this.forgotLoading.set(true);
     try {
       const { error } = await this.authService.resetPasswordForEmail(email);
       if (error) {
-        this.authError.set(error.message);
+        this.setAuthErrorMessage(error.message);
       } else {
         // Reset OTP attempts and start 60s cooldown
         this.otpAttempts.set(0);
+        this.otpDigits = ['', '', '', '', '', ''];
         this.forgotOtp = '';
-        this.forgotSuccessMsg.set('A new code has been sent to your email.');
+        this.setAuthSuccessMessage('A new code has been sent to your email.');
         this.startResendCooldown(60);
         this.startCodeExpiry();
+        setTimeout(() => {
+          const firstBox = document.getElementById('otp-box-0') as HTMLInputElement;
+          if (firstBox) firstBox.focus();
+        }, 150);
       }
     } catch (err: any) {
-      this.authError.set(err.message || 'Failed to resend code.');
+      this.setAuthErrorMessage(err.message || 'Failed to resend code.');
     } finally {
       this.forgotLoading.set(false);
     }
@@ -933,23 +1180,23 @@ export class App implements OnInit {
 
   async submitNewPassword() {
     if (!this.forgotNewPassword || this.forgotNewPassword.length < 6) {
-      this.authError.set('Password must be at least 6 characters long.');
+      this.setAuthErrorMessage('Password must be at least 6 characters long.');
       return;
     }
     if (this.forgotNewPassword !== this.forgotConfirmPassword) {
-      this.authError.set('Passwords do not match. Please re-enter.');
+      this.setAuthErrorMessage('Passwords do not match. Please re-enter.');
       return;
     }
 
-    this.authError.set('');
+    this.clearAuthMessages();
     this.forgotLoading.set(true);
     try {
       const { error } = await this.authService.updateUserPassword(this.forgotNewPassword);
       if (error) {
-        this.authError.set(error.message);
+        this.setAuthErrorMessage(error.message);
       } else {
         this.isRecoveringPassword.set(false);
-        this.forgotSuccessMsg.set('Password updated successfully! Logging you in...');
+        this.setAuthSuccessMessage('Password updated successfully! Logging you in...');
         if (typeof window !== 'undefined' && (window.location.hash || window.location.search)) {
           window.history.replaceState(null, '', window.location.pathname);
         }
@@ -963,7 +1210,7 @@ export class App implements OnInit {
         }, 1200);
       }
     } catch (err: any) {
-      this.authError.set(err.message || 'Failed to update password.');
+      this.setAuthErrorMessage(err.message || 'Failed to update password.');
     } finally {
       this.forgotLoading.set(false);
     }
@@ -1014,9 +1261,13 @@ export class App implements OnInit {
           this.checkFirstTimeOnboarding(user);
 
           // Only show toast on genuine sign-in event for newly signed in user
-          if (event === 'SIGNED_IN' && isNewSignIn) {
+          // Don't show on page reload/refresh (INITIAL_SESSION restores existing session)
+          // Only fires after initialSessionLoaded is true — skips the first INITIAL_SESSION restore on page refresh
+          if (event === 'SIGNED_IN' && isNewSignIn && this.initialSessionLoaded) {
             this.showToast(`Signed in successfully as ${user.email || user.user_metadata?.user_name || 'user'}!`, 'success');
           }
+
+          this.initialSessionLoaded = true;
 
           // Clean OAuth hash or PKCE code from browser URL bar cleanly without reload
           if (typeof window !== 'undefined') {
@@ -1113,20 +1364,20 @@ export class App implements OnInit {
 
   // GitHub OAuth Operations
   async signInWithGitHub() {
-    this.authError.set('');
+    this.clearAuthMessages();
     this.isOAuthConnecting.set(true);
     try {
       const { error } = await this.authService.signInWithGitHub();
       if (error) {
         if (error.message.toLowerCase().includes('not enabled') || error.message.toLowerCase().includes('unsupported provider')) {
-          this.authError.set('GitHub OAuth is not yet enabled in your Supabase project. Click "Setup Guide" below for 2-minute instructions.');
+          this.setAuthErrorMessage('GitHub OAuth is not yet enabled in your Supabase project. Click "Setup Guide" below for 2-minute instructions.');
           this.showOAuthHelpModal.set(true);
         } else {
-          this.authError.set(error.message);
+          this.setAuthErrorMessage(error.message);
         }
       }
     } catch (err: any) {
-      this.authError.set(err.message || 'GitHub OAuth sign-in failed.');
+      this.setAuthErrorMessage(err.message || 'GitHub OAuth sign-in failed.');
     } finally {
       this.isOAuthConnecting.set(false);
     }
@@ -1167,17 +1418,17 @@ export class App implements OnInit {
   // Auth Operations
   async register() {
     if (!this.authEmail || !this.authPassword) {
-      this.authError.set('Please provide both email and password.');
+      this.setAuthErrorMessage('Please provide both email and password.');
       return;
     }
-    this.authError.set('');
+    this.clearAuthMessages();
     const { data, error } = await this.authService.signUp(
       this.authEmail,
       this.authPassword,
       this.authDisplayName || 'Developer'
     );
     if (error) {
-      this.authError.set(error.message);
+      this.setAuthErrorMessage(error.message);
     } else {
       this.closeAuthModal();
       this.showToast('Registration Successful! You can now log in.', 'success');
@@ -1187,18 +1438,17 @@ export class App implements OnInit {
 
   async login() {
     if (!this.authEmail || !this.authPassword) {
-      this.authError.set('Please provide both email and password.');
+      this.setAuthErrorMessage('Please provide both email and password.');
       return;
     }
 
     // Check if currently locked out
     if (this.isLoginLocked()) {
-      const secs = this.loginLockoutRemaining();
-      this.authError.set(`Too many failed attempts. Please wait ${secs} second${secs === 1 ? '' : 's'} before trying again.`);
+      this.startLoginLockoutCountdown();
       return;
     }
 
-    this.authError.set('');
+    this.clearAuthMessages();
     const { data, error } = await this.authService.signIn(this.authEmail, this.authPassword);
     if (error) {
       const fails = this.loginFailCount() + 1;
@@ -1206,24 +1456,15 @@ export class App implements OnInit {
       if (fails >= this.LOGIN_LOCKOUT_AFTER) {
         this.loginLockoutUntil.set(Date.now() + this.LOGIN_LOCKOUT_SECONDS * 1000);
         this.loginFailCount.set(0);
-        // Keep lockout message refreshed — but only while still on login screen
-        const tick = setInterval(() => {
-          if (!this.isLoginLocked()) {
-            clearInterval(tick);
-            if (this.authMode() === 'login') this.authError.set('');
-          } else if (this.authMode() === 'login') {
-            const secs = this.loginLockoutRemaining();
-            this.authError.set(`Too many failed attempts. Please wait ${secs} second${secs === 1 ? '' : 's'} before trying again.`);
-          }
-        }, 1000);
-        this.authError.set(`Too many failed attempts. Please wait ${this.LOGIN_LOCKOUT_SECONDS} seconds before trying again.`);
+        this.startLoginLockoutCountdown();
       } else {
         const remaining = this.LOGIN_LOCKOUT_AFTER - fails;
-        this.authError.set(`${error.message} (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout)`);
+        this.setAuthErrorMessage(`${error.message} (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout)`);
       }
     } else {
       this.loginFailCount.set(0);
       this.loginLockoutUntil.set(0);
+      this.stopLoginLockoutCountdown();
       this.closeAuthModal();
       this.showToast('Welcome back! Signed in successfully.', 'success');
       await this.loadCurrentUser();
@@ -1287,15 +1528,117 @@ export class App implements OnInit {
   }
 
   getUserAvatar(): string {
+    const custom = localStorage.getItem('portfolioiq_custom_avatar');
+    if (custom === '__NONE__') {
+      return '';
+    }
+    if (custom) {
+      return custom;
+    }
     const user = this.currentUser();
+    if (user?.user_metadata?.avatar_url === '__NONE__') {
+      return '';
+    }
     if (user?.user_metadata?.avatar_url) {
       return user.user_metadata.avatar_url;
+    }
+    if (user?.user_metadata?.picture) {
+      return user.user_metadata.picture;
+    }
+    if (user?.user_metadata?.avatar) {
+      return user.user_metadata.avatar;
+    }
+    if (user?.identities && Array.isArray(user.identities)) {
+      const ghIdentity = user.identities.find((id: any) => id.provider === 'github');
+      if (ghIdentity?.identity_data?.avatar_url) {
+        return ghIdentity.identity_data.avatar_url;
+      }
+    }
+    if (this.githubScanData()?.profile?.avatar_url) {
+      return this.githubScanData()!.profile!.avatar_url;
     }
     const gh = this.verifiedGitHubUsername() || this.githubUsername;
     if (gh) {
       return `https://github.com/${gh}.png?size=64`;
     }
     return '';
+  }
+
+  getModalPreviewAvatar(): string {
+    return this.profileAvatarUrl || '';
+  }
+
+  onAvatarFileSelected(event: any) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.showToast('Please select an image file (PNG, JPG, WebP).', 'warning');
+      return;
+    }
+    const maxSizeBytes = 10 * 1024 * 1024; // 10MB limit
+    if (file.size > maxSizeBytes) {
+      this.showToast('Image size should be under 10MB.', 'warning');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 512;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const base64 = canvas.toDataURL('image/jpeg', 0.88);
+            this.profileAvatarUrl = base64;
+          } else {
+            this.profileAvatarUrl = e.target.result as string;
+          }
+          this.showToast('Photo staged. Click "Save Changes" to apply.', 'info');
+        } catch {
+          this.profileAvatarUrl = e.target.result as string;
+          this.showToast('Photo staged. Click "Save Changes" to apply.', 'info');
+        }
+      };
+      img.onerror = () => {
+        this.showToast('Failed to load image preview.', 'error');
+      };
+      img.src = e.target.result as string;
+    };
+    reader.readAsDataURL(file);
+    if (event.target) event.target.value = '';
+  }
+
+  useGitHubAvatar() {
+    const gh = this.verifiedGitHubUsername() || this.githubUsername;
+    if (!gh) {
+      this.showToast('No GitHub username found to link photo.', 'warning');
+      return;
+    }
+    const ghAvatar = `https://github.com/${gh}.png`;
+    this.profileAvatarUrl = ghAvatar;
+    this.showToast('GitHub photo staged. Click "Save Changes" to apply.', 'info');
+  }
+
+  removeProfileAvatar() {
+    this.profileAvatarUrl = '';
+    this.showToast('Photo removed in draft. Click "Save Changes" to apply.', 'info');
   }
 
   openProfileModal() {
@@ -1305,6 +1648,8 @@ export class App implements OnInit {
     }
     this.profileDisplayName = this.getUserDisplayName();
     this.initialProfileDisplayName = this.profileDisplayName;
+    this.profileAvatarUrl = this.getUserAvatar() || '';
+    this.initialProfileAvatarUrl = this.profileAvatarUrl;
     this.profileSelectedRoleId = this.selectedRole()?.id || '';
     this.initialProfileRoleId = this.profileSelectedRoleId;
     this.profileCurrentPassword = '';
@@ -1321,9 +1666,10 @@ export class App implements OnInit {
   hasUnsavedProfileChanges(): boolean {
     if (!this.showProfileModal()) return false;
     const nameChanged = this.profileDisplayName.trim() !== this.initialProfileDisplayName.trim();
+    const avatarChanged = this.profileAvatarUrl.trim() !== this.initialProfileAvatarUrl.trim();
     const roleChanged = (this.profileSelectedRoleId || '') !== (this.initialProfileRoleId || '');
     const passwordEntered = !!(this.profileCurrentPassword.trim() || this.profileNewPassword || this.profileConfirmPassword);
-    return nameChanged || roleChanged || passwordEntered;
+    return nameChanged || avatarChanged || roleChanged || passwordEntered;
   }
 
   handleCloseProfileModal() {
@@ -1346,6 +1692,9 @@ export class App implements OnInit {
 
   closeProfileModal() {
     this.showProfileModal.set(false);
+    this.profileAvatarUrl = this.initialProfileAvatarUrl;
+    this.profileDisplayName = this.initialProfileDisplayName;
+    this.profileSelectedRoleId = this.initialProfileRoleId;
     this.profileCurrentPassword = '';
     this.profileNewPassword = '';
     this.profileConfirmPassword = '';
@@ -1408,10 +1757,34 @@ export class App implements OnInit {
         this.currentUser.set(data.user);
       }
 
+      // If avatar URL was modified, persist to local storage and cloud user_metadata
+      const trimmedAvatar = this.profileAvatarUrl.trim();
+      if (trimmedAvatar !== this.initialProfileAvatarUrl.trim()) {
+        if (trimmedAvatar) {
+          localStorage.setItem('portfolioiq_custom_avatar', trimmedAvatar);
+          try {
+            await this.authService.updateUserData({ avatar_url: trimmedAvatar });
+          } catch (avatarErr) {
+            console.warn('Could not sync avatar to cloud metadata:', avatarErr);
+          }
+        } else {
+          localStorage.setItem('portfolioiq_custom_avatar', '__NONE__');
+          try {
+            await this.authService.updateUserData({ avatar_url: '__NONE__' });
+          } catch (avatarErr) {
+            console.warn('Could not sync avatar to cloud metadata:', avatarErr);
+          }
+        }
+        this.initialProfileAvatarUrl = trimmedAvatar;
+      }
+
+      this.initialProfileDisplayName = trimmedName;
+
       // If career role was changed in profile modal, update it
       if (this.profileSelectedRoleId && this.profileSelectedRoleId !== this.selectedRole()?.id) {
         await this.selectCareerRole(this.profileSelectedRoleId);
       }
+      this.initialProfileRoleId = this.profileSelectedRoleId;
 
       // If password was also provided, execute password update now
       if (hasPasswordInput) {
@@ -2233,6 +2606,112 @@ export class App implements OnInit {
     }
   }
 
+  getProjectName(id: string): string {
+    const p = this.projects().find(proj => proj.id === id);
+    return p ? p.name : id;
+  }
+
+  isProjectSelectedForSkill(id: string): boolean {
+    return this.newSkillProjectIds.includes(id);
+  }
+
+  toggleProjectSelectionForSkill(id: string) {
+    const idx = this.newSkillProjectIds.indexOf(id);
+    if (idx >= 0) {
+      this.newSkillProjectIds.splice(idx, 1);
+    } else {
+      this.newSkillProjectIds.push(id);
+    }
+  }
+
+  selectAllProjectsForSkill() {
+    this.newSkillProjectIds = this.projects().map(p => p.id);
+  }
+
+  clearAllProjectsForSkill() {
+    this.newSkillProjectIds = [];
+  }
+
+  removeProjectFromSkill(id: string) {
+    this.newSkillProjectIds = this.newSkillProjectIds.filter(pid => pid !== id);
+  }
+
+  getFilteredProjectsForDropdown(): any[] {
+    const q = (this.projectDropdownSearch || '').toLowerCase().trim();
+    if (!q) return this.projects();
+    return this.projects().filter(p => (p.name || '').toLowerCase().includes(q));
+  }
+
+  resetAddSkillForm() {
+    this.showAddSkillForm.set(false);
+    this.newSkillName = '';
+    this.newSkillProjectId = '';
+    this.newSkillProjectIds = [];
+    this.showProjectMultiSelect.set(false);
+    this.projectDropdownSearch = '';
+    this.isExpandedSelectedProjects = false;
+  }
+
+  async addSkillDirectly() {
+    const name = this.newSkillName.trim();
+    const targetProjectIds = this.newSkillProjectIds.length > 0 
+      ? this.newSkillProjectIds 
+      : (this.newSkillProjectId ? [this.newSkillProjectId] : []);
+
+    if (!name || targetProjectIds.length === 0) return;
+
+    this.isAddingSkill.set(true);
+    try {
+      const canonicalName = this.getCanonicalSkillName(name);
+      const category = this.classifySkillCategory(canonicalName);
+
+      let skillObj = this.skills().find(s => s.name.toLowerCase() === canonicalName.toLowerCase());
+      if (!skillObj) {
+        const { data, error } = await this.skillService.createSkill(canonicalName, category);
+        if (error) { this.showToast('Error creating skill: ' + error.message, 'error'); return; }
+        skillObj = data;
+        await this.fetchSkills();
+      }
+
+      if (!skillObj) return;
+
+      let attachedCount = 0;
+      let alreadyCount = 0;
+
+      for (const pId of targetProjectIds) {
+        const proj = this.projects().find(p => p.id === pId);
+        const alreadyAttached = (proj?.project_skills || []).some((ps: any) => ps.skill_id === skillObj!.id);
+        if (alreadyAttached) {
+          alreadyCount++;
+        } else {
+          try {
+            await this.skillService.addSkillToProject(pId, skillObj.id);
+            attachedCount++;
+          } catch (err) {
+            console.error(`Error attaching skill to project ${pId}:`, err);
+          }
+        }
+      }
+
+      await this.fetchProjects();
+
+      if (attachedCount > 0) {
+        if (targetProjectIds.length === 1) {
+          const projName = this.getProjectName(targetProjectIds[0]);
+          this.showToast(`Added "${canonicalName}" to "${projName}"!`, 'success');
+        } else {
+          this.showToast(`Added "${canonicalName}" to ${attachedCount} project(s)!`, 'success');
+        }
+      } else if (alreadyCount > 0) {
+        this.showToast(`"${canonicalName}" is already attached to all selected project(s).`, 'info');
+      }
+
+      this.resetAddSkillForm();
+    } finally {
+      this.isAddingSkill.set(false);
+    }
+  }
+
   async deleteSkillFromCatalog(id: string, name: string) {
     this.openConfirmDialog({
       title: 'Delete Catalog Skill',
@@ -2405,29 +2884,59 @@ export class App implements OnInit {
 
   async removeSkillFromUserPortfolio(skillName: string) {
     const canonicalTarget = this.getCanonicalSkillName(skillName).toLowerCase();
+    
+    // Find all project attachments for this skill so we can restore them on Undo
+    const targetAttachments: { projectId: string; skillId: string; projectName: string }[] = [];
+    for (const p of this.projects()) {
+      if (p.project_skills) {
+        for (const ps of p.project_skills) {
+          const sName = ps.skills?.name;
+          if (sName && (sName.toLowerCase() === skillName.toLowerCase() || this.getCanonicalSkillName(sName).toLowerCase() === canonicalTarget)) {
+            targetAttachments.push({ projectId: p.id, skillId: ps.skill_id, projectName: p.name });
+          }
+        }
+      }
+    }
+
+    if (targetAttachments.length === 0) {
+      this.showToast(`"${skillName}" is not attached to any project.`, 'info');
+      return;
+    }
+
     this.openConfirmDialog({
       title: 'Remove Skill from Portfolio',
-      message: `Are you sure you want to remove "${skillName}" from your active portfolio? This will detach it from your projects.`,
+      message: `Are you sure you want to remove "${skillName}" from your active portfolio? This will detach it from ${targetAttachments.length} project(s). (You can also undo this action afterwards).`,
       confirmText: 'Remove Skill',
       cancelText: 'Keep Skill',
       type: 'danger',
       icon: 'delete',
       onConfirm: async () => {
         try {
-          let removedCount = 0;
-          for (const p of this.projects()) {
-            if (p.project_skills) {
-              for (const ps of p.project_skills) {
-                const sName = ps.skills?.name;
-                if (sName && (sName.toLowerCase() === skillName.toLowerCase() || this.getCanonicalSkillName(sName).toLowerCase() === canonicalTarget)) {
-                  await this.skillService.removeSkillFromProject(p.id, ps.skill_id);
-                  removedCount++;
-                }
-              }
-            }
+          for (const item of targetAttachments) {
+            await this.skillService.removeSkillFromProject(item.projectId, item.skillId);
           }
           await this.fetchProjects();
-          this.showToast(`Removed "${skillName}" from ${removedCount} project(s) in your portfolio.`, 'success');
+
+          // Show Toast with interactive UNDO button
+          this.showToast(
+            `Removed "${skillName}" from ${targetAttachments.length} project(s)`,
+            'info',
+            7000,
+            'Undo',
+            async () => {
+              let restoredCount = 0;
+              for (const item of targetAttachments) {
+                try {
+                  const { error } = await this.skillService.addSkillToProject(item.projectId, item.skillId);
+                  if (!error) restoredCount++;
+                } catch (e) {
+                  console.error(`Failed to restore ${skillName} to project ${item.projectName}:`, e);
+                }
+              }
+              await this.fetchProjects();
+              this.showToast(`Restored "${skillName}" to ${restoredCount} project(s)!`, 'success');
+            }
+          );
         } catch (err: any) {
           this.showToast(`Failed to remove skill: ${err.message}`, 'error');
         }
@@ -2708,17 +3217,22 @@ export class App implements OnInit {
 
   async attachSkillToProject(projectId: string, skillId: string) {
     if (!skillId) return;
+    const contentEl = document.querySelector('.content-container') as HTMLElement;
+    const savedScroll = contentEl?.scrollTop ?? 0;
     const { error } = await this.skillService.addSkillToProject(projectId, skillId);
     if (error) {
       console.error('Skill attachment error:', error);
     } else {
       await this.fetchProjects();
+      if (contentEl) contentEl.scrollTop = savedScroll;
     }
   }
 
   async detachSkillFromProject(projectId: string, skillId: string, skillName?: string) {
     const proj = this.projects().find(p => p.id === projectId);
     const sName = skillName || this.skills().find(s => s.id === skillId)?.name || 'Skill';
+    const contentEl = document.querySelector('.content-container') as HTMLElement;
+    const savedScroll = contentEl?.scrollTop ?? 0;
 
     const { error } = await this.skillService.removeSkillFromProject(projectId, skillId);
     if (error) {
@@ -2726,6 +3240,7 @@ export class App implements OnInit {
       this.showToast(`Failed to remove ${sName}: ${error.message}`, 'error');
     } else {
       await this.fetchProjects();
+      if (contentEl) contentEl.scrollTop = savedScroll;
       this.showToast(
         `Detached "${sName}" from ${proj?.name || 'project'}`,
         'info',
@@ -2734,7 +3249,9 @@ export class App implements OnInit {
         async () => {
           const { error: attachErr } = await this.skillService.addSkillToProject(projectId, skillId);
           if (!attachErr) {
+            const scrollAfterUndo = contentEl?.scrollTop ?? 0;
             await this.fetchProjects();
+            if (contentEl) contentEl.scrollTop = scrollAfterUndo;
             this.showToast(`Restored "${sName}" to ${proj?.name || 'project'}!`, 'success');
           }
         }
@@ -3657,7 +4174,7 @@ export class App implements OnInit {
     const text = (overrideMessage || this.coachInput).trim();
     if (!text || this.coachLoading()) return;
 
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = formatSmartCoachTimestamp(new Date());
     const userMsg: ChatMessage = { role: 'user', content: text, timestamp: time };
 
     this.coachMessages.update(msgs => [...msgs, userMsg]);
@@ -3675,7 +4192,7 @@ export class App implements OnInit {
         const assistantMsg: ChatMessage = {
           role: 'assistant',
           content: res.message,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: formatSmartCoachTimestamp(new Date()),
           isDemo: res.is_demo
         };
         this.coachMessages.update(msgs => [...msgs, assistantMsg]);
@@ -3691,7 +4208,7 @@ export class App implements OnInit {
         const errorMsg: ChatMessage = {
           role: 'assistant',
           content: `Failed to reach AI Coach: ${err.message || 'Connection error'}. Please check if the backend is running.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          timestamp: formatSmartCoachTimestamp(new Date())
         };
         this.coachMessages.update(msgs => [...msgs, errorMsg]);
         this.coachService.saveMessageToCloud(errorMsg);
@@ -3727,7 +4244,7 @@ export class App implements OnInit {
           {
             role: 'assistant',
             content: "Chat cleared! How can I help you elevate your developer portfolio today?",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            timestamp: formatSmartCoachTimestamp(new Date())
           }
         ]);
         this.showToast('AI Coach conversation cleared.', 'info');
@@ -3738,6 +4255,14 @@ export class App implements OnInit {
   @HostListener('click', ['$event'])
   onGlobalClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
+
+    if (this.showProjectMultiSelect()) {
+      const multiSelect = target?.closest('.multiselect-container');
+      if (!multiSelect) {
+        this.showProjectMultiSelect.set(false);
+      }
+    }
+
     const copyBtn = target?.closest('.copy-code-btn') as HTMLButtonElement | null;
     if (copyBtn) {
       event.preventDefault();
@@ -3846,7 +4371,10 @@ export class App implements OnInit {
     // 4b. Ensure generous separation and convert ANY numbered section headers (e.g., "1. Title", "**1. Title**", "***1. Title***")
     // into dedicated block headers with clear spacing
     text = text.replace(/^[ \t]*[*_#]*[ \t]*(\d+\.)[ \t]+([^\n\r]+?)[ \t]*$/gm, (_m, num, content) => {
-      const clean = content.replace(/^[*_]+|[*_]+$/g, '').trim();
+      const clean = content
+        .replace(/^[*_]+|[*_]+$/g, '')
+        .replace(/[ \t]{2,}/g, ' ')  // collapse multiple spaces/tabs into one
+        .trim();
       return `\n\n<div class="chat-numbered-heading"><span class="num-badge">${num}</span> ${parseInline(clean)}</div>\n\n`;
     });
 

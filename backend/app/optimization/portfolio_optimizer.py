@@ -67,7 +67,7 @@ PROJECT_CATALOG: List[Dict[str, Any]] = [
         "architecture_highlights": "GitHub Actions multi-job workflow, Docker layer caching, automated status checks."
     },
 
-    # --- STANDARD & CAPSTONE TIER ARCHETYPES (~30-45 Hours) ---
+    # --- STANDARD & COMPREHENSIVE TIER ARCHETYPES (~30-45 Hours) ---
     # UI / UX Design Archetypes
     {
         "id": "proj-uiux-design-system",

@@ -27,7 +27,9 @@ The system combines machine learning classification, mathematical optimization, 
 | **GitHub Profile Scanner** | Scans public GitHub repos, extracts tech stacks via NLP, classifies domains via ML |
 | **Knowledge Graph** | NetworkX-based ontology of 125+ technologies and 475+ relationships with skill trees per role |
 | **Resume ATS Intelligence** | PDF resume parser with NLP skill extraction and ATS compatibility scoring |
-| **Light / Dark Mode** | Full theme support persisted across sessions |
+| **Secure Auth & Recovery** | Segmented 6-box OTP cards, real-time rate limit countdowns, and GitHub OAuth |
+| **Light / Dark Mode** | Dynamic theme switching with matching branding, favicon, and high-contrast palettes |
+| **Profile & Avatar Engine** | Client-side 10MB image upload with Canvas compression and persistent customization |
 
 ---
 

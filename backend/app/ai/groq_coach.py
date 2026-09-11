@@ -244,7 +244,7 @@ Your mission is to provide rigorous, actionable, high-signal advice to help deve
         """
         missing_str = ", ".join(missing_skills[:6]) if missing_skills else "advanced industry practices"
         user_skills_str = ", ".join(user_skills[:8]) if user_skills else "core foundational skills"
-        tier_label = "Sprint (~20 hrs)" if effort_budget_hours <= 25 else ("Standard (~40 hrs)" if effort_budget_hours <= 50 else "Capstone (~80 hrs)")
+        tier_label = "Sprint (~20 hrs)" if effort_budget_hours <= 25 else ("Standard (~40 hrs)" if effort_budget_hours <= 50 else "Comprehensive (~80 hrs)")
 
         system_instruction = (
             "You are an Elite Principal Software Architect & AI Engineering Coach at PortfolioIQ AI. "
@@ -400,7 +400,7 @@ Your mission is to provide rigorous, actionable, high-signal advice to help deve
 
 #### 🚀 3-Step Remediation Plan
 1. **Week 1-2:** Containerize your latest project with Docker and configure a GitHub Actions CI pipeline.
-2. **Week 3-4:** Build a targeted capstone integrating {missing[0] if missing else 'Cloud Deployment'}.
+2. **Week 3-4:** Build a targeted portfolio project integrating {missing[0] if missing else 'Cloud Deployment'}.
 3. **Week 5:** Refactor documentation to highlight metrics (e.g., *latency reduction*, *query optimization*).
 """
         elif "project" in q or "recommend" in q or "idea" in q:

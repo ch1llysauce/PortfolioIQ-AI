@@ -5,8 +5,14 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, List
 
-# Ensure workspace ml folder is in python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+# Ensure workspace root and backend root are in python path
+current_dir = os.path.dirname(__file__)
+workspace_root = os.path.abspath(os.path.join(current_dir, "../../../"))
+backend_root = os.path.abspath(os.path.join(current_dir, "../../"))
+
+for p in [workspace_root, backend_root]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 import ml.classifier
 importlib.reload(ml.classifier)

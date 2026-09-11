@@ -7,7 +7,7 @@
     <div class="sidebar-header-row flex-between">
       <div class="sidebar-brand">
         <span class="logo">
-          <img src="/portfolioiq.png" alt="PortfolioIQ" class="logo-img" />PortfolioIQ<span class="logo-accent">.AI</span>
+          <img [src]="isDarkMode() ? '/portfolioiq.png' : '/portfolioiqlight.png'" alt="PortfolioIQ" class="logo-img" width="28" height="28" loading="eager" decoding="async" />PortfolioIQ<span class="logo-accent">.AI</span>
         </span>
       </div>
       <button class="btn-icon mobile-sidebar-close" (click)="closeMobileSidebar()" aria-label="Close Sidebar">
@@ -292,9 +292,24 @@
 
       <!-- TAB 2: PROJECTS MANAGEMENT (Modernized UI) -->
       <div *ngIf="activeTab() === 'projects'" class="tab-pane projects-tab-pane">
+
+        <!-- Case 1: Signed Out (Guest) - ZERO Projects displayed, 100% Locked -->
+        <div class="card locked-card text-center" *ngIf="!currentUser()" style="padding: 48px 24px;">
+          <h2>Developer Projects Portfolio Locked</h2>
+          <p class="text-muted" style="max-width: 520px; margin: 8px auto 24px; line-height: 1.5;">
+            Sign in to view your verified software engineering projects, repository sync, and AI architecture analysis. Private developer projects are never visible to guests.
+          </p>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" (click)="openAuthModal('login')">Sign In</button>
+            <button class="btn btn-outline" (click)="openAuthModal('register')">Create Account</button>
+          </div>
+        </div>
+
+        <!-- Case 2: Signed In - User's Projects Portfolio -->
+        <div *ngIf="currentUser()">
         
-        <!-- Top Toolbar Header -->
-        <div class="card projects-header-card">
+          <!-- Top Toolbar Header -->
+          <div class="card projects-header-card">
           <div class="projects-top-bar flex-between flex-wrap gap-md">
             <div>
               <div class="flex-align gap-xs">
@@ -308,7 +323,8 @@
               <button 
                 class="btn btn-primary new-project-toggle-btn" 
                 (click)="toggleAddProjectForm()">
-                <svg class="btn-svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <svg *ngIf="!showAddProjectForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <svg *ngIf="showAddProjectForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 <span>{{ showAddProjectForm() ? 'Close Form' : 'New Project' }}</span>
               </button>
             </div>
@@ -433,11 +449,6 @@
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- Guest Prompt -->
-        <div class="card alert-info" *ngIf="!currentUser()">
-          <p>Please <strong>Sign In</strong> at the top right to create, edit, and analyze your developer projects.</p>
         </div>
 
         <!-- Projects Grid -->
@@ -565,9 +576,9 @@
           <p class="text-muted" style="max-width: 480px; margin: 8px auto 20px;">
             Start tracking your developer portfolio by creating your first project or importing existing repositories from GitHub!
           </p>
-          <div class="flex-center gap-sm">
-            <button class="btn btn-primary btn-sm" (click)="toggleAddProjectForm()">+ Create First Project</button>
-            <button class="btn btn-secondary btn-sm" (click)="setTab('github')">Sync with GitHub</button>
+          <div class="optimizer-empty-actions margin-top-sm">
+            <button class="btn btn-primary" (click)="toggleAddProjectForm()">+ Create First Project</button>
+            <button class="btn btn-outline-ai" (click)="setTab('github')">Sync with GitHub</button>
           </div>
         </div>
 
@@ -607,6 +618,7 @@
           </div>
         </div>
 
+        </div>
       </div>
 
       <!-- TAB 3: DEVELOPER SKILLS PROFILE & CATALOG (User-Centric) -->
@@ -628,82 +640,226 @@
         <div *ngIf="currentUser()">
           
           <!-- SUB-VIEW 1: MY VERIFIED SKILLS -->
-          <div class="card" *ngIf="skillsSubView() === 'my-skills'">
-            <div class="card-header">
-              <div>
-                <h2>My Verified Developer Skills</h2>
-                <p class="sub-text">Technologies extracted and verified across your active portfolio projects.</p>
-              </div>
-            </div>
-
-            <!-- Skills Search & Category Filter Toolbar -->
-            <div class="skills-filter-toolbar margin-bottom-md" *ngIf="getUserSkillNames().length > 0">
-              <div class="skills-toolbar-layout">
-                <!-- Search Input Row -->
-                <div class="skill-search-box">
-                  <svg class="search-svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  <input 
-                    type="text" 
-                    class="form-input skill-search-input" 
-                    placeholder="Search skills or projects..." 
-                    [(ngModel)]="skillSearchQuery" 
-                  />
-                  <button *ngIf="skillSearchQuery()" class="btn-clear-search" (click)="skillSearchQuery.set('')" title="Clear search">✕</button>
+          <ng-container *ngIf="skillsSubView() === 'my-skills'">
+            <!-- Top Toolbar Header (Matched with Projects Header UI Card) -->
+            <div class="card projects-header-card">
+              <div class="projects-top-bar flex-between flex-wrap gap-md">
+                <div>
+                  <div class="flex-align gap-xs">
+                    <h2>My Verified Developer Skills</h2>
+                    <span class="count-badge">{{ getUserSkillNames().length }} Skills</span>
+                  </div>
+                  <p class="section-subtitle">Technologies extracted and verified across your active portfolio projects.</p>
                 </div>
 
-                <!-- Mobile Category Filter Dropdown (<= 768px) -->
-                <div class="skill-category-select-wrapper">
-                  <svg class="category-select-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                  <select 
-                    class="skill-category-select"
-                    [ngModel]="skillCategoryFilter()"
-                    (ngModelChange)="setSkillCategoryFilter($event)">
-                    <option value="all">All Categories ({{ getUserSkillsDetailed().length }})</option>
-                    <option *ngFor="let cat of getSkillCategories()" [value]="cat">
+                <div class="projects-top-actions flex-align gap-sm" *ngIf="currentUser()">
+                  <button class="btn btn-primary new-project-toggle-btn" (click)="showAddSkillForm.update(v => !v)">
+                    <svg *ngIf="!showAddSkillForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg *ngIf="showAddSkillForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span>{{ showAddSkillForm() ? 'Close Form' : 'Add Skill' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Skills Search & Category Filter Toolbar (Inside Header Card when skills exist) -->
+              <div class="skills-filter-toolbar margin-top-md" *ngIf="getUserSkillNames().length > 0">
+                <div class="skills-toolbar-layout">
+                  <!-- Search Input Row -->
+                  <div class="skill-search-box">
+                    <svg class="search-svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input 
+                      type="text" 
+                      class="form-input skill-search-input" 
+                      placeholder="Search skills or projects..." 
+                      [(ngModel)]="skillSearchQuery" 
+                    />
+                    <button *ngIf="skillSearchQuery()" class="btn-clear-search" (click)="skillSearchQuery.set('')" title="Clear search">✕</button>
+                  </div>
+
+                  <!-- Mobile Category Filter Dropdown (<= 768px) -->
+                  <div class="skill-category-select-wrapper">
+                    <svg class="category-select-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <select 
+                      class="skill-category-select"
+                      [ngModel]="skillCategoryFilter()"
+                      (ngModelChange)="setSkillCategoryFilter($event)">
+                      <option value="all">All Categories ({{ getUserSkillsDetailed().length }})</option>
+                      <option *ngFor="let cat of getSkillCategories()" [value]="cat">
+                        {{ cat }} ({{ getSkillCountByCategory(cat) }})
+                      </option>
+                    </select>
+                    <svg class="select-chevron-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+
+                  <!-- Desktop Category Filter Pills (> 768px) -->
+                  <div class="skill-category-pills">
+                    <button 
+                      class="filter-pill" 
+                      [class.active]="skillCategoryFilter() === 'all'" 
+                      (click)="setSkillCategoryFilter('all')">
+                      All ({{ getUserSkillsDetailed().length }})
+                    </button>
+                    <button 
+                      class="filter-pill" 
+                      *ngFor="let cat of getSkillCategories()"
+                      [class.active]="skillCategoryFilter() === cat" 
+                      (click)="setSkillCategoryFilter(cat)">
                       {{ cat }} ({{ getSkillCountByCategory(cat) }})
-                    </option>
-                  </select>
-                  <svg class="select-chevron-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collapsible Modern "Add Skill" Drawer/Card -->
+            <div class="card add-project-card margin-bottom-md" *ngIf="showAddSkillForm()">
+              <div class="card-header flex-between">
+                <div class="flex-align gap-xs">
+                  <div class="add-proj-icon-bubble">
+                    <svg class="btn-svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  </div>
+                  <div>
+                    <h3>Add Skill to Portfolio</h3>
+                    <span class="sub-text">Skill will be canonicalized and auto-categorized based on our knowledge base</span>
+                  </div>
+                </div>
+                <button class="btn-icon" (click)="resetAddSkillForm()">✕</button>
+              </div>
+
+              <div class="add-project-form-body">
+                <div class="form-row-grid">
+                  <div class="form-group flex-2">
+                    <label class="form-label">Skill Name <span class="text-danger">*</span></label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      placeholder="e.g. React, Docker, Python, TypeScript..."
+                      [(ngModel)]="newSkillName"
+                      (keydown.enter)="addSkillDirectly()"
+                      autocomplete="off"
+                    />
+                    <span class="sub-text" *ngIf="newSkillName.trim()" style="font-size: 0.78rem; margin-top: 2px;">
+                      Will be saved as: <strong>{{ getCanonicalSkillName(newSkillName) }}</strong>
+                    </span>
+                  </div>
+
+                  <div class="form-group flex-1">
+                    <div class="flex-between">
+                      <label class="form-label">Attach to Project(s) <span class="text-danger">*</span></label>
+                      <span *ngIf="newSkillProjectIds.length > 0" class="sub-text" style="font-size: 0.76rem; font-weight: 600; color: var(--accent-primary);">
+                        {{ newSkillProjectIds.length }} selected
+                      </span>
+                    </div>
+
+                    <!-- Custom Searchable Multi-Select Dropdown -->
+                    <div class="multiselect-container" (click)="$event.stopPropagation()">
+                      <div 
+                        class="form-select multiselect-trigger" 
+                        (click)="showProjectMultiSelect.set(!showProjectMultiSelect())"
+                        [class.open]="showProjectMultiSelect()">
+                        <span *ngIf="newSkillProjectIds.length === 0" class="text-muted">Choose projects...</span>
+                        <span *ngIf="newSkillProjectIds.length === 1" class="multiselect-label">{{ getProjectName(newSkillProjectIds[0]) }}</span>
+                        <span *ngIf="newSkillProjectIds.length > 1" class="multiselect-badge">
+                          {{ newSkillProjectIds.length }} projects selected
+                        </span>
+                        <svg class="multiselect-chevron" viewBox="0 0 24 24" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                      </div>
+
+                      <!-- Floating Multi-select Dropdown -->
+                      <div class="multiselect-dropdown" *ngIf="showProjectMultiSelect()" (click)="$event.stopPropagation()">
+                        <div class="multiselect-header flex-between">
+                          <span class="multiselect-count">{{ newSkillProjectIds.length }}/{{ projects().length }} attached</span>
+                          <div class="flex-align gap-xs">
+                            <button type="button" class="btn-link-xs" (click)="selectAllProjectsForSkill()">Select All</button>
+                            <span class="text-muted">•</span>
+                            <button type="button" class="btn-link-xs" (click)="clearAllProjectsForSkill()" [disabled]="newSkillProjectIds.length === 0">Clear</button>
+                          </div>
+                        </div>
+
+                        <div class="multiselect-search" *ngIf="projects().length > 4">
+                          <input 
+                            type="text" 
+                            class="form-input form-input-sm" 
+                            placeholder="Filter projects..." 
+                            [(ngModel)]="projectDropdownSearch" 
+                          />
+                        </div>
+
+                        <div class="multiselect-list">
+                          <label 
+                            *ngFor="let p of getFilteredProjectsForDropdown()" 
+                            class="multiselect-item flex-align gap-xs">
+                            <input 
+                              type="checkbox" 
+                              [checked]="isProjectSelectedForSkill(p.id)" 
+                              (change)="toggleProjectSelectionForSkill(p.id)"
+                            />
+                            <span class="multiselect-label" [title]="p.name">{{ p.name }}</span>
+                          </label>
+                          <div *ngIf="getFilteredProjectsForDropdown().length === 0" class="multiselect-empty">
+                            No matching projects
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Selected project chips -->
+                    <div class="selected-projects-chips margin-top-xs" *ngIf="newSkillProjectIds.length > 0">
+                      <span class="selected-proj-chip" *ngFor="let pid of (isExpandedSelectedProjects ? newSkillProjectIds : (newSkillProjectIds | slice:0:3))">
+                        {{ getProjectName(pid) }}
+                        <button type="button" class="chip-remove" (click)="removeProjectFromSkill(pid)" title="Remove project">✕</button>
+                      </span>
+                      <span class="chip-more" *ngIf="newSkillProjectIds.length > 3" (click)="isExpandedSelectedProjects = !isExpandedSelectedProjects">
+                        {{ isExpandedSelectedProjects ? 'Show less' : ('+' + (newSkillProjectIds.length - 3) + ' more') }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Desktop Category Filter Pills (> 768px) -->
-                <div class="skill-category-pills">
-                  <button 
-                    class="filter-pill" 
-                    [class.active]="skillCategoryFilter() === 'all'" 
-                    (click)="setSkillCategoryFilter('all')">
-                    All ({{ getUserSkillsDetailed().length }})
+                <div class="add-project-actions flex-align gap-sm margin-top-md">
+                  <button
+                    class="btn btn-primary"
+                    (click)="addSkillDirectly()"
+                    [disabled]="isAddingSkill() || !newSkillName.trim() || newSkillProjectIds.length === 0">
+                    <span *ngIf="!isAddingSkill()">
+                      {{ newSkillProjectIds.length > 1 ? ('+ Add to ' + newSkillProjectIds.length + ' Projects') : '+ Add to Portfolio' }}
+                    </span>
+                    <span *ngIf="isAddingSkill()">Adding...</span>
                   </button>
-                  <button 
-                    class="filter-pill" 
-                    *ngFor="let cat of getSkillCategories()"
-                    [class.active]="skillCategoryFilter() === cat" 
-                    (click)="setSkillCategoryFilter(cat)">
-                    {{ cat }} ({{ getSkillCountByCategory(cat) }})
+                  <button class="btn btn-secondary" (click)="resetAddSkillForm()">
+                    Cancel
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Empty State when user has 0 skills attached -->
-            <div class="empty-state text-center" *ngIf="getUserSkillNames().length === 0" style="padding: 32px 16px;">
+            <!-- Zero / Empty State (Matched with Projects Empty State) -->
+            <div class="card empty-projects-card text-center" *ngIf="getUserSkillNames().length === 0">
+              <div class="empty-icon-circle">
+                <svg class="nav-svg" viewBox="0 0 24 24" style="width: 32px; height: 32px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </div>
               <h3>No Skills in Your Portfolio Yet</h3>
-              <p class="text-muted" style="max-width: 480px; margin: 6px auto 16px;">
+              <p class="text-muted" style="max-width: 480px; margin: 8px auto 20px;">
                 You haven't attached any skills to your projects yet. Go to <strong>My Projects</strong> or import your repositories in <strong>GitHub Sync</strong> to automatically detect and populate your skills!
               </p>
-              <div class="flex-center gap-sm">
-                <button class="btn btn-primary btn-sm" (click)="setTab('projects')">Go to My Projects</button>
-                <button class="btn btn-secondary btn-sm" (click)="setTab('github')">GitHub Sync</button>
+              <div class="optimizer-empty-actions margin-top-sm">
+                <button class="btn btn-primary" (click)="setTab('projects')">Go to My Projects</button>
+                <button class="btn btn-outline-ai" (click)="setTab('github')">GitHub Sync</button>
               </div>
             </div>
 
-            <!-- Search / Filter Zero State -->
-            <div class="empty-state text-center" *ngIf="getUserSkillNames().length > 0 && getFilteredUserSkills().length === 0" style="padding: 32px 16px;">
+            <!-- Filter / Search Zero State -->
+            <div class="card empty-projects-card text-center" *ngIf="getUserSkillNames().length > 0 && getFilteredUserSkills().length === 0">
+              <div class="empty-icon-circle">
+                <svg class="search-icon" viewBox="0 0 24 24" style="position: static; width: 26px; height: 26px; stroke: var(--accent-primary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
               <h3>No Matching Skills Found</h3>
-              <p class="text-muted" style="max-width: 480px; margin: 6px auto 16px;">
+              <p class="text-muted" style="max-width: 480px; margin: 8px auto 20px;">
                 No skills matched your search query "<strong>{{ skillSearchQuery() }}</strong>" in category <strong>{{ skillCategoryFilter() }}</strong>.
               </p>
-              <button class="btn btn-primary btn-sm" (click)="clearSkillFilters()">Clear Filters</button>
+              <div class="optimizer-empty-actions margin-top-sm" style="max-width: 240px; margin-left: auto; margin-right: auto;">
+                <button class="btn btn-primary" (click)="clearSkillFilters()">Clear Filters</button>
+              </div>
             </div>
 
             <!-- User's Skills Grid -->
@@ -745,7 +901,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </ng-container>
 
 
 
@@ -855,7 +1011,7 @@
                   class="budget-pill" 
                   [class.active]="effortBudgetHours() === 80" 
                   (click)="setEffortBudget(80)">
-                  Capstone (~80 hrs)
+                  Comprehensive (~80 hrs)
                 </button>
               </div>
             </div>
@@ -1154,7 +1310,7 @@
               <h2>AI Resume & ATS Intelligence Hub</h2>
               <p class="section-subtitle">Automated NLP parser, ATS compatibility scoring, and target role keyword matching.</p>
             </div>
-            <span class="badge badge-success">Capstone Feature</span>
+            <span class="badge badge-success">AI Powered</span>
           </div>
 
           <!-- Cloud-Saved Resume Profile Banner (Isolated to logged-in user) -->
@@ -1668,9 +1824,9 @@
               <div class="path-col">
                 <h4 class="text-success">Already Acquired Prerequisites</h4>
                 <div class="path-list" *ngIf="goalSkillRoadmap()?.already_acquired_prereqs?.length; else noneAcquired">
-                  <div class="path-item acquired clickable-path-item" *ngFor="let p of goalSkillRoadmap()?.already_acquired_prereqs" (click)="inspectNode(p); setKnowledgeViewMode('inspector')" title="Inspect {{ p }} in Skill Explorer">
+                  <div class="path-item acquired clickable-path-item" *ngFor="let p of goalSkillRoadmap()?.already_acquired_prereqs" (click)="calculateGoalSkillPath(p)" title="Calculate Learning Path for {{ p }}">
                     <span class="path-skill-name">{{ p }}</span>
-                    <div class="flex-align gap-xs">
+                    <div class="flex-align gap-xs path-action-badge" (click)="$event.stopPropagation(); inspectNode(p); setKnowledgeViewMode('inspector')" title="Inspect {{ p }} in Skill Explorer">
                       <span class="badge badge-success">Mastered</span>
                       <span class="path-inspect-arrow">→</span>
                     </div>
@@ -1691,9 +1847,9 @@
                   Missing Prerequisites (In Sequence)
                 </h4>
                 <div class="path-list" *ngIf="goalSkillRoadmap()?.missing_prerequisites_in_order?.length; else noneMissing">
-                  <div class="path-item missing clickable-path-item" *ngFor="let m of goalSkillRoadmap()?.missing_prerequisites_in_order; let i = index" (click)="inspectNode(m); setKnowledgeViewMode('inspector')" title="Inspect {{ m }} in Skill Explorer">
+                  <div class="path-item missing clickable-path-item" *ngFor="let m of goalSkillRoadmap()?.missing_prerequisites_in_order; let i = index" (click)="calculateGoalSkillPath(m)" title="Calculate Learning Path for {{ m }}">
                     <span><strong>Step {{ i + 1 }}:</strong> {{ m }}</span>
-                    <div class="flex-align gap-xs">
+                    <div class="flex-align gap-xs path-action-badge" (click)="$event.stopPropagation(); inspectNode(m); setKnowledgeViewMode('inspector')" title="Inspect {{ m }} in Skill Explorer">
                       <span class="badge badge-warning">Required First</span>
                       <span class="path-inspect-arrow">→</span>
                     </div>
@@ -1746,9 +1902,9 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 <span>Critique</span>
               </button>
-              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestProjectRecommendations()" [disabled]="coachLoading()" title="Recommend High-Impact Project Blueprints">
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="requestProjectRecommendations()" [disabled]="coachLoading()" title="Recommend High-Impact Projects">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <span>Blueprints</span>
+                <span>Recommend</span>
               </button>
               <button class="btn-icon coach-icon-btn" (click)="scrollCoachToTop(true)" title="Scroll to top">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
@@ -1774,8 +1930,11 @@
                    [class.user-row]="msg.role === 'user'" 
                    [class.assistant-row]="msg.role === 'assistant'">
                 
-                <div class="chat-avatar">
-                  <span class="user-avatar-initial" *ngIf="msg.role === 'user'">{{ (currentUser()?.email || 'U')[0].toUpperCase() }}</span>
+                <div class="chat-avatar" [class.clickable-avatar]="msg.role === 'user'" (click)="msg.role === 'user' ? openProfileModal() : null" [title]="msg.role === 'user' ? 'Your Profile Photo - Click to edit' : 'PortfolioIQ Coach'">
+                  <div class="user-avatar-initial" *ngIf="msg.role === 'user'">
+                    <img *ngIf="getUserAvatar()" [src]="getUserAvatar()" alt="User Avatar" class="user-avatar-img" />
+                    <span *ngIf="!getUserAvatar()">{{ getUserInitial() }}</span>
+                  </div>
                   <span class="ai-avatar-badge" *ngIf="msg.role === 'assistant'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   </span>
@@ -1834,6 +1993,7 @@
                   type="text" 
                   class="chat-input-field" 
                   placeholder="Ask your AI coach anything (e.g. 'Paano ko mapapaganda ang portfolio ko para maging AI Engineer?')" 
+                  placeholder="Ask your AI coach anything..." 
                   [(ngModel)]="coachInput" 
                   (keydown.enter)="sendCoachMessage()" 
                   [disabled]="coachLoading()" 
@@ -2611,10 +2771,14 @@
     <div class="modal-body profile-modal-body" [class.password-open]="showProfilePasswordSection()">
       <!-- Top Hero Identity Card -->
       <div class="profile-hero-card">
-        <div class="profile-hero-avatar">
-          <img *ngIf="getUserAvatar()" [src]="getUserAvatar()" alt="Avatar" class="profile-hero-avatar-img" />
-          <span *ngIf="!getUserAvatar()">{{ getUserInitial() }}</span>
+        <div class="profile-hero-avatar clickable-profile-avatar" (click)="avatarFileInput.click()" title="Click to upload custom profile photo">
+          <img *ngIf="getModalPreviewAvatar()" [src]="getModalPreviewAvatar()" alt="Avatar" class="profile-hero-avatar-img" />
+          <span *ngIf="!getModalPreviewAvatar()">{{ getUserInitial() }}</span>
+          <div class="avatar-edit-overlay">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          </div>
         </div>
+        <input #avatarFileInput type="file" accept="image/*" style="display: none" (change)="onAvatarFileSelected($event)" />
         <div class="profile-hero-details">
           <h3 class="profile-hero-name">{{ getUserDisplayName() }}</h3>
           <span class="profile-hero-email">{{ currentUser()?.email }}</span>
@@ -2684,6 +2848,71 @@
             <small class="profile-field-hint">
               Used in AI Coach, ATS Audit & Skill Gap.
             </small>
+          </div>
+
+          <!-- Profile Photo Manager (No raw URL input) -->
+          <div class="form-group profile-field-group full-width-profile-field profile-photo-manage-group">
+            <label class="form-label">Profile Photo</label>
+            <div class="profile-photo-control-card">
+              <div class="profile-photo-preview-wrapper">
+                <div class="profile-photo-preview-box">
+                  <img *ngIf="getModalPreviewAvatar()" [src]="getModalPreviewAvatar()" alt="Profile Photo" class="profile-photo-preview-img" />
+                  <span *ngIf="!getModalPreviewAvatar()" class="profile-photo-preview-placeholder">{{ getUserInitial() }}</span>
+                </div>
+              </div>
+
+              <div class="profile-photo-info">
+                <div class="profile-photo-status-row flex-align gap-xs">
+                  <span *ngIf="profileAvatarUrl?.startsWith('data:image')" class="photo-source-badge local">
+                    <svg class="badge-mini-svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Custom Uploaded Photo
+                  </span>
+                  <span *ngIf="profileAvatarUrl && !profileAvatarUrl.startsWith('data:image') && profileAvatarUrl.includes('github')" class="photo-source-badge github">
+                    <svg class="badge-mini-svg" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                    GitHub Profile Photo
+                  </span>
+                  <span *ngIf="profileAvatarUrl && !profileAvatarUrl.startsWith('data:image') && !profileAvatarUrl.includes('github')" class="photo-source-badge web">
+                    <svg class="badge-mini-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    Web Photo
+                  </span>
+                  <span *ngIf="!profileAvatarUrl" class="photo-source-badge default">
+                    No photo set (Default avatar)
+                  </span>
+                </div>
+
+                <div class="profile-photo-actions-row flex-align gap-xs flex-wrap">
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm photo-action-btn" 
+                    (click)="avatarFileInput.click()">
+                    <svg class="btn-sm-svg" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    <span>{{ profileAvatarUrl ? 'Change Photo' : 'Upload Photo' }}</span>
+                  </button>
+
+                  <button 
+                    *ngIf="verifiedGitHubUsername() || githubUsername" 
+                    type="button" 
+                    class="btn btn-secondary btn-sm photo-action-btn" 
+                    (click)="useGitHubAvatar()">
+                    <svg class="btn-sm-svg" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                    <span>Use GitHub Photo</span>
+                  </button>
+
+                  <button 
+                    *ngIf="profileAvatarUrl" 
+                    type="button" 
+                    class="btn btn-danger-soft btn-sm photo-action-btn" 
+                    (click)="removeProfileAvatar()">
+                    <svg class="btn-sm-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Remove</span>
+                  </button>
+                </div>
+
+                <small class="profile-field-hint">
+                  Supports PNG, JPG, or WebP up to 10MB. Staged changes will apply when you click Save Changes.
+                </small>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2888,11 +3117,21 @@
 <!-- AUTHENTICATION MODAL DIALOG -->
 <div class="modal-backdrop" *ngIf="showAuthModal()" (click)="closeAuthModal()">
   <div class="modal-card auth-modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header flex-between">
-      <h2>
-        {{ authMode() === 'login' ? 'Sign In to PortfolioIQ' : (authMode() === 'register' ? 'Create Developer Account' : 'Reset Password') }}
-      </h2>
-      <button class="btn-icon" (click)="closeAuthModal()">✕</button>
+    <div class="modal-header flex-between auth-modal-header">
+      <div class="flex-align gap-sm">
+        <div class="auth-header-icon-badge">
+          <img [src]="isDarkMode() ? '/portfolioiq.png' : '/portfolioiqlight.png'" alt="PortfolioIQ" class="auth-header-logo" width="34" height="34" loading="lazy" decoding="async" />
+        </div>
+        <div>
+          <h2 class="auth-modal-title">
+            {{ authMode() === 'login' ? 'Sign In to PortfolioIQ' : (authMode() === 'register' ? 'Create Developer Account' : 'Reset Password') }}
+          </h2>
+          <p class="auth-modal-subtitle" *ngIf="authMode() === 'login'">Welcome back! Access your portfolio & AI Coach</p>
+          <p class="auth-modal-subtitle" *ngIf="authMode() === 'register'">Level up your developer portfolio & track skills</p>
+          <p class="auth-modal-subtitle" *ngIf="authMode() === 'forgot'">Follow steps to securely recover your account</p>
+        </div>
+      </div>
+      <button class="btn-icon" (click)="closeAuthModal()" aria-label="Close modal">✕</button>
     </div>
 
     <!-- Stepper Bar for Forgot Password -->
@@ -2913,52 +3152,87 @@
       </div>
     </div>
 
-    <!-- Mode Switcher Tabs (Login/Register) -->
-    <div class="auth-tabs" *ngIf="authMode() !== 'forgot'">
-      <button class="auth-tab-btn" [class.active]="authMode() === 'login'" (click)="switchAuthMode('login')">
-        Sign In
+    <!-- Segmented Pill Switcher (Login/Register) -->
+    <div class="auth-segmented-pill" *ngIf="authMode() !== 'forgot'">
+      <button type="button" class="auth-pill-btn" [class.active]="authMode() === 'login'" (click)="switchAuthMode('login')">
+        <svg class="auth-pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+        </svg>
+        <span>Sign In</span>
       </button>
-      <button class="auth-tab-btn" [class.active]="authMode() === 'register'" (click)="switchAuthMode('register')">
-        Register
+      <button type="button" class="auth-pill-btn" [class.active]="authMode() === 'register'" (click)="switchAuthMode('register')">
+        <svg class="auth-pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+        </svg>
+        <span>Register</span>
       </button>
     </div>
 
     <!-- Feedback Banners -->
-    <div class="alert-danger" *ngIf="authError()">
-      {{ authError() }}
+    <div class="alert-danger flex-between" *ngIf="authError()">
+      <span>{{ authError() }}</span>
+      <button type="button" class="alert-close-btn" (click)="clearAuthMessages()" aria-label="Dismiss error">✕</button>
     </div>
-    <div class="alert-success" *ngIf="forgotSuccessMsg()">
-      {{ forgotSuccessMsg() }}
+    <div class="alert-success flex-between" *ngIf="forgotSuccessMsg()">
+      <span>{{ forgotSuccessMsg() }}</span>
+      <button type="button" class="alert-close-btn" (click)="clearAuthMessages()" aria-label="Dismiss message">✕</button>
     </div>
 
     <!-- STANDARD LOGIN / REGISTER FORMS -->
     <div class="auth-form-body" *ngIf="authMode() !== 'forgot'">
       <div class="form-group" *ngIf="authMode() === 'register'">
         <div class="flex-between">
-          <label>Display Name</label>
-          <small class="text-muted" style="font-size: 0.78rem;">{{ authDisplayName.length }}/32</small>
+          <label class="form-label" for="authDisplayNameInput">Display Name <span class="text-danger">*</span></label>
+          <small class="text-muted" style="font-size: 0.76rem;">{{ authDisplayName.length }}/32</small>
         </div>
-        <input type="text" placeholder="e.g. John Doe" [(ngModel)]="authDisplayName" class="form-input" maxlength="32" />
+        <div class="auth-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input 
+            id="authDisplayNameInput"
+            type="text" 
+            placeholder="e.g. John Doe" 
+            [(ngModel)]="authDisplayName" 
+            class="form-input auth-form-input with-icon" 
+            maxlength="32" 
+          />
+        </div>
       </div>
 
       <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" placeholder="developer@example.com" [(ngModel)]="authEmail" class="form-input" />
+        <label class="form-label" for="authEmailInput">Email Address <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <input 
+            id="authEmailInput"
+            type="email" 
+            placeholder="developer@example.com" 
+            [(ngModel)]="authEmail" 
+            class="form-input auth-form-input with-icon" 
+          />
+        </div>
       </div>
 
       <div class="form-group">
         <div class="flex-between">
-          <label>Password</label>
+          <label class="form-label" for="authPasswordInput">Password <span class="text-danger">*</span></label>
           <a href="javascript:void(0)" *ngIf="authMode() === 'login'" (click)="switchAuthMode('forgot')" class="auth-link-subtle">
             Forgot Password?
           </a>
         </div>
-        <div class="password-input-wrapper">
+        <div class="auth-input-wrapper password-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
           <input 
+            id="authPasswordInput"
             [type]="showAuthPassword() ? 'text' : 'password'" 
             placeholder="••••••••" 
             [(ngModel)]="authPassword" 
-            class="form-input password-input" 
+            class="form-input auth-form-input password-input with-icon" 
             (keydown.enter)="authMode() === 'login' ? login() : register()" 
           />
           <button 
@@ -2976,13 +3250,16 @@
             </svg>
           </button>
         </div>
+        <small class="auth-field-hint" *ngIf="authMode() === 'register'">
+          Minimum of 6 characters.
+        </small>
       </div>
 
-      <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'login'" (click)="login()">
-        Sign In
+      <button class="btn btn-primary full-width-btn auth-submit-btn" *ngIf="authMode() === 'login'" (click)="login()">
+        <span>Sign In</span>
       </button>
-      <button class="btn btn-primary full-width-btn" *ngIf="authMode() === 'register'" (click)="register()">
-        Create Account
+      <button class="btn btn-primary full-width-btn auth-submit-btn" *ngIf="authMode() === 'register'" (click)="register()">
+        <span>Create Account</span>
       </button>
 
       <div class="auth-divider">
@@ -3015,12 +3292,25 @@
         Enter your registered email address and we'll send a password reset link to recover your account.
       </p>
       <div class="form-group">
-        <label>Account Email Address</label>
-        <input type="email" placeholder="developer@example.com" [(ngModel)]="forgotEmail" class="form-input" (keydown.enter)="sendForgotOtp()" [disabled]="forgotLoading()" />
+        <label class="form-label" for="forgotEmailInput">Account Email Address <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <input 
+            id="forgotEmailInput"
+            type="email" 
+            placeholder="developer@example.com" 
+            [(ngModel)]="forgotEmail" 
+            class="form-input auth-form-input with-icon" 
+            (keydown.enter)="sendForgotOtp()" 
+            [disabled]="forgotLoading()" 
+          />
+        </div>
       </div>
 
       <div class="auth-btn-stack">
-        <button type="button" class="btn btn-primary full-width-btn" (click)="sendForgotOtp()" [disabled]="forgotLoading()">
+        <button type="button" class="btn btn-primary full-width-btn auth-submit-btn" (click)="sendForgotOtp()" [disabled]="forgotLoading()">
           {{ forgotLoading() ? 'Sending Reset Link...' : 'Send Reset Link' }}
         </button>
         <button type="button" class="btn btn-auth-back full-width-btn" (click)="switchAuthMode('login')" [disabled]="forgotLoading()">
@@ -3056,28 +3346,36 @@
         <span>Code expired. Please click <strong>Resend Code</strong>.</span>
       </div>
 
-      <!-- OTP Input Field -->
-      <div class="form-group" style="width:100%; margin-top: 4px;">
-        <label class="form-label">Verification Code</label>
-        <input
-          type="text"
-          class="form-input otp-input"
-          placeholder="000000"
-          maxlength="6"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          autocomplete="one-time-code"
-          [value]="forgotOtp"
-          (input)="onOtpInput($event)"
-          (keyup.enter)="verifyForgotOtp()"
-          [disabled]="otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0"
-        />
+      <!-- OTP 6-Box Segmented Inputs -->
+      <div class="otp-boxes-wrapper" (paste)="onOtpPasteEvent($event)">
+        <label class="form-label text-center" style="display: block; width: 100%; margin-bottom: 6px;">
+          Verification Code
+        </label>
+        <div class="otp-boxes-grid">
+          <input
+            *ngFor="let digit of otpDigits; let i = index"
+            [id]="'otp-box-' + i"
+            type="text"
+            class="otp-digit-box"
+            [class.filled]="otpDigits[i] !== ''"
+            maxlength="1"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="one-time-code"
+            [value]="otpDigits[i]"
+            (input)="onOtpDigitInput(i, $event)"
+            (keydown)="onOtpKeyDown(i, $event)"
+            (keyup.enter)="verifyForgotOtp()"
+            (focus)="$any($event.target).select()"
+            [disabled]="otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0 || forgotLoading()"
+          />
+        </div>
       </div>
 
       <!-- Verify Button -->
       <button
         type="button"
-        class="btn btn-primary full-width-btn"
+        class="btn btn-primary full-width-btn auth-submit-btn"
         style="margin-top: 4px;"
         (click)="verifyForgotOtp()"
         [disabled]="forgotLoading() || forgotOtp.length < 4 || otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0"
@@ -3124,13 +3422,17 @@
         Identity verified! Please enter your new password below.
       </p>
       <div class="form-group">
-        <label>New Password (min 6 characters)</label>
-        <div class="password-input-wrapper">
+        <label class="form-label" for="forgotNewPassInput">New Password (min 6 characters) <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper password-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
           <input 
+            id="forgotNewPassInput"
             [type]="showForgotNewPassword() ? 'text' : 'password'" 
             placeholder="••••••••" 
             [(ngModel)]="forgotNewPassword" 
-            class="form-input password-input" 
+            class="form-input auth-form-input password-input with-icon" 
             [disabled]="forgotLoading()" 
           />
           <button 
@@ -3150,13 +3452,17 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Confirm New Password</label>
-        <div class="password-input-wrapper">
+        <label class="form-label" for="forgotConfirmPassInput">Confirm New Password <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper password-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
           <input 
+            id="forgotConfirmPassInput"
             [type]="showForgotConfirmPassword() ? 'text' : 'password'" 
             placeholder="••••••••" 
             [(ngModel)]="forgotConfirmPassword" 
-            class="form-input password-input" 
+            class="form-input auth-form-input password-input with-icon" 
             (keydown.enter)="submitNewPassword()" 
             [disabled]="forgotLoading()" 
           />
@@ -3166,7 +3472,7 @@
             (click)="showForgotConfirmPassword.set(!showForgotConfirmPassword())"
             [title]="showForgotConfirmPassword() ? 'Hide password' : 'Show password'">
             <svg *ngIf="!showForgotConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
               <circle cx="12" cy="7" r="3"></circle>
             </svg>
             <svg *ngIf="showForgotConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3178,7 +3484,7 @@
       </div>
 
       <div class="auth-btn-stack">
-        <button type="button" class="btn btn-primary full-width-btn" (click)="submitNewPassword()" [disabled]="forgotLoading()">
+        <button type="button" class="btn btn-primary full-width-btn auth-submit-btn" (click)="submitNewPassword()" [disabled]="forgotLoading()">
           {{ forgotLoading() ? 'Updating Password...' : 'Save New Password & Sign In' }}
         </button>
         <button type="button" class="btn btn-auth-back full-width-btn" (click)="switchAuthMode('login')" [disabled]="forgotLoading()">
@@ -3354,7 +3660,7 @@
   <div class="dossier-header">
     <div class="dossier-brand">
       <h1>PortfolioIQ.AI — Developer Evaluation Dossier</h1>
-      <p class="dossier-tagline">Automated Capstone Portfolio Health, Skill Gap, & Architecture Assessment</p>
+      <p class="dossier-tagline">Automated Portfolio Health, Skill Gap, & Architecture Assessment</p>
     </div>
     <div class="dossier-meta">
       <p><strong>Candidate:</strong> {{ currentUser()?.email || 'Guest Developer' }}</p>
@@ -3417,7 +3723,7 @@
 
   <!-- Footer Certification -->
   <div class="dossier-footer">
-    <p>Generated by <strong>PortfolioIQ AI (Capstone v1.0)</strong> • Powered by Scikit-Learn ML, Knowledge Graph, & Groq Cloud LLM</p>
+    <p>Generated by <strong>PortfolioIQ AI (v1.0)</strong> • Powered by Scikit-Learn ML, Knowledge Graph, & Groq Cloud LLM</p>
   </div>
 </div>
 
@@ -3637,4 +3943,11 @@
     (mousedown)="attachSkillFromPicker(activeSkillPickerProjectId()!, s.id)"
   >{{ s.name }}</div>
   <div class="attach-skill-empty" *ngIf="getFilteredAttachSkills(activeSkillPickerProjectId()!).length === 0">No matching skills</div>
+  <div class="attach-skill-empty" *ngIf="getFilteredAttachSkills(activeSkillPickerProjectId()!).length === 0">
+    <div class="attach-skill-option attach-skill-create"
+      (mousedown)="createAndAttachSkill(activeSkillPickerProjectId()!, projectSkillSearch[activeSkillPickerProjectId()!])">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create &amp; attach "{{ projectSkillSearch[activeSkillPickerProjectId()!] }}"
+    </div>
+  </div>
 </div>

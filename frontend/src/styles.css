@@ -16,6 +16,22 @@ button, input, select, textarea {
   font-family: inherit;
 }
 
+/* Remove default browser focus outline on mouse/touch click.
+   Keyboard navigation still shows focus via :focus-visible */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #00000000;
+  outline-offset: 2px;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   color: #f8fafc;
@@ -63,6 +79,9 @@ h1, h2, h3, h4, h5, h6 {
   color: #f1f5f9;
   margin: 16px 0 6px 0;
   line-height: 1.6;
+  flex-wrap: wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .chat-rendered-markdown > .chat-numbered-heading:first-child,

@@ -4,6 +4,38 @@ import { Observable } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { environment } from '../../environments/environment';
 
+export function formatSmartCoachTimestamp(dateInput?: string | Date | number): string {
+  if (!dateInput) return '';
+  const date = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
+  if (isNaN(date.getTime())) return typeof dateInput === 'string' ? dateInput : '';
+
+  const now = new Date();
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Check if today
+  const isToday = date.getFullYear() === now.getFullYear() &&
+                  date.getMonth() === now.getMonth() &&
+                  date.getDate() === now.getDate();
+  if (isToday) {
+    return `Today, ${timeStr}`;
+  }
+
+  // Check if yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
+                      date.getMonth() === yesterday.getMonth() &&
+                      date.getDate() === yesterday.getDate();
+  if (isYesterday) {
+    return `Yesterday, ${timeStr}`;
+  }
+
+  // Check if same year
+  const isSameYear = date.getFullYear() === now.getFullYear();
+  const dateStr = date.toLocaleDateString([], isSameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+  return `${dateStr}, ${timeStr}`;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -141,7 +173,7 @@ export class CoachService {
           const cloudMessages: ChatMessage[] = data.map((item: any) => ({
             role: item.role as 'user' | 'assistant' | 'system',
             content: item.content,
-            timestamp: item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
+            timestamp: item.created_at ? formatSmartCoachTimestamp(item.created_at) : undefined,
             isDemo: !!item.is_demo
           }));
           // Sync cloud messages to local cache
