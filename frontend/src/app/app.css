@@ -12426,7 +12426,7 @@
 
   /* Chat input bar safe area */
   .chat-input-bar {
-    padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
+    padding-bottom: max(52px, env(safe-area-inset-bottom, 52px));
   }
 }
 
