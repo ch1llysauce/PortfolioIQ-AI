@@ -351,6 +351,7 @@ export class App implements OnInit {
     this.loadGitHubStatus();
     this.fetchSystemTelemetry();
     this.elRef.nativeElement.setAttribute('data-theme', this.isDarkMode() ? 'dark' : 'light');
+    this.setupVisualViewport();
   }
 
 
@@ -361,6 +362,20 @@ export class App implements OnInit {
         this.mobileSidebarOpen.set(false);
       }
     }
+  }
+
+  private setupVisualViewport() {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const updateOffset = () => {
+      const offsetFromBottom = window.innerHeight - (vv.offsetTop + vv.height);
+      const keyboardHeight = Math.max(0, offsetFromBottom);
+      document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+      this.elRef.nativeElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+    };
+    vv.addEventListener('resize', updateOffset);
+    vv.addEventListener('scroll', updateOffset);
+    updateOffset();
   }
 
   toggleMobileSidebar() {
