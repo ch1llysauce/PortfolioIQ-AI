@@ -6,5 +6,5 @@ export const environment = {
         key: 'sb_publishable_QIey49CoZgkEXn_yg8RhbQ_SXjTwSmh'
     },
 
-    apiUrl: 'https://portfolioiq-backend.onrender.com'
+    apiUrl: 'https://portfolioiq-ai.onrender.com'
 };
