@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface GraphNode {
   id: string;
@@ -63,7 +64,7 @@ export interface EntityExtractResponse {
   providedIn: 'root'
 })
 export class KnowledgeService {
-  private apiUrl = 'http://127.0.0.1:8000/api/knowledge';
+  private apiUrl = `${environment.apiUrl}/api/knowledge`;
 
   constructor(private http: HttpClient) {}
 

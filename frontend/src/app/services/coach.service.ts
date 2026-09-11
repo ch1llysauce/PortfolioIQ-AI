@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SupabaseService } from './supabase.service';
+import { environment } from '../../environments/environment';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -56,7 +57,7 @@ export interface CoachStatus {
   providedIn: 'root'
 })
 export class CoachService {
-  private apiUrl = 'http://127.0.0.1:8000/api/coach';
+  private apiUrl = `${environment.apiUrl}/api/coach`;
   private supabase;
 
   constructor(

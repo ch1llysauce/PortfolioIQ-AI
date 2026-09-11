@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface GitHubProfile {
   username: string;
@@ -60,7 +61,7 @@ export interface GitHubStatus {
   providedIn: 'root'
 })
 export class GitHubService {
-  private apiUrl = 'http://127.0.0.1:8000/api/github';
+  private apiUrl = `${environment.apiUrl}/api/github`;
 
   constructor(private http: HttpClient) {}
 

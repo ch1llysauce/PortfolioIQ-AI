@@ -132,6 +132,18 @@ export class App implements OnInit {
   onboardingSelectedRoleId = signal<string>('');
   onboardingSaving = signal<boolean>(false);
   onboardingGitHubUsername = '';
+
+  isDarkMode = signal<boolean>(
+    typeof localStorage !== 'undefined' ? localStorage.getItem('portfolioiq_theme') !== 'light' : true
+  );
+
+  toggleTheme() {
+    const next = !this.isDarkMode();
+    this.isDarkMode.set(next);
+    const theme = next ? 'dark' : 'light';
+    if (typeof localStorage !== 'undefined') localStorage.setItem('portfolioiq_theme', theme);
+    this.elRef.nativeElement.setAttribute('data-theme', theme);
+  }
   
   newProjectName = '';
   newProjectDesc = '';
@@ -280,7 +292,8 @@ export class App implements OnInit {
     private coachService: CoachService,
     private githubService: GitHubService,
     private systemService: SystemService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private elRef: ElementRef
   ) {}
 
   async ngOnInit() {
@@ -331,6 +344,7 @@ export class App implements OnInit {
     this.loadCoachMessages();
     this.loadGitHubStatus();
     this.fetchSystemTelemetry();
+    this.elRef.nativeElement.setAttribute('data-theme', this.isDarkMode() ? 'dark' : 'light');
   }
 
 

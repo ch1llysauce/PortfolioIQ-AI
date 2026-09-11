@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface RecommendedProject {
   id: string;
@@ -53,7 +54,7 @@ export interface OptimizationRequest {
   providedIn: 'root'
 })
 export class OptimizationService {
-  private apiUrl = 'http://127.0.0.1:8000/api/optimization';
+  private apiUrl = `${environment.apiUrl}/api/optimization`;
 
   constructor(private http: HttpClient) {}
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SkillGapRequest {
   user_skills: string[];
@@ -54,7 +55,7 @@ export interface ResumeParseResponse {
   providedIn: 'root'
 })
 export class AnalyticsService {
-  private apiUrl = 'http://127.0.0.1:8000/api/analytics';
+  private apiUrl = `${environment.apiUrl}/api/analytics`;
 
   constructor(private http: HttpClient) {}
 

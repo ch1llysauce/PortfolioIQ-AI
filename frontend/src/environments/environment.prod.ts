@@ -1,10 +1,10 @@
 export const environment = {
-    production: false,
+    production: true,
 
     supabase: {
         url: 'https://rigtwkuypixwwontbckr.supabase.co',
         key: 'sb_publishable_QIey49CoZgkEXn_yg8RhbQ_SXjTwSmh'
     },
 
-    apiUrl: 'http://127.0.0.1:8000'
+    apiUrl: 'https://portfolioiq-backend.onrender.com'
 };

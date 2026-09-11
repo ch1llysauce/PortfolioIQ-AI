@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SubsystemDetail {
   name: string;
@@ -42,7 +43,7 @@ export interface SystemTelemetryResponse {
   providedIn: 'root'
 })
 export class SystemService {
-  private apiUrl = 'http://127.0.0.1:8000/api/system';
+  private apiUrl = `${environment.apiUrl}/api/system`;
 
   constructor(private http: HttpClient) {}
 

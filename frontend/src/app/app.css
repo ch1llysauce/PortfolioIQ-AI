@@ -3293,6 +3293,12 @@
   margin-bottom: 24px;
 }
 
+.knowledge-header-card .card-header {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 .view-mode-tabs {
   display: flex;
   gap: 8px;
@@ -10231,15 +10237,14 @@
 }
 
 .profile-btn-signout {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #f87171;
+  color: #991b1b;
 }
 
 .profile-btn-signout:hover {
   background: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.6);
-  color: #fca5a5;
   transform: translateY(-1px);
 }
 
@@ -10950,4 +10955,1393 @@
   .onboarding-footer {
     padding: 12px 14px 16px;
   }
+}
+
+
+/* ==========================================================================
+   LIGHT MODE THEME (data-theme="light")
+   ========================================================================== */
+:host([data-theme="light"]) {
+  --bg-primary: #f1f5f9;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --accent-primary: #6366f1;
+  --accent-hover: #4f46e5;
+  --success-color: #059669;
+  --danger-color: #dc2626;
+  --warning-color: #d97706;
+  --border-color: #e2e8f0;
+}
+
+/* Sidebar */
+:host([data-theme="light"]) .sidebar {
+  background: #ffffff;
+  border-right-color: #e2e8f0;
+}
+:host([data-theme="light"]) .nav-item { color: #475569; }
+:host([data-theme="light"]) .nav-item:hover { background: #f1f5f9; color: #0f172a; }
+:host([data-theme="light"]) .nav-item.active { background: #6366f1; color: #fff; }
+:host([data-theme="light"]) .nav-svg { stroke: #64748b; }
+:host([data-theme="light"]) .nav-item:hover .nav-svg { stroke: #0f172a; }
+:host([data-theme="light"]) .nav-item.active .nav-svg { stroke: #fff !important; }
+:host([data-theme="light"]) .logo-accent { color: #6366f1; }
+
+/* Header */
+:host([data-theme="light"]) .top-header {
+  background: #ffffff;
+  border-bottom-color: #e2e8f0;
+}
+:host([data-theme="light"]) .header-title h1 { color: #0f172a; }
+:host([data-theme="light"]) .user-profile-badge {
+  background: #f8fafc;
+  border-color: rgba(99,102,241,0.2);
+}
+:host([data-theme="light"]) .user-display-name { color: #0f172a; }
+:host([data-theme="light"]) .user-email-subtitle { color: #64748b; }
+:host([data-theme="light"]) .header-signout-btn {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+:host([data-theme="light"]) .header-signout-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* Cards */
+:host([data-theme="light"]) .card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+:host([data-theme="light"]) .card-header { border-bottom-color: #e2e8f0; }
+:host([data-theme="light"]) .card-header h2 { color: #0f172a; }
+
+/* Content area */
+:host([data-theme="light"]) .content-container { background: #f1f5f9; }
+:host([data-theme="light"]) .main-wrapper { background: #f1f5f9; }
+
+/* Health card */
+:host([data-theme="light"]) .health-hero-display {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .score-number { color: #6366f1; }
+:host([data-theme="light"]) .score-max { color: #64748b; }
+:host([data-theme="light"]) .sub-metric-item { color: #475569; border-bottom-color: #f1f5f9; }
+:host([data-theme="light"]) .sub-val { color: #0f172a; }
+:host([data-theme="light"]) .progress-bar-bg { background: #e2e8f0; }
+
+/* Stat boxes */
+:host([data-theme="light"]) .stat-box { background: #f8fafc; border-color: #e2e8f0; }
+:host([data-theme="light"]) .stat-box:hover { border-color: #6366f1; }
+:host([data-theme="light"]) .stat-num { color: #6366f1; }
+:host([data-theme="light"]) .stat-label { color: #64748b; }
+
+/* Eval items */
+:host([data-theme="light"]) .eval-item-success { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+:host([data-theme="light"]) .eval-item-danger { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+/* Forms */
+:host([data-theme="light"]) .form-input,
+:host([data-theme="light"]) .form-select,
+:host([data-theme="light"]) .form-textarea {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+:host([data-theme="light"]) .form-input:focus,
+:host([data-theme="light"]) .form-select:focus,
+:host([data-theme="light"]) .form-textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}
+:host([data-theme="light"]) .form-label { color: #475569; }
+
+/* Project cards */
+:host([data-theme="light"]) .project-glass-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .project-glass-card:hover {
+  border-color: rgba(99,102,241,0.4);
+  box-shadow: 0 8px 20px rgba(99,102,241,0.1);
+}
+:host([data-theme="light"]) .proj-title { color: #0f172a; }
+:host([data-theme="light"]) .proj-tech-stack-section {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .modern-tech-chip {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+:host([data-theme="light"]) .modern-tech-chip:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+:host([data-theme="light"]) .proj-card-footer { border-top-color: #e2e8f0; }
+
+/* Filter pills */
+:host([data-theme="light"]) .filter-pill {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+:host([data-theme="light"]) .filter-pill:hover { color: #0f172a; border-color: #94a3b8; }
+:host([data-theme="light"]) .filter-pill.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+
+/* Search inputs */
+:host([data-theme="light"]) .project-search-input,
+:host([data-theme="light"]) .gh-repo-search-input,
+:host([data-theme="light"]) .skill-search-input {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Modals */
+:host([data-theme="light"]) .modal-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+:host([data-theme="light"]) .modal-header { border-bottom-color: #e2e8f0; }
+:host([data-theme="light"]) .modal-header h2 { color: #0f172a; }
+:host([data-theme="light"]) .modal-footer { border-top-color: #e2e8f0; }
+:host([data-theme="light"]) .modal-backdrop { background: rgba(15,23,42,0.5); }
+
+/* Auth modal */
+:host([data-theme="light"]) .auth-tabs { border-bottom-color: #e2e8f0; }
+:host([data-theme="light"]) .auth-tab-btn { color: #64748b; }
+:host([data-theme="light"]) .auth-tab-btn.active { color: #6366f1; border-bottom-color: #6366f1; }
+:host([data-theme="light"]) .auth-modal-footer { color: #64748b; }
+
+/* Sidebar backdrop */
+:host([data-theme="light"]) .sidebar-backdrop { background: rgba(15,23,42,0.4); }
+
+/* Alerts */
+:host([data-theme="light"]) .alert-info {
+  background: #eef2ff;
+  border-color: rgba(99,102,241,0.3);
+  color: #3730a3;
+}
+:host([data-theme="light"]) .alert-danger {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+:host([data-theme="light"]) .alert-success {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+:host([data-theme="light"]) .alert-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+/* Badges */
+:host([data-theme="light"]) .badge-primary { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+:host([data-theme="light"]) .badge-success { background: #f0fdf4; color: #166534; border-color: #86efac; }
+:host([data-theme="light"]) .badge-warning { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+:host([data-theme="light"]) .badge-secondary { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
+/* Skill cards */
+:host([data-theme="light"]) .user-skill-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .user-skill-card:hover { border-color: rgba(99,102,241,0.4); }
+:host([data-theme="light"]) .user-skill-name { color: #0f172a; }
+:host([data-theme="light"]) .user-skill-count-pill {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+
+/* GitHub cards */
+:host([data-theme="light"]) .gh-search-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color: rgba(99,102,241,0.2);
+}
+:host([data-theme="light"]) .gh-hero-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-color: rgba(99,102,241,0.25);
+}
+:host([data-theme="light"]) .gh-repo-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-repo-card:hover { border-color: rgba(99,102,241,0.4); }
+:host([data-theme="light"]) .gh-repo-name { color: #0f172a; }
+:host([data-theme="light"]) .gh-repo-desc { color: #475569; }
+:host([data-theme="light"]) .gh-stat-box { background: #f8fafc; border-color: #e2e8f0; }
+:host([data-theme="light"]) .gh-stat-number { color: #0f172a; }
+:host([data-theme="light"]) .gh-stat-label { color: #64748b; }
+:host([data-theme="light"]) .gh-input-wrapper {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+:host([data-theme="light"]) .gh-username-input { color: #0f172a; }
+:host([data-theme="light"]) .gh-input-icon { color: #94a3b8; }
+
+/* Coach */
+:host([data-theme="light"]) .coach-top-bar {
+  background: rgba(255,255,255,0.9);
+  border-bottom-color: #e2e8f0;
+}
+:host([data-theme="light"]) .coach-title { color: #0f172a; }
+:host([data-theme="light"]) .chat-message-stream { background: #f8fafc; }
+:host([data-theme="light"]) .assistant-row .chat-bubble { color: #1e293b; }
+:host([data-theme="light"]) .chat-rendered-markdown { color: #1e293b; }
+:host([data-theme="light"]) .chat-rendered-markdown strong { color: #0f172a; }
+:host([data-theme="light"]) .chat-input-bar {
+  background: rgba(255,255,255,0.95);
+  border-top-color: #e2e8f0;
+}
+:host([data-theme="light"]) .chat-input-capsule {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+:host([data-theme="light"]) .chat-input-field { color: #0f172a; }
+:host([data-theme="light"]) .chat-input-field::placeholder { color: #94a3b8; }
+:host([data-theme="light"]) .prompt-chip {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+:host([data-theme="light"]) .prompt-chip:hover { background: #e0e7ff; color: #3730a3; }
+
+/* Career */
+:host([data-theme="light"]) .career-role-card,
+:host([data-theme="light"]) .optimizer-header-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .career-main-title,
+:host([data-theme="light"]) .optimizer-title { color: #0f172a; }
+:host([data-theme="light"]) .career-subtitle,
+:host([data-theme="light"]) .optimizer-subtext { color: #64748b; }
+:host([data-theme="light"]) .alignment-score-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .career-skill-group {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .budget-pill {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+:host([data-theme="light"]) .budget-pill:hover { border-color: #6366f1; color: #0f172a; }
+:host([data-theme="light"]) .budget-pill.active {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+/* Knowledge */
+:host([data-theme="light"]) .tier-column {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .tier-node-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .tier-node-card:hover { border-color: rgba(99,102,241,0.5); }
+:host([data-theme="light"]) .node-name { color: #0f172a; }
+:host([data-theme="light"]) .node-cat { color: #64748b; }
+:host([data-theme="light"]) .inspector-details-hero { background: #f8fafc; border-color: #e2e8f0; }
+:host([data-theme="light"]) .inspector-panel { background: #ffffff; border-color: #e2e8f0; }
+:host([data-theme="light"]) .panel-item-card { background: #f8fafc; border-color: #e2e8f0; }
+:host([data-theme="light"]) .panel-item-card:hover { border-color: #6366f1; }
+:host([data-theme="light"]) .path-col { background: #f8fafc; border-color: #e2e8f0; }
+
+/* Onboarding */
+:host([data-theme="light"]) .onboarding-modal-card {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-color: rgba(99,102,241,0.25);
+}
+:host([data-theme="light"]) .onboarding-header {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-bottom-color: #e2e8f0;
+}
+:host([data-theme="light"]) .onboarding-title { color: #0f172a; }
+:host([data-theme="light"]) .onboarding-subtitle { color: #475569; }
+:host([data-theme="light"]) .onboarding-role-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .onboarding-role-card:hover {
+  background: #eef2ff;
+  border-color: rgba(99,102,241,0.4);
+}
+:host([data-theme="light"]) .onboarding-role-card.selected {
+  background: #eef2ff;
+  border-color: #6366f1;
+}
+:host([data-theme="light"]) .onboarding-role-title { color: #0f172a; }
+:host([data-theme="light"]) .onboarding-role-card.selected .onboarding-role-title { color: #4338ca; }
+:host([data-theme="light"]) .onboarding-role-desc { color: #64748b; }
+:host([data-theme="light"]) .onboarding-github-section {
+  background: #f1f5f9;
+  border-top-color: #e2e8f0;
+}
+:host([data-theme="light"]) .onboarding-github-label { color: #0f172a; }
+:host([data-theme="light"]) .onboarding-github-input-wrapper {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+:host([data-theme="light"]) .onboarding-github-prefix {
+  color: #94a3b8;
+  border-right-color: #e2e8f0;
+}
+:host([data-theme="light"]) .onboarding-github-input { color: #0f172a !important; }
+:host([data-theme="light"]) .onboarding-footer {
+  background: #f8fafc;
+  border-top-color: #e2e8f0;
+}
+
+/* Profile modal */
+:host([data-theme="light"]) .profile-hero-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-color: rgba(99,102,241,0.2);
+}
+:host([data-theme="light"]) .profile-hero-name { color: #0f172a; }
+:host([data-theme="light"]) .profile-hero-email { color: #64748b; }
+:host([data-theme="light"]) .profile-stat-box { background: #f8fafc; border-color: #e2e8f0; }
+:host([data-theme="light"]) .profile-stat-num { color: #6366f1; }
+:host([data-theme="light"]) .profile-stat-lbl { color: #64748b; }
+:host([data-theme="light"]) .profile-section-card { background: #f8fafc; border-color: #e2e8f0; }
+:host([data-theme="light"]) .profile-section-title { color: #0f172a; }
+:host([data-theme="light"]) .profile-section-sub { color: #64748b; }
+:host([data-theme="light"]) .profile-btn-close {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+/* Toast */
+:host([data-theme="light"]) .toast-item {
+  background: rgba(255,255,255,0.97);
+  border-color: #e2e8f0;
+  color: #0f172a;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* Confirm dialog */
+:host([data-theme="light"]) .confirm-modal-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .confirm-title { color: #0f172a; }
+:host([data-theme="light"]) .confirm-message { color: #475569; }
+
+/* Scrollbars */
+:host([data-theme="light"]) .content-container::-webkit-scrollbar-track,
+:host([data-theme="light"]) .sidebar::-webkit-scrollbar-track { background: #f1f5f9; }
+:host([data-theme="light"]) .content-container::-webkit-scrollbar-thumb,
+:host([data-theme="light"]) .sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+/* Text utilities */
+:host([data-theme="light"]) .text-muted { color: #64748b; }
+:host([data-theme="light"]) .sub-text { color: #64748b; }
+:host([data-theme="light"]) .section-subtitle { color: #64748b; }
+:host([data-theme="light"]) .count-badge { background: #f1f5f9; color: #64748b; }
+
+/* ==========================================================================
+   THEME TOGGLE BUTTON
+   ========================================================================== */
+.theme-toggle-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  opacity: 1;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #c7d2fe;
+  transform: rotate(15deg);
+}
+
+:host([data-theme="light"]) .theme-toggle-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #f59e0b;
+}
+
+:host([data-theme="light"]) .theme-toggle-btn:hover {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #d97706;
+  transform: rotate(15deg);
+}
+
+/* ==========================================================================
+   LIGHT MODE — TARGETED FIXES
+   ========================================================================== */
+
+/* ── General text & headings ── */
+:host([data-theme="light"]) h1,
+:host([data-theme="light"]) h2,
+:host([data-theme="light"]) h3,
+:host([data-theme="light"]) h4 {
+  color: #0f172a;
+}
+:host([data-theme="light"]) p,
+:host([data-theme="light"]) span:not([class*="badge"]):not([class*="btn"]):not([class*="pill"]) {
+  color: inherit;
+}
+:host([data-theme="light"]) {
+  color: #0f172a;
+}
+
+/* ── Skills filter toolbar ── */
+:host([data-theme="light"]) .skills-filter-toolbar {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .skill-search-input {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+:host([data-theme="light"]) .skill-search-box .search-svg-icon {
+  stroke: #94a3b8;
+}
+
+/* ── Skills filter pills ── */
+:host([data-theme="light"]) .skill-filter-pill,
+:host([data-theme="light"]) .filter-pill {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+:host([data-theme="light"]) .skill-filter-pill:hover,
+:host([data-theme="light"]) .filter-pill:hover {
+  color: #0f172a;
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+:host([data-theme="light"]) .skill-filter-pill.active,
+:host([data-theme="light"]) .filter-pill.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #ffffff;
+}
+
+/* ── Project status dropdown ── */
+:host([data-theme="light"]) .select-status-idea {
+  background-color: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #6d28d9;
+}
+:host([data-theme="light"]) .select-status-active {
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #1d4ed8;
+}
+:host([data-theme="light"]) .select-status-completed {
+  background-color: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #065f46;
+}
+:host([data-theme="light"]) .modern-status-select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+:host([data-theme="light"]) .modern-status-select:focus {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* ── Skill cards ── */
+:host([data-theme="light"]) .user-skill-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .user-skill-name { color: #0f172a; }
+:host([data-theme="light"]) .user-skill-count-pill {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+:host([data-theme="light"]) .skill-badge-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+:host([data-theme="light"]) .skill-cat { color: #64748b; }
+:host([data-theme="light"]) .project-tag {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .project-tag-more {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+/* ── Card header h2 explicit fix ── */
+:host([data-theme="light"]) .card-header h2,
+:host([data-theme="light"]) .card-header h3 {
+  color: #0f172a !important;
+}
+
+/* ── Count badge ── */
+:host([data-theme="light"]) .count-badge {
+  background: #e2e8f0;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* ── Skill gap / optimization sections ── */
+:host([data-theme="light"]) .role-summary-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .role-summary-box h4 { color: #6366f1; }
+:host([data-theme="light"]) .role-summary-box p { color: #475569; }
+
+/* ── Empty state text ── */
+:host([data-theme="light"]) .empty-hint,
+:host([data-theme="light"]) .empty-tech-hint { color: #64748b; }
+
+/* ── Section headers in tabs ── */
+:host([data-theme="light"]) .desktop-title,
+:host([data-theme="light"]) .header-title h1 { color: #0f172a; }
+
+/* ── ML Domain AI pill ── */
+:host([data-theme="light"]) .proj-ai-domain-pill {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.06));
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #4338ca;
+}
+:host([data-theme="light"]) .ai-sparkle-svg {
+  stroke: #6366f1;
+}
+:host([data-theme="light"]) .ai-score {
+  color: #6366f1;
+}
+:host([data-theme="light"]) .ai-warning {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #92400e !important;
+}
+:host([data-theme="light"]) .ai-warning .ai-sparkle-svg {
+  stroke: #d97706;
+}
+
+/* ==========================================================================
+   LIGHT MODE — OPTIMIZER & ROADMAP FIXES
+   ========================================================================== */
+
+/* ── Role summary compact box (dark banner) ── */
+:host([data-theme="light"]) .role-summary-box-compact {
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+:host([data-theme="light"]) .role-badge-title { color: #4338ca; }
+:host([data-theme="light"]) .role-desc-text { color: #475569; }
+
+/* ── Architecture highlights box ── */
+:host([data-theme="light"]) .rec-arch-box {
+  background: #f8fafc;
+  border-left-color: #6366f1;
+}
+:host([data-theme="light"]) .rec-arch-box strong { color: #4338ca; }
+:host([data-theme="light"]) .rec-arch-box p { color: #475569; }
+
+/* ── Complementary skill chips ── */
+:host([data-theme="light"]) .chip-complementary {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+:host([data-theme="light"]) .chip-match {
+  background: rgba(5, 150, 105, 0.08);
+  color: #065f46;
+  border-color: rgba(5, 150, 105, 0.25);
+}
+
+/* ── ROI Efficiency badge ── */
+:host([data-theme="light"]) .efficiency-badge { color: #475569; }
+
+/* ── Blueprint switcher pills ── */
+:host([data-theme="light"]) .switcher-pill {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+:host([data-theme="light"]) .switcher-pill:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+:host([data-theme="light"]) .switcher-pill.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #ffffff;
+}
+:host([data-theme="light"]) .switcher-pill.ai-pill.active {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border-color: #c084fc;
+  color: #ffffff;
+}
+
+/* ── Skill progression roadmap ── */
+:host([data-theme="light"]) .skill-roadmap-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .roadmap-title { color: #0f172a; }
+:host([data-theme="light"]) .roadmap-subtitle { color: #64748b; }
+
+/* default node */
+:host([data-theme="light"]) .roadmap-step-node {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+:host([data-theme="light"]) .roadmap-step-node:hover {
+  border-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+:host([data-theme="light"]) .step-skill-text { color: #0f172a; }
+:host([data-theme="light"]) .step-badge-counter { color: #6366f1; }
+
+/* mastered node */
+:host([data-theme="light"]) .roadmap-step-node.node-mastered {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+:host([data-theme="light"]) .roadmap-step-node.node-mastered:hover {
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+:host([data-theme="light"]) .step-skill-text.text-mastered { color: #065f46; }
+:host([data-theme="light"]) .step-badge-counter.badge-mastered { color: #059669; }
+:host([data-theme="light"]) .check-mini-svg { color: #059669; }
+:host([data-theme="light"]) .step-verified-tag {
+  background: rgba(5, 150, 105, 0.1);
+  color: #065f46;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+/* priority / milestone node */
+:host([data-theme="light"]) .roadmap-step-node.priority-node {
+  background: linear-gradient(135deg, #fefce8 0%, #fffbeb 100%);
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: 0 2px 10px rgba(217, 119, 6, 0.1);
+}
+:host([data-theme="light"]) .priority-node .step-badge-counter { color: #b45309; }
+:host([data-theme="light"]) .step-status-tag {
+  background: rgba(217, 119, 6, 0.1);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+:host([data-theme="light"]) .step-cat-tag {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+/* connector arrows */
+:host([data-theme="light"]) .roadmap-connector { color: #94a3b8; }
+:host([data-theme="light"]) .roadmap-connector.connector-mastered { color: #059669; }
+
+/* roadmap legend */
+:host([data-theme="light"]) .roadmap-completion-tag {
+  background: #eef2ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+}
+
+/* ── ROI Efficiency badge background fix ── */
+:host([data-theme="light"]) .efficiency-badge {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+/* ── Roadmap card & pipeline container ── */
+:host([data-theme="light"]) .skill-roadmap-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .roadmap-title { color: #0f172a; }
+:host([data-theme="light"]) .roadmap-subtitle { color: #64748b; }
+
+:host([data-theme="light"]) .roadmap-pipeline-flow {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+/* ── Legend chips ── */
+:host([data-theme="light"]) .legend-chip.legend-mastered {
+  background: rgba(5, 150, 105, 0.1);
+  color: #065f46;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+:host([data-theme="light"]) .legend-chip.legend-gap {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* ── Steps count & completion tag ── */
+:host([data-theme="light"]) .roadmap-steps-count {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+:host([data-theme="light"]) .roadmap-completion-tag {
+  background: rgba(14, 165, 233, 0.08);
+  color: #0284c7;
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+/* ==========================================================================
+   LIGHT MODE — KNOWLEDGE GRAPH FIXES
+   ========================================================================== */
+
+/* ── Tab switcher container ── */
+:host([data-theme="light"]) .view-mode-tabs {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .view-mode-btn {
+  color: #475569;
+}
+:host([data-theme="light"]) .view-mode-btn:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+:host([data-theme="light"]) .view-mode-btn.active {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+/* ── Role pills ── */
+:host([data-theme="light"]) .role-pill {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+:host([data-theme="light"]) .role-pill:hover {
+  border-color: #6366f1;
+  color: #0f172a;
+  background: #eef2ff;
+}
+:host([data-theme="light"]) .role-pill.active {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+/* ── Role overview hero ── */
+:host([data-theme="light"]) .role-overview-hero {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+:host([data-theme="light"]) .role-hero-title { color: #0f172a; }
+:host([data-theme="light"]) .role-hero-sub { color: #475569; }
+
+/* ==========================================================================
+   LIGHT MODE — LEARNING PATH & PREREQUISITE CARD TEXT FIXES
+   ========================================================================== */
+
+/* ── Path column containers ── */
+:host([data-theme="light"]) .path-col {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .path-col h4 { color: #0f172a; }
+
+/* ── Path item rows ── */
+:host([data-theme="light"]) .path-item {
+  border-radius: 8px;
+}
+:host([data-theme="light"]) .path-item.acquired {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.25);
+}
+:host([data-theme="light"]) .path-item.missing {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.25);
+}
+:host([data-theme="light"]) .path-item.acquired.clickable-path-item:hover {
+  background: rgba(5, 150, 105, 0.14);
+  border-color: rgba(5, 150, 105, 0.45);
+}
+:host([data-theme="light"]) .path-item.missing.clickable-path-item:hover {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.45);
+}
+
+/* ── Skill name text inside path items ── */
+:host([data-theme="light"]) .path-skill-name,
+:host([data-theme="light"]) .path-item span { color: #0f172a; }
+
+/* ── Mastered badge inside acquired row ── */
+:host([data-theme="light"]) .path-item.acquired .badge-success {
+  background: rgba(5, 150, 105, 0.12);
+  color: #065f46;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+/* ── Required First / missing badge ── */
+:host([data-theme="light"]) .path-item.missing .badge-warning,
+:host([data-theme="light"]) .path-item.missing .badge {
+  background: rgba(217, 119, 6, 0.1);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+/* ── Path inspect arrow ── */
+:host([data-theme="light"]) .path-inspect-arrow { color: #94a3b8; }
+:host([data-theme="light"]) .clickable-path-item:hover .path-inspect-arrow { color: #6366f1; }
+
+/* ── Prereq pills ── */
+:host([data-theme="light"]) .prereq-pill {
+  background: rgba(217, 119, 6, 0.08);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+:host([data-theme="light"]) .prereq-label { color: #64748b; }
+
+/* ── Missing prereq step text — step label amber, skill name dark ── */
+:host([data-theme="light"]) .path-item.missing > span {
+  color: #0f172a;
+}
+:host([data-theme="light"]) .path-item.missing > span strong {
+  color: #b45309;
+}
+
+/* ── Acquired prereq skill name — dark text, not green ── */
+:host([data-theme="light"]) .path-item.acquired .path-skill-name,
+:host([data-theme="light"]) .path-item.acquired > span {
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   LIGHT MODE — RESUME & ATS HUB FIXES
+   ========================================================================== */
+
+/* ── Saved resume banner card ── */
+:host([data-theme="light"]) .saved-resume-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+:host([data-theme="light"]) .saved-resume-title { color: #0f172a; }
+:host([data-theme="light"]) .saved-resume-card .text-muted { color: #64748b; }
+
+/* ── ATS score card ── */
+:host([data-theme="light"]) .resume-ats-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+  border-color: rgba(5, 150, 105, 0.25);
+}
+:host([data-theme="light"]) .ats-score-display {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+/* ── ATS score circle ── */
+:host([data-theme="light"]) .ats-score-circle {
+  background: radial-gradient(circle, rgba(5, 150, 105, 0.15) 0%, #ffffff 100%);
+  border-color: #059669;
+  box-shadow: 0 0 16px rgba(5, 150, 105, 0.15);
+}
+:host([data-theme="light"]) .ats-score-num { color: #065f46; }
+:host([data-theme="light"]) .ats-score-denom { color: #64748b; }
+
+/* ── ATS verdict & metrics ── */
+:host([data-theme="light"]) .ats-score-verdict strong { color: #0f172a; }
+:host([data-theme="light"]) .metric-row { color: #475569; }
+
+/* ── Resume alignment card (match ratio side) ── */
+:host([data-theme="light"]) .resume-alignment-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+:host([data-theme="light"]) .resume-ats-card h4,
+:host([data-theme="light"]) .resume-alignment-card h4 {
+  color: #0f172a !important;
+}
+
+/* ==========================================================================
+   LIGHT MODE — COACH, CHAT, MARKDOWN & TABLES
+   ========================================================================== */
+
+/* ── Coach top bar ── */
+:host([data-theme="light"]) .coach-top-bar {
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom-color: #e2e8f0;
+  backdrop-filter: none;
+}
+:host([data-theme="light"]) .coach-title { color: #0f172a; }
+:host([data-theme="light"]) .coach-subtitle { color: #64748b; }
+
+/* ── Live model pill ── */
+:host([data-theme="light"]) .live-model-pill {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #065f46;
+}
+:host([data-theme="light"]) .live-dot {
+  background: #059669;
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.6);
+}
+
+/* ── Coach action buttons (Critique, Blueprints) ── */
+:host([data-theme="light"]) .coach-action-btn {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+:host([data-theme="light"]) .coach-action-btn:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+/* ── Coach icon buttons (+, clear) ── */
+:host([data-theme="light"]) .coach-icon-btn {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+:host([data-theme="light"]) .coach-icon-btn:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+:host([data-theme="light"]) .coach-icon-btn.coach-clear-btn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* ── Chat message stream ── */
+:host([data-theme="light"]) .chat-message-stream { background: #f8fafc; }
+
+/* ── Assistant bubble text ── */
+:host([data-theme="light"]) .assistant-row .chat-bubble { color: #1e293b; }
+:host([data-theme="light"]) .chat-rendered-markdown { color: #1e293b; }
+:host([data-theme="light"]) .chat-rendered-markdown strong { color: #0f172a; }
+:host([data-theme="light"]) .chat-rendered-markdown .chat-h2,
+:host([data-theme="light"]) .chat-rendered-markdown .chat-h3,
+:host([data-theme="light"]) .chat-rendered-markdown .chat-h4 { color: #0f172a; }
+:host([data-theme="light"]) .chat-rendered-markdown .chat-numbered-heading { color: #0f172a; }
+:host([data-theme="light"]) .chat-rendered-markdown .star-label { color: #0284c7; }
+:host([data-theme="light"]) .chat-rendered-markdown .chat-li,
+:host([data-theme="light"]) .chat-rendered-markdown .chat-oli { color: #334155; }
+
+/* ── User bubble stays indigo ── */
+:host([data-theme="light"]) .user-row .chat-bubble {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+}
+:host([data-theme="light"]) .user-row .chat-rendered-markdown { color: #ffffff; }
+
+/* ── Code blocks ── */
+:host([data-theme="light"]) .chat-code-block {
+  background: #1e293b;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+:host([data-theme="light"]) .chat-code-header {
+  background: #0f172a;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+:host([data-theme="light"]) .chat-code-header .code-lang-label { color: #94a3b8; }
+:host([data-theme="light"]) .chat-code-block pre { color: #e2e8f0; }
+:host([data-theme="light"]) .copy-code-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+:host([data-theme="light"]) .copy-code-btn:hover { color: #f8fafc; }
+
+/* ── Markdown tables ── */
+:host([data-theme="light"]) .chat-table-wrapper {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+:host([data-theme="light"]) .chat-table th {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .chat-table td {
+  color: #334155;
+  border-color: #e2e8f0;
+  background: #ffffff;
+}
+:host([data-theme="light"]) .chat-table tbody tr:nth-child(even) td {
+  background: #f8fafc;
+}
+:host([data-theme="light"]) .chat-table tbody tr:hover td {
+  background: #eef2ff;
+}
+
+/* ── Chat input bar ── */
+:host([data-theme="light"]) .chat-input-bar {
+  background: rgba(255, 255, 255, 0.98);
+  border-top-color: #e2e8f0;
+}
+:host([data-theme="light"]) .chat-input-textarea {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+:host([data-theme="light"]) .chat-input-textarea:focus {
+  border-color: #6366f1;
+}
+:host([data-theme="light"]) .chat-input-textarea::placeholder { color: #94a3b8; }
+
+/* ==========================================================================
+   LIGHT MODE — GITHUB SCANNER SECTION
+   ========================================================================== */
+
+/* ── Profile hero card ── */
+:host([data-theme="light"]) .gh-hero-card,
+:host([data-theme="light"]) .gh-search-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-name-row,
+:host([data-theme="light"]) .gh-profile-info { color: #0f172a; }
+:host([data-theme="light"]) .gh-username { color: #6366f1; }
+:host([data-theme="light"]) .gh-bio { color: #475569; }
+:host([data-theme="light"]) .gh-meta { color: #64748b; }
+
+/* ── Stat boxes ── */
+:host([data-theme="light"]) .gh-stat-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-stat-number { color: #0f172a; }
+:host([data-theme="light"]) .gh-stat-label { color: #64748b; }
+
+/* ── Analysis cards (Language Distribution, Tech Stack) ── */
+:host([data-theme="light"]) .gh-analysis-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-card-title-row h3 { color: #0f172a; }
+:host([data-theme="light"]) .gh-card-desc { color: #64748b; }
+:host([data-theme="light"]) .gh-header-badge {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+:host([data-theme="light"]) .gh-header-badge.primary {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #1d4ed8;
+}
+
+/* ── Language distribution bar track ── */
+:host([data-theme="light"]) .gh-multi-lang-bar {
+  background: #e2e8f0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+:host([data-theme="light"]) .gh-lang-name { color: #0f172a; }
+:host([data-theme="light"]) .gh-lang-pct { color: #475569; }
+:host([data-theme="light"]) .gh-lang-count { color: #94a3b8; }
+
+/* ── Language insights chips (Primary Stack, Ecosystem Focus, Total Codebases) ── */
+:host([data-theme="light"]) .gh-lang-insights-row {
+  border-top-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-lang-stat-chip {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .stat-chip-label { color: #64748b; }
+:host([data-theme="light"]) .stat-chip-value { color: #0f172a; }
+
+/* ── Tech tags (Extracted Tech Stack) ── */
+:host([data-theme="light"]) .gh-tech-tag {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.25);
+  color: #065f46;
+}
+:host([data-theme="light"]) .tech-badge {
+  background: rgba(5, 150, 105, 0.12);
+  color: #065f46;
+}
+:host([data-theme="light"]) .gh-skills-card-footer {
+  border-top-color: #e2e8f0;
+}
+
+/* ── Repo filter toolbar ── */
+:host([data-theme="light"]) .gh-repo-filter-toolbar {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-repo-search-input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+:host([data-theme="light"]) .gh-repo-search-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* ── Repo filter pills ── */
+:host([data-theme="light"]) .gh-filter-pill {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+:host([data-theme="light"]) .gh-filter-pill:hover {
+  border-color: #6366f1;
+  color: #4338ca;
+}
+:host([data-theme="light"]) .gh-filter-pill.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #ffffff;
+}
+
+/* ── Domain filter select ── */
+:host([data-theme="light"]) .gh-domain-select {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* ── Repo cards ── */
+:host([data-theme="light"]) .gh-repo-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-repo-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+:host([data-theme="light"]) .gh-repo-name { color: #0f172a; }
+:host([data-theme="light"]) .gh-repo-desc { color: #475569; }
+:host([data-theme="light"]) .gh-repo-card-footer {
+  border-top-color: #f1f5f9;
+}
+
+/* ==========================================================================
+   LIGHT MODE — GITHUB QUICK CHIPS, REPO STATS, LANG TAG, DOMAIN PILL
+   ========================================================================== */
+
+/* ── Quick scan chips ── */
+:host([data-theme="light"]) .gh-chip {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+:host([data-theme="light"]) .gh-chip:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+:host([data-theme="light"]) .quick-chip-label { color: #475569; }
+
+/* ── Repo card: star/fork stats ── */
+:host([data-theme="light"]) .gh-meta-pill {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+:host([data-theme="light"]) .gh-repo-fork-badge {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* ── Repo language tag (TypeScript bar + text) ── */
+:host([data-theme="light"]) .gh-repo-lang-tag,
+:host([data-theme="light"]) .repo-lang-name,
+:host([data-theme="light"]) .gh-lang-tag { color: #334155; }
+
+/* ── Repo domain/ML pill ── */
+:host([data-theme="light"]) .gh-repo-domain-pill,
+:host([data-theme="light"]) .gh-domain-pill,
+:host([data-theme="light"]) .repo-domain-badge {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.25);
+  color: #4338ca;
+}
+
+/* ── Repos header ── */
+:host([data-theme="light"]) .gh-repos-header-info h3 { color: #0f172a; }
+
+/* ── Repo cards full fix ── */
+:host([data-theme="light"]) .gh-repo-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .gh-repo-name { color: #0f172a; }
+:host([data-theme="light"]) .gh-repo-desc { color: #64748b; }
+:host([data-theme="light"]) .gh-repo-link-icon { color: #6366f1; }
+
+/* ── Hero card telemetry border ── */
+:host([data-theme="light"]) .gh-telemetry-grid {
+  border-top-color: #e2e8f0;
+}
+
+/* ── Repo language pill & ML category badge ── */
+:host([data-theme="light"]) .gh-lang-pill {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+:host([data-theme="light"]) .gh-ml-category-badge {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #4338ca;
+}
+
+/* ── Password requirements box ── */
+:host([data-theme="light"]) .password-rules-list {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .password-rule-item {
+  color: #64748b;
+}
+:host([data-theme="light"]) .password-rule-item.rule-valid {
+  color: #059669;
+}
+
+/* ==========================================================================
+   LIGHT MODE — HEALTH SCORE MODAL, PASSWORD ERROR, KNOWLEDGE INSPECTOR
+   ========================================================================== */
+
+/* ── Health score modal formula banner ── */
+:host([data-theme="light"]) .score-formula-banner {
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+:host([data-theme="light"]) .formula-label { color: #4338ca; }
+:host([data-theme="light"]) .formula-math { color: #0f172a; }
+:host([data-theme="light"]) .formula-math strong { color: #0284c7; }
+
+/* ── Rubric cards (Skill Coverage, Project Volume, etc.) ── */
+:host([data-theme="light"]) .rubric-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .rubric-title { color: #0f172a; }
+:host([data-theme="light"]) .rubric-desc { color: #475569; }
+:host([data-theme="light"]) .rubric-formula-box {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .rubric-formula-box code { color: #4338ca; }
+:host([data-theme="light"]) .rubric-rule { color: #64748b; }
+
+/* ── pts max badge ── */
+:host([data-theme="light"]) .pts-max-badge,
+:host([data-theme="light"]) [class*="pts-max"] {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+/* ── Role alignment info card (bottom gray box) ── */
+:host([data-theme="light"]) .role-alignment-info-card {
+  background: #f1f5f9;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+:host([data-theme="light"]) .role-alignment-info-card strong { color: #4338ca; }
+:host([data-theme="light"]) .role-alignment-info-card .sub-text { color: #475569; }
+
+/* ── Password error alert ── */
+:host([data-theme="light"]) .password-error-alert {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #991b1b;
+}
+:host([data-theme="light"]) .password-error-alert svg { stroke: #dc2626; }
+
+/* ── Knowledge inspector — Explore Skill Connections label ── */
+:host([data-theme="light"]) .knowledge-search-label { color: #0f172a; }
+:host([data-theme="light"]) .modern-knowledge-select {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* ── Tier columns (tree-tiers-grid) ── */
+:host([data-theme="light"]) .tier-column {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .tier-header h4 { color: #0f172a; }
+:host([data-theme="light"]) .tier-subtitle { color: #64748b; }
+
+/* ── Tier node cards (Docker, TypeScript, etc.) ── */
+:host([data-theme="light"]) .tier-node-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:host([data-theme="light"]) .tier-node-card:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: #eef2ff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+:host([data-theme="light"]) .tier-node-card:hover .node-name { color: #4338ca; }
+:host([data-theme="light"]) .node-name { color: #0f172a; }
+:host([data-theme="light"]) .node-cat { color: #64748b; }
+:host([data-theme="light"]) .prereqs-box { border-top-color: #f1f5f9; }
+
+/* ── Tier badges ── */
+:host([data-theme="light"]) .tier-badge.foundational {
+  background: rgba(5, 150, 105, 0.1);
+  color: #065f46;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+:host([data-theme="light"]) .tier-badge.intermediate {
+  background: rgba(2, 132, 199, 0.1);
+  color: #0369a1;
+  border-color: rgba(2, 132, 199, 0.3);
+}
+:host([data-theme="light"]) .tier-badge.advanced {
+  background: rgba(124, 58, 237, 0.1);
+  color: #6d28d9;
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+/* ── Empty tier box ── */
+:host([data-theme="light"]) .empty-tier-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+/* ── Inspector details hero ── */
+:host([data-theme="light"]) .inspector-details-hero {
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
