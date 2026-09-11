@@ -6961,7 +6961,7 @@
   }
 
   .content-container {
-    padding: 16px 12px 16px 12px;
+    padding: 16px 12px calc(16px + env(safe-area-inset-bottom, 60px)) 12px;
   }
 
   .dashboard-grid-layout {
@@ -12376,4 +12376,60 @@
 :host([data-theme="light"]) .inspector-details-hero {
   background: #f8fafc;
   border-color: #e2e8f0;
+}
+
+/* ==========================================================================
+   MOBILE BOTTOM SPACING & SMALL SCREEN FIXES
+   ========================================================================== */
+
+/* Ensure last card has breathing room above mobile browser nav bar */
+@media (max-width: 768px) {
+  .tab-pane > :last-child,
+  .content-container > .tab-pane > *:last-child {
+    margin-bottom: 24px;
+  }
+
+  /* Profile modal footer — stack on very small screens */
+  .profile-modal-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .profile-modal-footer .profile-btn-signout {
+    order: 3;
+    width: 100%;
+  }
+  .profile-modal-footer .profile-footer-actions {
+    width: 100%;
+    justify-content: stretch;
+    gap: 8px;
+  }
+  .profile-modal-footer .profile-footer-actions .profile-btn {
+    flex: 1;
+  }
+
+  /* Modal cards — extra bottom padding for safe area */
+  .modal-card {
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  }
+
+  /* Chat input bar safe area */
+  .chat-input-bar {
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  }
+}
+
+/* Optimizer buttons on mobile — full width stack */
+@media (max-width: 480px) {
+  .opt-action-buttons-row {
+    flex-direction: column;
+  }
+  .opt-action-buttons-row .btn {
+    width: 100%;
+  }
+  .run-opt-btn,
+  .generate-ai-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
 }
