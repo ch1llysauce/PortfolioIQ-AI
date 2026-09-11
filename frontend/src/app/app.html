@@ -537,10 +537,19 @@
               </button>
 
               <div class="modern-attach-picker">
-                <select #skillPicker class="form-select form-select-sm" (change)="attachSkillToProject(project.id, skillPicker.value); skillPicker.value=''">
-                  <option value="">+ Attach Skill...</option>
-                  <option *ngFor="let s of skills()" [value]="s.id">{{ s.name }}</option>
-                </select>
+                <div class="attach-skill-search-wrapper">
+                  <input
+                    #attachInput
+                    type="text"
+                    class="form-input form-input-sm attach-skill-search"
+                    placeholder="Search & attach skill..."
+                    [(ngModel)]="projectSkillSearch[project.id]"
+                    (focus)="openSkillPicker(project.id, attachInput)"
+                    (input)="openSkillPicker(project.id, attachInput)"
+                    (blur)="closeSkillPicker()"
+                    autocomplete="off"
+                  />
+                </div>
               </div>
             </div>
 
@@ -3611,4 +3620,21 @@
       <button class="btn btn-primary btn-sm" (click)="closeScoreInfoModal()">Got it</button>
     </div>
   </div>
+</div>
+
+<!-- GLOBAL FIXED SKILL PICKER DROPDOWN PORTAL -->
+<div
+  class="attach-skill-dropdown-portal"
+  *ngIf="activeSkillPickerProjectId() && projectSkillSearch[activeSkillPickerProjectId()!]?.length > 0"
+  [style.top.px]="skillPickerPosition().top"
+  [style.left.px]="skillPickerPosition().left"
+  [style.width.px]="skillPickerPosition().width"
+  (mousedown)="$event.preventDefault()"
+>
+  <div
+    *ngFor="let s of getFilteredAttachSkills(activeSkillPickerProjectId()!) | slice:0:8"
+    class="attach-skill-option"
+    (mousedown)="attachSkillFromPicker(activeSkillPickerProjectId()!, s.id)"
+  >{{ s.name }}</div>
+  <div class="attach-skill-empty" *ngIf="getFilteredAttachSkills(activeSkillPickerProjectId()!).length === 0">No matching skills</div>
 </div>

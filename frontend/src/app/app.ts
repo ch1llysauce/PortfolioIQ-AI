@@ -191,6 +191,60 @@ export class App implements OnInit {
   skillsSubView = signal<'my-skills' | 'catalog'>('my-skills');
   skillSearchQuery = signal<string>('');
   skillCategoryFilter = signal<string>('all');
+  projectSkillSearch: { [projectId: string]: string } = {};
+
+  getFilteredAttachSkills(projectId: string): { id: string; name: string }[] {
+    const q = (this.projectSkillSearch[projectId] || '').toLowerCase().trim();
+    const attached = new Set((this.projects().find(p => p.id === projectId)?.project_skills || []).map((ps: any) => ps.skill_id || ps.skills?.id));
+    return this.skills()
+      .filter(s => !attached.has(s.id))
+      .filter(s => !q || s.name.toLowerCase().includes(q));
+  }
+
+  activeSkillPickerProjectId = signal<string | null>(null);
+  skillPickerPosition = signal<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
+  private activeSkillInputEl: HTMLElement | null = null;
+  private skillPickerRafId: number | null = null;
+
+  openSkillPicker(projectId: string, inputEl: HTMLElement) {
+    this.activeSkillInputEl = inputEl;
+    this.updateSkillPickerPosition(inputEl);
+    this.activeSkillPickerProjectId.set(projectId);
+    this.startSkillPickerTracking();
+  }
+
+  private startSkillPickerTracking() {
+    if (this.skillPickerRafId) cancelAnimationFrame(this.skillPickerRafId);
+    const track = () => {
+      if (this.activeSkillInputEl && this.activeSkillPickerProjectId()) {
+        this.updateSkillPickerPosition(this.activeSkillInputEl);
+        this.skillPickerRafId = requestAnimationFrame(track);
+      }
+    };
+    this.skillPickerRafId = requestAnimationFrame(track);
+  }
+
+  private updateSkillPickerPosition(inputEl: HTMLElement) {
+    const rect = inputEl.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow < 200 ? rect.top - 184 : rect.bottom + 4;
+    this.skillPickerPosition.set({ top, left: rect.left, width: rect.width });
+  }
+
+  closeSkillPicker() {
+    this.activeSkillPickerProjectId.set(null);
+    this.activeSkillInputEl = null;
+    if (this.skillPickerRafId) {
+      cancelAnimationFrame(this.skillPickerRafId);
+      this.skillPickerRafId = null;
+    }
+  }
+
+  attachSkillFromPicker(projectId: string, skillId: string) {
+    this.attachSkillToProject(projectId, skillId);
+    this.projectSkillSearch[projectId] = '';
+    this.closeSkillPicker();
+  }
 
   // Resume Parser Operations
   resumeParsing = signal<boolean>(false);

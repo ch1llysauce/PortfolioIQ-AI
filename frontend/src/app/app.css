@@ -870,8 +870,6 @@
 
 .project-glass-card {
   background: rgba(23, 33, 53, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 20px;
@@ -881,6 +879,7 @@
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   position: relative;
+  overflow: visible;
 }
 
 .project-glass-card:hover {
@@ -12487,4 +12486,88 @@
     align-items: center !important;
     justify-content: center !important;
   }
+}
+
+/* ==========================================================================
+   ATTACH SKILL SEARCH PICKER
+   ========================================================================== */
+.attach-skill-search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.attach-skill-search {
+  width: 100%;
+  font-size: 0.82rem !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+}
+
+.attach-skill-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.attach-skill-option {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.attach-skill-option:hover {
+  background: var(--bg-active-subtle, rgba(99, 102, 241, 0.12));
+  color: var(--accent-primary);
+}
+
+.attach-skill-empty {
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* Light mode */
+:host([data-theme="light"]) .attach-skill-dropdown {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+:host([data-theme="light"]) .attach-skill-option { color: #0f172a; }
+:host([data-theme="light"]) .attach-skill-option:hover {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+/* ==========================================================================
+   GLOBAL FIXED SKILL PICKER DROPDOWN PORTAL
+   ========================================================================== */
+.attach-skill-dropdown-portal {
+  position: fixed;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 99999;
+  overflow: hidden;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+:host([data-theme="light"]) .attach-skill-dropdown-portal {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
