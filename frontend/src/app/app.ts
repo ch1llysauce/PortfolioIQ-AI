@@ -294,7 +294,13 @@ export class App implements OnInit {
     private systemService: SystemService,
     private sanitizer: DomSanitizer,
     private elRef: ElementRef
-  ) {}
+  ) {
+    // Apply theme immediately so auth modal renders with correct theme
+    if (typeof localStorage !== 'undefined') {
+      const theme = localStorage.getItem('portfolioiq_theme') !== 'light' ? 'dark' : 'light';
+      this.elRef.nativeElement.setAttribute('data-theme', theme);
+    }
+  }
 
   async ngOnInit() {
     this.checkBackendHealth();
@@ -1169,7 +1175,6 @@ export class App implements OnInit {
     this.verifiedGitHubUsername.set(null);
     this.isGitHubOAuthVerified.set(false);
     this.devBypassActive.set(false);
-    localStorage.removeItem('portfolioiq_dev_oauth_bypass');
     this.githubUsername = '';
     this.githubScanData.set(null);
     this.projects.set([]);
@@ -1177,10 +1182,20 @@ export class App implements OnInit {
     this.skillGap.set(null);
     this.strengthsList.set([]);
     this.weaknessesList.set([]);
+    this.optimizationResult.set(null);
+    this.customAiBlueprint.set(null);
     this.resumeData.set(null);
     this.savedResumeMeta.set(null);
     this.resumePdfUrlSafe.set(null);
     this.showResumeModal.set(false);
+
+    // Clear all portfolioiq keys from localStorage except theme preference
+    if (typeof localStorage !== 'undefined') {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('portfolioiq_') && k !== 'portfolioiq_theme')
+        .forEach(k => localStorage.removeItem(k));
+    }
+
     this.closeAuthModal();
     this.closeProfileModal();
     if (!silent) {

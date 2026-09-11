@@ -1,59 +1,87 @@
-# PortfolioiqFrontend
+# PortfolioIQ AI — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.6.
+Angular 22 frontend for the PortfolioIQ AI platform.
 
-## Development server
+**Live:** [portfolio-iq-ai.vercel.app](https://portfolio-iq-ai.vercel.app)
 
-To start a local development server, run:
+---
+
+## Stack
+
+- Angular 22 (standalone components, signals)
+- TypeScript
+- Supabase JS (auth + database)
+- Tailwind CSS utilities
+
+---
+
+## Local Development
 
 ```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+App runs at `http://localhost:4200`.
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Environment Configuration
 
-```bash
-ng generate component component-name
-```
+| File | Used for |
+|------|----------|
+| `src/environments/environment.ts` | Local development (`localhost:8000`) |
+| `src/environments/environment.prod.ts` | Production (Render backend URL) |
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Angular swaps the file automatically during production builds via `fileReplacements` in `angular.json`.
 
-```bash
-ng generate --help
-```
+---
 
-## Building
-
-To build the project run:
+## Build
 
 ```bash
+# Development
 ng build
+
+# Production
+ng build --configuration=production
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Output goes to `dist/portfolioiq-frontend/browser/`.
 
-## Running unit tests
+---
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Deploy to Vercel
 
-```bash
-ng test
+Settings in Vercel dashboard:
+- **Root directory:** `frontend`
+- **Build command:** `ng build --configuration=production`
+- **Output directory:** `dist/portfolioiq-frontend/browser`
+
+---
+
+## Key Files
+
 ```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
+src/
+├── app/
+│   ├── app.ts          # Main component — all state management via Angular signals
+│   ├── app.html        # Single-page template (~3400 lines)
+│   ├── app.css         # Global styles + light/dark theme (~11000 lines)
+│   └── services/
+│       ├── api.service.ts
+│       ├── auth.service.ts
+│       ├── analytics.service.ts
+│       ├── coach.service.ts
+│       ├── github.service.ts
+│       ├── knowledge.service.ts
+│       ├── ml.service.ts
+│       ├── optimization.service.ts
+│       ├── project.service.ts
+│       ├── skill.service.ts
+│       └── system.service.ts
+├── environments/
+│   ├── environment.ts
+│   └── environment.prod.ts
+└── styles.css          # Global markdown/chat styles (innerHTML scope)
 ```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
