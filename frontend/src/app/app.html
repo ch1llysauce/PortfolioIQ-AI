@@ -2071,15 +2071,6 @@
             </button>
           </div>
 
-          <!-- Quick Suggestion Chips -->
-          <div class="gh-quick-chips">
-            <span class="quick-chip-label">Quick Scan:</span>
-            <button class="gh-chip chip-my-account" *ngIf="linkedGitHubUsername()" (click)="scanGitHub(linkedGitHubUsername())">@{{ linkedGitHubUsername() }} (My Account)</button>
-            <button class="gh-chip" (click)="scanGitHub('tiangolo')">tiangolo (Explore)</button>
-            <button class="gh-chip" (click)="scanGitHub('karpathy')">karpathy (Explore)</button>
-            <button class="gh-chip" (click)="scanGitHub('antfu')">antfu (Explore)</button>
-          </div>
-
           <!-- Feedback Alerts -->
           <div class="alert-danger" *ngIf="githubError()">
             {{ githubError() }}
