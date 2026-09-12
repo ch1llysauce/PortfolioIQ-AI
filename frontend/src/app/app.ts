@@ -718,14 +718,22 @@ export class App implements OnInit {
       return;
     }
 
-    // 2. Load linked GitHub username specifically tied to THIS user ID or default to ch1llysauce
-    const userSavedGithub = localStorage.getItem(`portfolioiq_github_${user.id}`) || 'ch1llysauce';
-    this.linkedGitHubUsername.set(userSavedGithub);
-    this.githubUsername = userSavedGithub;
-    this.verifiedGitHubUsername.set(userSavedGithub);
-    this.isGitHubOAuthVerified.set(true);
-    if (!this.githubScanData() && !this.isScanningGitHub()) {
-      this.scanGitHub(userSavedGithub);
+    // 2. Load linked GitHub username specifically tied to THIS user ID if previously saved
+    const userSavedGithub = localStorage.getItem(`portfolioiq_github_${user.id}`);
+    if (userSavedGithub) {
+      this.linkedGitHubUsername.set(userSavedGithub);
+      this.githubUsername = userSavedGithub;
+      this.verifiedGitHubUsername.set(null);
+      this.isGitHubOAuthVerified.set(false);
+      if (!this.githubScanData() && !this.isScanningGitHub()) {
+        this.scanGitHub(userSavedGithub);
+      }
+    } else {
+      this.linkedGitHubUsername.set('');
+      this.githubUsername = '';
+      this.verifiedGitHubUsername.set(null);
+      this.isGitHubOAuthVerified.set(false);
+      this.githubScanData.set(null);
     }
   }
 
