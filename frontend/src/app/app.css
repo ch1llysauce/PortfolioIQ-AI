@@ -6603,15 +6603,23 @@
 }
 .verified-bar {
   background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   padding: 8px 12px;
   border-radius: 8px;
 }
+:host([data-theme="light"]) .verified-bar {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
 .unverified-bar {
-  background: rgba(245, 158, 11, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   padding: 8px 12px;
   border-radius: 8px;
+}
+:host([data-theme="light"]) .unverified-bar {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 .verified-tag {
   font-size: 0.75rem;

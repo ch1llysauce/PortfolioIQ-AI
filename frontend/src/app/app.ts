@@ -98,8 +98,8 @@ export class App implements OnInit {
   // Forgot Password 3-Step State
   forgotStep = signal<1 | 2 | 3>(1);
   forgotEmail = '';
-  forgotOtp = '';
-  otpDigits: string[] = ['', '', '', '', '', ''];
+  forgotOtp = signal<string>('');
+  otpDigits = signal<string[]>(['', '', '', '', '', '']);
   forgotNewPassword = '';
   forgotConfirmPassword = '';
   forgotLoading = signal<boolean>(false);
@@ -887,8 +887,8 @@ export class App implements OnInit {
   resetForgotFlow() {
     this.forgotStep.set(1);
     this.forgotEmail = this.authEmail || '';
-    this.forgotOtp = '';
-    this.otpDigits = ['', '', '', '', '', ''];
+    this.forgotOtp.set('');
+    this.otpDigits.set(['', '', '', '', '', '']);
     this.forgotNewPassword = '';
     this.forgotConfirmPassword = '';
     this.forgotLoading.set(false);
@@ -995,7 +995,11 @@ export class App implements OnInit {
     }
 
     const singleDigit = digitsOnly.slice(-1);
-    this.otpDigits[index] = singleDigit;
+    this.otpDigits.update(arr => {
+      const next = [...arr];
+      next[index] = singleDigit;
+      return next;
+    });
     input.value = singleDigit;
     this.syncOtpValue();
 
@@ -1005,14 +1009,21 @@ export class App implements OnInit {
         nextInput.focus();
         nextInput.select();
       }
+    } else if (this.forgotOtp().length === 6) {
+      this.verifyForgotOtp();
     }
   }
 
   onOtpKeyDown(index: number, event: KeyboardEvent) {
     if (event.key === 'Backspace') {
-      if (!this.otpDigits[index] && index > 0) {
+      const currentDigits = this.otpDigits();
+      if (!currentDigits[index] && index > 0) {
         event.preventDefault();
-        this.otpDigits[index - 1] = '';
+        this.otpDigits.update(arr => {
+          const next = [...arr];
+          next[index - 1] = '';
+          return next;
+        });
         this.syncOtpValue();
         const prevInput = document.getElementById(`otp-box-${index - 1}`) as HTMLInputElement;
         if (prevInput) {
@@ -1021,7 +1032,11 @@ export class App implements OnInit {
           prevInput.select();
         }
       } else {
-        this.otpDigits[index] = '';
+        this.otpDigits.update(arr => {
+          const next = [...arr];
+          next[index] = '';
+          return next;
+        });
         this.syncOtpValue();
       }
     } else if (event.key === 'ArrowLeft' && index > 0) {
@@ -1052,14 +1067,16 @@ export class App implements OnInit {
     if (!digits) return;
     const chars = digits.split('');
     let curr = startIndex;
+    const current = [...this.otpDigits()];
     for (const char of chars) {
       if (curr < 6) {
-        this.otpDigits[curr] = char;
+        current[curr] = char;
         const box = document.getElementById(`otp-box-${curr}`) as HTMLInputElement;
         if (box) box.value = char;
         curr++;
       }
     }
+    this.otpDigits.set(current);
     this.syncOtpValue();
     const targetIdx = Math.min(curr, 5);
     const targetInput = document.getElementById(`otp-box-${targetIdx}`) as HTMLInputElement;
@@ -1067,10 +1084,13 @@ export class App implements OnInit {
       targetInput.focus();
       targetInput.select();
     }
+    if (this.forgotOtp().length === 6) {
+      this.verifyForgotOtp();
+    }
   }
 
   syncOtpValue() {
-    this.forgotOtp = this.otpDigits.join('');
+    this.forgotOtp.set(this.otpDigits().join(''));
   }
 
   // 3-Step Forgot Password Flow
@@ -1094,8 +1114,8 @@ export class App implements OnInit {
         this.setAuthErrorMessage(error.message);
       } else {
         this.setAuthSuccessMessage(`Password reset email sent to ${email}. Check your inbox!`);
-        this.otpDigits = ['', '', '', '', '', ''];
-        this.forgotOtp = '';
+        this.otpDigits.set(['', '', '', '', '', '']);
+        this.forgotOtp.set('');
         this.forgotStep.set(2);
         this.startResendCooldown(60);
         this.startCodeExpiry();
@@ -1113,7 +1133,7 @@ export class App implements OnInit {
 
   async verifyForgotOtp() {
     const email = this.forgotEmail.trim();
-    const token = this.forgotOtp.trim();
+    const token = this.forgotOtp().trim();
 
     // Block if max attempts reached
     if (this.otpAttempts() >= this.OTP_MAX_ATTEMPTS) {
@@ -1121,8 +1141,8 @@ export class App implements OnInit {
       return;
     }
 
-    if (!token || token.length < 4) {
-      this.setAuthErrorMessage('Please enter the verification code from your email.');
+    if (!token || token.length < 6) {
+      this.setAuthErrorMessage('Please enter the 6-digit verification code from your email.');
       return;
     }
 
@@ -1169,8 +1189,8 @@ export class App implements OnInit {
       } else {
         // Reset OTP attempts and start 60s cooldown
         this.otpAttempts.set(0);
-        this.otpDigits = ['', '', '', '', '', ''];
-        this.forgotOtp = '';
+        this.otpDigits.set(['', '', '', '', '', '']);
+        this.forgotOtp.set('');
         this.setAuthSuccessMessage('A new code has been sent to your email.');
         this.startResendCooldown(60);
         this.startCodeExpiry();

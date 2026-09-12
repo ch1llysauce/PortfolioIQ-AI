@@ -2026,46 +2026,27 @@
             </div>
           </div>
 
-          <!-- Linked GitHub Profile & OAuth Ownership Verification Bar -->
+          <!-- Linked GitHub Profile & Ownership Verification Bar -->
           <div class="linked-github-bar flex-between margin-bottom-sm" [class.verified-bar]="isGitHubOAuthVerified()" [class.unverified-bar]="!isGitHubOAuthVerified()">
             <div class="flex-align gap-sm">
               <ng-container *ngIf="isGitHubOAuthVerified()">
-                <span class="badge badge-success">Verified Owner:</span>
+                <span class="badge badge-success">Verified:</span>
                 <strong class="text-success">@{{ verifiedGitHubUsername() }}</strong>
-                <span class="verified-tag">Authenticated via GitHub OAuth</span>
+                <span class="verified-tag">Connected via GitHub</span>
               </ng-container>
 
               <ng-container *ngIf="!isGitHubOAuthVerified()">
-                <ng-container *ngIf="linkedGitHubUsername()">
-                  <span class="badge badge-warning">Ownership Unverified:</span>
-                  <strong class="text-muted">@{{ linkedGitHubUsername() }}</strong>
-                  <button class="btn btn-primary btn-xs" (click)="connectGitHubOAuth()" [disabled]="isOAuthConnecting()">
-                    <span *ngIf="!isOAuthConnecting()">Connect GitHub OAuth</span>
-                    <span *ngIf="isOAuthConnecting()">Connecting...</span>
-                  </button>
-                  <button class="btn btn-subtle btn-xs" (click)="openOAuthHelpModal()">Setup Guide</button>
-                  <button *ngIf="!isEditingLinkedGitHub()" class="btn btn-outline btn-xs" (click)="startEditingLinkedGitHub()" title="Change username target">Change</button>
-                </ng-container>
-
-                <ng-container *ngIf="!linkedGitHubUsername()">
-                  <span class="badge badge-secondary">No GitHub Account Connected</span>
-                  <button class="btn btn-primary btn-xs" (click)="connectGitHubOAuth()" [disabled]="isOAuthConnecting()">
-                    <span *ngIf="!isOAuthConnecting()">Connect GitHub OAuth</span>
-                    <span *ngIf="isOAuthConnecting()">Connecting...</span>
-                  </button>
-                  <button *ngIf="!isEditingLinkedGitHub()" class="btn btn-outline btn-xs" (click)="startEditingLinkedGitHub()">Enter Username</button>
-                </ng-container>
-
-                <div *ngIf="isEditingLinkedGitHub()" class="flex-align gap-xs">
-                  <input type="text" class="form-input form-input-sm" [(ngModel)]="tempLinkedUsername" placeholder="GitHub username" (keydown.enter)="saveLinkedGitHubUsername()" />
-                  <button class="btn btn-primary btn-xs" (click)="saveLinkedGitHubUsername()">Save</button>
-                  <button class="btn btn-secondary btn-xs" (click)="cancelEditingLinkedGitHub()">Cancel</button>
-                </div>
+                <span class="badge badge-secondary">No GitHub Account Connected</span>
+                <button class="btn btn-primary btn-xs" (click)="connectGitHubOAuth()" [disabled]="isOAuthConnecting()">
+                  <span *ngIf="!isOAuthConnecting()">Connect GitHub</span>
+                  <span *ngIf="isOAuthConnecting()">Connecting...</span>
+                </button>
+                <button class="btn btn-subtle btn-xs" (click)="openOAuthHelpModal()">Setup Guide</button>
               </ng-container>
             </div>
 
             <div class="flex-align gap-xs">
-              <button class="btn btn-outline btn-xs" *ngIf="linkedGitHubUsername() || verifiedGitHubUsername()" (click)="scanGitHub(isGitHubOAuthVerified() ? (verifiedGitHubUsername() || '') : linkedGitHubUsername())">
+              <button class="btn btn-outline btn-xs" *ngIf="isGitHubOAuthVerified()" (click)="scanGitHub(verifiedGitHubUsername() || '')">
                 Sync Profile
               </button>
             </div>
@@ -2261,7 +2242,7 @@
             <strong>Read-Only Benchmark Mode:</strong> You are exploring public repositories from <strong>@{{ githubScanData()?.profile?.username }}</strong>. Importing is restricted to your verified GitHub account (<strong>@{{ isGitHubOAuthVerified() ? verifiedGitHubUsername() : linkedGitHubUsername() }}</strong>).
           </div>
           <div class="alert-warning margin-bottom-md" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">
-            <strong>GitHub OAuth Verification Required:</strong> You are viewing <strong>@{{ linkedGitHubUsername() }}</strong>. To verify ownership and prevent unauthorized portfolio imports, please authenticate with GitHub OAuth.
+            <strong>GitHub Verification Required:</strong> Please connect your GitHub account to verify ownership and import your repositories.
           </div>
 
           <!-- Repositories Section Header with Batch Import -->
@@ -2272,7 +2253,7 @@
                 <span class="gh-header-badge">{{ filteredGitHubRepos().length }} of {{ githubScanData()?.repos?.length || 0 }}</span>
               </div>
               <p class="gh-card-desc" *ngIf="isScannedAccountLinked() && isGitHubOAuthVerified()">Verified owner. Review and import your repositories directly into your portfolio with detected skills attached.</p>
-              <p class="gh-card-desc text-warning" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">OAuth verification required before repositories can be imported.</p>
+              <p class="gh-card-desc text-warning" *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()">Connect your GitHub account to import repositories into your portfolio.</p>
               <p class="gh-card-desc text-muted" *ngIf="!isScannedAccountLinked()">Browsing external profile for skill benchmarking & exploration (Read-Only).</p>
             </div>
             <div class="gh-repos-header-actions">
@@ -2280,7 +2261,7 @@
                 Import All Repositories ({{ githubNotImportedCount() }})
               </button>
               <button *ngIf="isScannedAccountLinked() && !isGitHubOAuthVerified()" class="btn btn-warning btn-sm" (click)="connectGitHubOAuth()">
-                Connect OAuth to Import All
+                Connect GitHub to Import All
               </button>
               <button *ngIf="!isScannedAccountLinked()" class="btn btn-outline btn-sm" disabled title="Import restricted to @{{ isGitHubOAuthVerified() ? verifiedGitHubUsername() : linkedGitHubUsername() }}">
                 Import Restricted (External Profile)
@@ -2404,7 +2385,7 @@
                       class="btn btn-warning btn-sm gh-import-btn" 
                       (click)="connectGitHubOAuth()" 
                       [disabled]="isOAuthConnecting()">
-                      Verify OAuth to Import
+                      Connect GitHub to Import
                     </button>
                   </ng-container>
                   <span *ngIf="!isScannedAccountLinked()" class="badge badge-secondary" title="Only the verified account can import this repository">
@@ -2929,7 +2910,7 @@
                   Connected as @{{ verifiedGitHubUsername() }}
                 </span>
                 <span class="profile-section-sub" *ngIf="!isGitHubOAuthVerified()">
-                  Not connected via OAuth
+                  Not connected
                 </span>
               </div>
             </div>
@@ -3353,16 +3334,16 @@
         </label>
         <div class="otp-boxes-grid">
           <input
-            *ngFor="let digit of otpDigits; let i = index"
+            *ngFor="let digit of otpDigits(); let i = index"
             [id]="'otp-box-' + i"
             type="text"
             class="otp-digit-box"
-            [class.filled]="otpDigits[i] !== ''"
+            [class.filled]="otpDigits()[i] !== ''"
             maxlength="1"
             inputmode="numeric"
             pattern="[0-9]*"
             autocomplete="one-time-code"
-            [value]="otpDigits[i]"
+            [value]="otpDigits()[i]"
             (input)="onOtpDigitInput(i, $event)"
             (keydown)="onOtpKeyDown(i, $event)"
             (keyup.enter)="verifyForgotOtp()"
@@ -3378,7 +3359,7 @@
         class="btn btn-primary full-width-btn auth-submit-btn"
         style="margin-top: 4px;"
         (click)="verifyForgotOtp()"
-        [disabled]="forgotLoading() || forgotOtp.length < 4 || otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0"
+        [disabled]="forgotLoading() || forgotOtp().length < 6 || otpAttempts() >= OTP_MAX_ATTEMPTS || codeExpiry() === 0"
       >
         <span *ngIf="forgotLoading()">Verifying...</span>
         <span *ngIf="!forgotLoading()">Verify Code</span>
@@ -3591,16 +3572,16 @@
   </div>
 </div>
 
-<!-- GITHUB OAUTH SETUP GUIDE MODAL -->
+<!-- GITHUB SETUP GUIDE MODAL -->
 <div class="modal-backdrop" *ngIf="showOAuthHelpModal()" (click)="closeOAuthHelpModal()">
   <div class="modal-card oauth-help-card" (click)="$event.stopPropagation()">
     <div class="modal-header flex-between">
-      <h2>GitHub OAuth Setup Guide</h2>
+      <h2>GitHub Connection Guide</h2>
       <button class="btn-icon" (click)="closeOAuthHelpModal()">✕</button>
     </div>
     <div class="modal-body">
       <p class="sub-text margin-bottom-md">
-        To enable authenticated GitHub OAuth login and prevent anyone else from importing your projects, link your GitHub App in Supabase in 2 minutes:
+        To enable secure GitHub account linking and project importing, connect your GitHub App in Supabase in 2 minutes:
       </p>
 
       <div class="oauth-setup-steps">
