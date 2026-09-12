@@ -11881,6 +11881,61 @@
   color: #94a3b8 !important;
 }
 
+/* OAuth Setup Guide Modal (Light Mode) */
+:host([data-theme="light"]) .oauth-help-card,
+[data-theme="light"] .oauth-help-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+:host([data-theme="light"]) .oauth-step-card,
+[data-theme="light"] .oauth-step-card {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+:host([data-theme="light"]) .oauth-step-card h4,
+[data-theme="light"] .oauth-step-card h4 {
+  color: #0f172a !important;
+}
+
+:host([data-theme="light"]) .oauth-step-card p,
+[data-theme="light"] .oauth-step-card p {
+  color: #334155 !important;
+}
+
+:host([data-theme="light"]) .oauth-step-card code,
+[data-theme="light"] .oauth-step-card code {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+  border: 1px solid #c7d2fe !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+:host([data-theme="light"]) .oauth-step-card a,
+[data-theme="light"] .oauth-step-card a {
+  color: #4f46e5 !important;
+  font-weight: 600 !important;
+}
+
+:host([data-theme="light"]) .copy-box,
+[data-theme="light"] .copy-box {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0369a1 !important;
+}
+
+:host([data-theme="light"]) .copy-box code,
+[data-theme="light"] .copy-box code {
+  background: transparent !important;
+  border: none !important;
+  color: #0284c7 !important;
+  padding: 0 !important;
+}
+
 @media (max-width: 640px) {
   .auth-modal-card {
     padding: 14px 12px !important;
