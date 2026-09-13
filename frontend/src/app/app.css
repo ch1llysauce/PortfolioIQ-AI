@@ -5249,7 +5249,9 @@ div[app-coach] {
 /* Mobile Responsiveness for AI Career Coach */
 @media (max-width: 768px) {
   .coach-main-canvas {
-    min-height: calc(100dvh - 120px);
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
   }
 
   .coach-header-bar {
@@ -5455,7 +5457,7 @@ div[app-coach] {
   }
 
   .chat-input-bar {
-    padding: 8px 10px max(20px, env(safe-area-inset-bottom, 20px)) 10px;
+    padding: 8px 12px max(12px, env(safe-area-inset-bottom, 12px)) 12px;
   }
 
   .chat-dock-container {
@@ -7319,6 +7321,8 @@ div[app-coach] {
   .main-wrapper {
     width: 100%;
     min-width: 0;
+    height: 100dvh;
+    max-height: 100dvh;
   }
 
   .top-header {
@@ -7424,7 +7428,7 @@ div[app-coach] {
   }
 
   .content-container {
-    padding: 16px 12px calc(80px + env(safe-area-inset-bottom, 0px)) 12px;
+    padding: 16px 12px max(16px, env(safe-area-inset-bottom, 12px)) 12px;
   }
 
   .dashboard-grid-layout {
@@ -8759,7 +8763,7 @@ div[app-coach] {
   }
 
   .chat-input-bar {
-    padding: 10px 12px max(24px, env(safe-area-inset-bottom, 24px)) 12px;
+    padding: 8px 12px max(12px, env(safe-area-inset-bottom, 12px)) 12px;
   }
 
   .suggested-prompts-container {
@@ -14013,7 +14017,7 @@ div[app-coach] {
 @media (max-width: 768px) {
   .tab-pane > :last-child,
   .content-container > .tab-pane > *:last-child {
-    margin-bottom: 24px;
+    margin-bottom: 0;
   }
 
   /* Profile modal footer — stack on very small screens */
@@ -14036,12 +14040,12 @@ div[app-coach] {
 
   /* Modal cards — extra bottom padding for safe area */
   .modal-card {
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
   }
 
-  /* Chat input bar safe area */
+  /* Chat input bar safe area — clean, balanced mobile clearance */
   .chat-input-bar {
-    padding-bottom: max(52px, env(safe-area-inset-bottom, 52px));
+    padding: 8px 12px max(12px, env(safe-area-inset-bottom, 12px)) 12px !important;
   }
 }
 
