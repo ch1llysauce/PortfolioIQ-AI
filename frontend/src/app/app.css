@@ -12677,6 +12677,130 @@
   color: #64748b !important;
 }
 
+/* ── Impact Simulation Hero Card & Metric Boxes (Light Mode) ── */
+:host([data-theme="light"]) .simulation-hero-card,
+[data-theme="light"] .simulation-hero-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:host([data-theme="light"]) .sim-metric-box,
+[data-theme="light"] .sim-metric-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+:host([data-theme="light"]) .sim-label,
+[data-theme="light"] .sim-label {
+  color: #64748b !important;
+  font-weight: 700;
+}
+
+:host([data-theme="light"]) .sim-val,
+[data-theme="light"] .sim-val {
+  color: #0f172a !important;
+}
+
+:host([data-theme="light"]) .sim-val.current,
+[data-theme="light"] .sim-val.current {
+  color: #64748b !important;
+}
+
+:host([data-theme="light"]) .sim-arrow,
+[data-theme="light"] .sim-arrow {
+  color: #6366f1 !important;
+}
+
+:host([data-theme="light"]) .sim-val.projected,
+[data-theme="light"] .sim-val.projected {
+  color: #059669 !important;
+}
+
+:host([data-theme="light"]) .sim-val.highlight,
+[data-theme="light"] .sim-val.highlight {
+  color: #7c3aed !important;
+}
+
+:host([data-theme="light"]) .sim-gain-badge,
+[data-theme="light"] .sim-gain-badge {
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+:host([data-theme="light"]) .sim-sub,
+[data-theme="light"] .sim-sub {
+  color: #64748b !important;
+}
+
+/* ── Custom AI Blueprint Card & Sections (Light Mode) ── */
+:host([data-theme="light"]) .custom-ai-blueprint-card,
+[data-theme="light"] .custom-ai-blueprint-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:host([data-theme="light"]) .custom-ai-title,
+[data-theme="light"] .custom-ai-title {
+  color: #0f172a !important;
+}
+
+:host([data-theme="light"]) .custom-ai-sub,
+[data-theme="light"] .custom-ai-sub {
+  color: #64748b !important;
+}
+
+:host([data-theme="light"]) .rec-deliverables-box,
+[data-theme="light"] .rec-deliverables-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+:host([data-theme="light"]) .rec-deliverables-box strong,
+[data-theme="light"] .rec-deliverables-box strong {
+  color: #0284c7 !important;
+}
+
+:host([data-theme="light"]) .deliverables-list,
+[data-theme="light"] .deliverables-list {
+  color: #334155 !important;
+}
+
+:host([data-theme="light"]) .rec-roi-box,
+[data-theme="light"] .rec-roi-box {
+  background: rgba(16, 185, 129, 0.06) !important;
+  border-left: 3px solid #059669 !important;
+}
+
+:host([data-theme="light"]) .rec-roi-box strong,
+[data-theme="light"] .rec-roi-box strong {
+  color: #047857 !important;
+}
+
+:host([data-theme="light"]) .rec-roi-box p,
+[data-theme="light"] .rec-roi-box p {
+  color: #334155 !important;
+}
+
+:host([data-theme="light"]) .ai-synthesis-loading-card,
+[data-theme="light"] .ai-synthesis-loading-card {
+  background: #ffffff !important;
+  border: 1px solid #c084fc !important;
+}
+
+:host([data-theme="light"]) .ai-synthesis-loading-card h4,
+[data-theme="light"] .ai-synthesis-loading-card h4 {
+  color: #7c3aed !important;
+}
+
+:host([data-theme="light"]) .ai-synthesis-loading-card p,
+[data-theme="light"] .ai-synthesis-loading-card p {
+  color: #64748b !important;
+}
+
 /* ── Architecture highlights box ── */
 :host([data-theme="light"]) .rec-arch-box {
   background: #f8fafc;

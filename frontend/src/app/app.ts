@@ -44,7 +44,9 @@ export interface ConfirmModalState {
 })
 export class App implements OnInit {
   // Navigation State
-  activeTab = signal<string>('dashboard');
+  activeTab = signal<string>(
+    (typeof localStorage !== 'undefined' && localStorage.getItem('portfolioiq_active_tab')) || 'dashboard'
+  );
   mobileSidebarOpen = signal<boolean>(false);
 
   // Global Confirmation Dialog
@@ -545,6 +547,9 @@ export class App implements OnInit {
     }
 
     this.activeTab.set(tabName);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('portfolioiq_active_tab', tabName);
+    }
     this.closeMobileSidebar();
 
     if (tabName === 'github') {
@@ -4001,11 +4006,17 @@ export class App implements OnInit {
   // =========================================================================
   setKnowledgeViewMode(mode: 'tree' | 'inspector' | 'path') {
     this.knowledgeViewMode.set(mode);
-    if (mode === 'inspector' && !this.inspectedNodeName()) {
-      this.inspectNode('Docker');
+    if (mode === 'inspector') {
+      const target = this.goalSkillInput() || this.inspectedNodeName() || 'Docker';
+      if (this.inspectedNodeName() !== target || !this.inspectedNodePrereqs().length) {
+        this.inspectNode(target);
+      }
     }
-    if (mode === 'path' && !this.goalSkillRoadmap()) {
-      this.calculateGoalSkillPath();
+    if (mode === 'path') {
+      const target = this.inspectedNodeName() || this.goalSkillInput() || 'Docker';
+      if (this.goalSkillInput() !== target || !this.goalSkillRoadmap()) {
+        this.calculateGoalSkillPath(target);
+      }
     }
   }
 
@@ -4052,6 +4063,7 @@ export class App implements OnInit {
   inspectNode(nodeName: string) {
     if (!nodeName) return;
     this.inspectedNodeName.set(nodeName);
+    this.goalSkillInput.set(nodeName);
     this.inspectedNodePrereqs.set([]);
     this.inspectedNodeUnlocked.set([]);
     this.inspectedNodeComplements.set([]);
@@ -4080,8 +4092,9 @@ export class App implements OnInit {
   }
 
   calculateGoalSkillPath(goalSkill?: string) {
-    const target = goalSkill || this.goalSkillInput() || 'Kubernetes';
+    const target = goalSkill || this.inspectedNodeName() || this.goalSkillInput() || 'Docker';
     this.goalSkillInput.set(target);
+    this.inspectedNodeName.set(target);
     this.isEvaluatingLearningPath.set(true);
 
     const userSkills = this.getUserSkillNames();
