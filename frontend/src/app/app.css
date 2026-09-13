@@ -5896,9 +5896,8 @@ div[app-coach] {
 .stat-chip-value {
   font-size: 0.84rem;
   color: #f8fafc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
+  word-break: break-word;
 }
 
 .gh-skills-card-footer {
@@ -8882,6 +8881,19 @@ div[app-coach] {
 
   .gh-telemetry-grid > .gh-stat-box:last-child:nth-child(odd) {
     grid-column: 1 / -1;
+  }
+
+  .gh-lang-insights-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .gh-lang-insights-row .gh-lang-stat-chip:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .gh-lang-stat-chip {
+    padding: 8px 10px;
   }
 
   .gh-repos-header {
