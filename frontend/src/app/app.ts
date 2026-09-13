@@ -270,10 +270,19 @@ export class App implements OnInit {
   skillsSubView = signal<'my-skills' | 'catalog'>('my-skills');
   skillSearchQuery = signal<string>('');
   skillCategoryFilter = signal<string>('all');
-  projectSkillSearch: { [projectId: string]: string } = {};
+  projectSkillSearch = signal<{ [projectId: string]: string }>({});
+
+  getProjectSkillSearch(projectId: string): string {
+    return this.projectSkillSearch()[projectId] || '';
+  }
+
+  onProjectSkillSearchChange(projectId: string, query: string, inputEl: HTMLElement) {
+    this.projectSkillSearch.update(map => ({ ...map, [projectId]: query }));
+    this.openSkillPicker(projectId, inputEl);
+  }
 
   getFilteredAttachSkills(projectId: string): { id: string; name: string }[] {
-    const q = (this.projectSkillSearch[projectId] || '').toLowerCase().trim();
+    const q = (this.projectSkillSearch()[projectId] || '').toLowerCase().trim();
     const attached = new Set((this.projects().find(p => p.id === projectId)?.project_skills || []).map((ps: any) => ps.skill_id || ps.skills?.id));
     return this.skills()
       .filter(s => !attached.has(s.id))
@@ -284,8 +293,10 @@ export class App implements OnInit {
   skillPickerPosition = signal<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
   private activeSkillInputEl: HTMLElement | null = null;
   private skillPickerRafId: number | null = null;
+  private closeSkillPickerTimeout: any = null;
 
   openSkillPicker(projectId: string, inputEl: HTMLElement) {
+    this.cancelCloseSkillPicker();
     this.activeSkillInputEl = inputEl;
     this.updateSkillPickerPosition(inputEl);
     this.activeSkillPickerProjectId.set(projectId);
@@ -306,11 +317,33 @@ export class App implements OnInit {
   private updateSkillPickerPosition(inputEl: HTMLElement) {
     const rect = inputEl.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
-    const top = spaceBelow < 200 ? rect.top - 184 : rect.bottom + 4;
-    this.skillPickerPosition.set({ top, left: rect.left, width: rect.width });
+    const top = spaceBelow < 200 ? Math.max(10, rect.top - 184) : rect.bottom + 4;
+    const width = Math.max(rect.width, 180);
+    let left = rect.left;
+    if (typeof window !== 'undefined') {
+      if (left + width > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - width - 12);
+      }
+    }
+    this.skillPickerPosition.set({ top, left, width });
+  }
+
+  scheduleCloseSkillPicker() {
+    this.cancelCloseSkillPicker();
+    this.closeSkillPickerTimeout = setTimeout(() => {
+      this.closeSkillPicker();
+    }, 250);
+  }
+
+  cancelCloseSkillPicker() {
+    if (this.closeSkillPickerTimeout) {
+      clearTimeout(this.closeSkillPickerTimeout);
+      this.closeSkillPickerTimeout = null;
+    }
   }
 
   closeSkillPicker() {
+    this.cancelCloseSkillPicker();
     this.activeSkillPickerProjectId.set(null);
     this.activeSkillInputEl = null;
     if (this.skillPickerRafId) {
@@ -320,16 +353,18 @@ export class App implements OnInit {
   }
 
   attachSkillFromPicker(projectId: string, skillId: string) {
+    this.cancelCloseSkillPicker();
     this.attachSkillToProject(projectId, skillId);
-    this.projectSkillSearch[projectId] = '';
+    this.projectSkillSearch.update(map => ({ ...map, [projectId]: '' }));
     this.closeSkillPicker();
   }
 
   async createAndAttachSkill(projectId: string, skillName: string) {
     const name = skillName.trim();
     if (!name) return;
+    this.cancelCloseSkillPicker();
+    this.projectSkillSearch.update(map => ({ ...map, [projectId]: '' }));
     this.closeSkillPicker();
-    this.projectSkillSearch[projectId] = '';
 
     // Add skill to portfolio (creates if not exists, canonicalizes)
     const { data, error } = await this.skillService.createSkill(name, 'General');
@@ -3301,18 +3336,64 @@ export class App implements OnInit {
   }
 
   deleteProject(id: string, projectName?: string) {
-    const name = projectName || this.projects().find(p => p.id === id)?.name || 'this project';
+    const projectToDelete = this.projects().find(p => p.id === id);
+    const name = projectName || projectToDelete?.name || 'this project';
+    const savedDesc = projectToDelete?.description || '';
+    const savedStatus = projectToDelete?.status || 'completed';
+    const savedSkillIds: string[] = (projectToDelete?.project_skills || [])
+      .map((ps: any) => ps.skill_id || ps.skills?.id)
+      .filter(Boolean);
+
     this.openConfirmDialog({
       title: 'Delete Project',
-      message: `Are you sure you want to delete "${name}" from your portfolio? This action cannot be undone.`,
+      message: `Are you sure you want to delete "${name}" from your portfolio? (You can also undo this action afterwards).`,
       confirmText: 'Delete Project',
       cancelText: 'Keep Project',
       type: 'danger',
       icon: 'delete',
       onConfirm: async () => {
+        const contentEl = document.querySelector('.content-container') as HTMLElement;
+        const savedScroll = contentEl?.scrollTop ?? 0;
+
         await this.projectService.deleteProject(id);
         await this.fetchProjects();
-        this.showToast(`Project "${name}" deleted from portfolio.`, 'info');
+        if (contentEl) contentEl.scrollTop = savedScroll;
+
+        this.showToast(
+          `Project "${name}" deleted from portfolio.`,
+          'info',
+          7000,
+          'Undo',
+          async () => {
+            try {
+              let restoredProject: any = null;
+              const res = await this.projectService.createProject(name, savedDesc, savedStatus, id);
+              if (res && res.data) {
+                restoredProject = res.data;
+              } else {
+                const fallback = await this.projectService.createProject(name, savedDesc, savedStatus);
+                restoredProject = fallback?.data;
+              }
+
+              if (restoredProject?.id) {
+                for (const sId of savedSkillIds) {
+                  try {
+                    await this.skillService.addSkillToProject(restoredProject.id, sId);
+                  } catch (err) {
+                    console.error('Error re-attaching skill during undo:', err);
+                  }
+                }
+              }
+
+              await this.fetchProjects();
+              if (contentEl) contentEl.scrollTop = savedScroll;
+              this.showToast(`Restored project "${name}"!`, 'success');
+            } catch (e) {
+              console.error('Failed to undo project deletion:', e);
+              this.showToast(`Could not restore project "${name}"`, 'error');
+            }
+          }
+        );
       }
     });
   }

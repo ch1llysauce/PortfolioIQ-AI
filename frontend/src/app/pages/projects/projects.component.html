@@ -261,10 +261,11 @@
                     type="text"
                     class="form-input form-input-sm attach-skill-search"
                     placeholder="Search & attach skill..."
-                    [(ngModel)]="app.projectSkillSearch[project.id]"
+                    [ngModel]="app.getProjectSkillSearch(project.id)"
+                    (ngModelChange)="app.onProjectSkillSearchChange(project.id, $event, attachInput)"
                     (focus)="app.openSkillPicker(project.id, attachInput)"
-                    (input)="app.openSkillPicker(project.id, attachInput)"
-                    (blur)="app.closeSkillPicker()"
+                    (click)="app.openSkillPicker(project.id, attachInput)"
+                    (blur)="app.scheduleCloseSkillPicker()"
                     autocomplete="off"
                   />
                 </div>

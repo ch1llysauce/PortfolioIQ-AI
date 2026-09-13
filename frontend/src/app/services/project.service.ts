@@ -15,7 +15,8 @@ export class ProjectService {
   async createProject(
     name: string,
     description: string,
-    status: string = 'completed'
+    status: string = 'completed',
+    id?: string
   ) {
 
     const {
@@ -30,14 +31,19 @@ export class ProjectService {
       };
     }
 
+    const payload: any = {
+      user_id: user.id,
+      name,
+      description,
+      status
+    };
+    if (id) {
+      payload.id = id;
+    }
+
     return await this.supabase
       .from('projects')
-      .insert({
-        user_id: user.id,
-        name,
-        description,
-        status
-      })
+      .insert(payload)
       .select()
       .single();
   }
