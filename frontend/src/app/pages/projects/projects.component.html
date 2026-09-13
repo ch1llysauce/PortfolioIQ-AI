@@ -82,17 +82,17 @@
 
         <!-- Collapsible Modern "Create Project" Drawer/Card -->
         <div class="card add-project-card margin-bottom-md" *ngIf="app.showAddProjectForm() && app.currentUser()">
-          <div class="card-header flex-between">
-            <div class="flex-align gap-xs">
+          <div class="card-header add-drawer-header flex-between">
+            <div class="add-drawer-header-left">
               <div class="add-proj-icon-bubble">
                 <svg class="btn-svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
               </div>
-              <div>
+              <div class="add-drawer-title-text">
                 <h3>Create New Developer Project</h3>
                 <span class="sub-text">Add a project to track tech skills and compute ML domain predictions</span>
               </div>
             </div>
-            <button class="btn-icon" (click)="app.toggleAddProjectForm()">✕</button>
+            <button class="btn-icon add-drawer-close-btn" (click)="app.toggleAddProjectForm()" title="Close form" aria-label="Close form">✕</button>
           </div>
 
           <div class="add-project-form-body">
@@ -142,6 +142,8 @@
                 [(ngModel)]="app.newProjectDesc" 
                 class="form-textarea"
                 rows="3">
+                class="form-textarea project-desc-textarea"
+                rows="5">
               </textarea>
             </div>
 
