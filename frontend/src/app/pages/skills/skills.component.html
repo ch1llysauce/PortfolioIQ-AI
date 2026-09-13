@@ -241,18 +241,16 @@
               <div class="user-skill-card" *ngFor="let s of app.getFilteredUserSkills()">
                 <div class="user-skill-top flex-between">
                   <span class="user-skill-name" [title]="s.name">{{ s.name }}</span>
-                  <div class="user-skill-actions flex-align gap-xs">
-                    <span class="user-skill-count-pill" [title]="'Used in ' + s.count + ' project(s)'">
-                      {{ s.count }} project{{ s.count > 1 ? 's' : '' }}
-                    </span>
-                    <button class="btn-icon delete-user-skill-btn" (click)="app.removeSkillFromUserPortfolio(s.name)" title="Remove {{ s.name }} from your portfolio">
-                      <svg class="btn-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                  </div>
+                  <button class="btn-icon delete-user-skill-btn" (click)="app.removeSkillFromUserPortfolio(s.name)" title="Remove {{ s.name }} from your portfolio">
+                    <svg class="btn-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
                 </div>
-                <div class="user-skill-meta">
+                <div class="user-skill-meta flex-align gap-xs">
                   <span class="skill-cat-pill" [ngClass]="app.getSkillCategoryClass(s.category)">
                     {{ s.category }}
+                  </span>
+                  <span class="user-skill-count-pill" [title]="'Used in ' + s.count + ' project(s)'">
+                    {{ s.count }} project{{ s.count > 1 ? 's' : '' }}
                   </span>
                 </div>
                 <div class="user-skill-projects">
