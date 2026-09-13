@@ -1,0 +1,404 @@
+<!-- Top GitHub Scanner Controller Card -->
+        <div class="card gh-search-card">
+          <div class="gh-search-header flex-between">
+            <div>
+              <h2>GitHub Profile Scanner & Importer</h2>
+              <p class="section-subtitle">
+                Analyze public developer profiles, discover repositories, extract tech stacks using automated NLP entity recognition, and classify project domains with machine learning.
+              </p>
+            </div>
+          </div>
+
+          <!-- Linked GitHub Profile & Ownership Verification Bar -->
+          <div class="linked-github-bar flex-between margin-bottom-sm" [class.verified-bar]="app.isGitHubOAuthVerified()" [class.unverified-bar]="!app.isGitHubOAuthVerified()">
+            <div class="flex-align gap-sm">
+              <ng-container *ngIf="app.isGitHubOAuthVerified()">
+                <span class="badge badge-success">Verified:</span>
+                <strong class="text-success">@{{ app.verifiedGitHubUsername() }}</strong>
+                <span class="verified-tag">Connected via GitHub</span>
+              </ng-container>
+
+              <ng-container *ngIf="!app.isGitHubOAuthVerified()">
+                <span class="badge badge-secondary">No GitHub Account Connected</span>
+                <button class="btn btn-primary btn-xs" (click)="app.connectGitHubOAuth()" [disabled]="app.isOAuthConnecting()">
+                  <span *ngIf="!app.isOAuthConnecting()">Connect GitHub</span>
+                  <span *ngIf="app.isOAuthConnecting()">Connecting...</span>
+                </button>
+                <button class="btn btn-subtle btn-xs" (click)="app.openOAuthHelpModal()">Setup Guide</button>
+              </ng-container>
+            </div>
+
+            <div class="flex-align gap-xs">
+              <button class="btn btn-outline btn-xs" *ngIf="app.isGitHubOAuthVerified()" (click)="app.scanGitHub(app.verifiedGitHubUsername() || '')">
+                Sync Profile
+              </button>
+            </div>
+          </div>
+
+          <!-- Input Bar -->
+          <div class="gh-input-bar">
+            <div class="gh-input-wrapper">
+              <span class="gh-input-icon">github.com/</span>
+              <input 
+                type="text" 
+                class="gh-username-input" 
+                placeholder="Enter GitHub username to scan" 
+                [(ngModel)]="app.githubUsername" 
+                (keydown.enter)="app.scanGitHub()" 
+                [disabled]="app.isScanningGitHub()" 
+              />
+            </div>
+            <button class="btn btn-primary gh-scan-btn" (click)="app.scanGitHub()" [disabled]="app.isScanningGitHub() || !app.githubUsername.trim()">
+              <span *ngIf="!app.isScanningGitHub()">Scan Profile</span>
+              <span *ngIf="app.isScanningGitHub()">Scanning GitHub...</span>
+            </button>
+          </div>
+
+          <!-- Feedback Alerts -->
+          <div class="alert-danger" *ngIf="app.githubError()">
+            {{ app.githubError() }}
+          </div>
+          <div class="alert-success" *ngIf="app.githubImportSuccessMsg()">
+            {{ app.githubImportSuccessMsg() }}
+          </div>
+        </div>
+
+        <!-- Scanning State Indicator -->
+        <div class="card gh-loading-card" *ngIf="app.isScanningGitHub()">
+          <div class="gh-spinner"></div>
+          <h3>Scanning GitHub ecosystem for @{{ app.githubUsername }}...</h3>
+          <p class="text-muted">Fetching public repositories, running NLP entity extraction on tech stacks, and executing ML domain predictions...</p>
+        </div>
+
+        <!-- GitHub Profile & Insights Hero -->
+        <div *ngIf="app.githubScanData() && !app.isScanningGitHub()">
+          
+          <!-- Developer Profile Hero Banner -->
+          <div class="card gh-hero-card">
+            <div class="gh-profile-header">
+              <img [src]="app.githubScanData()?.profile?.avatar_url" [alt]="app.githubScanData()?.profile?.username" class="gh-avatar" />
+              <div class="gh-profile-info">
+                <div class="gh-name-row">
+                  <h2>{{ app.githubScanData()?.profile?.name || app.githubScanData()?.profile?.username }}</h2>
+                  <a [href]="app.githubScanData()?.profile?.html_url" target="_blank" rel="noopener noreferrer" class="gh-external-link">
+                    @{{ app.githubScanData()?.profile?.username }} ↗
+                  </a>
+                </div>
+                <p class="gh-bio">{{ app.githubScanData()?.profile?.bio || 'Passionate software developer building open source software.' }}</p>
+                <div class="gh-extra-meta">
+                  <span *ngIf="app.githubScanData()?.profile?.location" class="gh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ app.githubScanData()?.profile?.location }}</span>
+                  </span>
+                  <span *ngIf="app.githubScanData()?.profile?.blog" class="gh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <a [href]="app.githubScanData()?.profile?.blog" target="_blank" rel="noopener noreferrer">{{ app.githubScanData()?.profile?.blog }}</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Telemetry Counters -->
+            <div class="gh-telemetry-grid">
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ app.githubScanData()?.profile?.public_repos || 0 }}</span>
+                <span class="gh-stat-label">Public Repos</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ app.githubScanData()?.summary?.total_stars || 0 }}</span>
+                <span class="gh-stat-label">Total Stars</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ app.githubScanData()?.summary?.total_forks || 0 }}</span>
+                <span class="gh-stat-label">Total Forks</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ app.githubScanData()?.summary?.unique_skills_count || 0 }}</span>
+                <span class="gh-stat-label">Tech Skills Detected</span>
+              </div>
+              <div class="gh-stat-box">
+                <span class="gh-stat-number">{{ app.githubScanData()?.profile?.followers || 0 }}</span>
+                <span class="gh-stat-label">Followers</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Language Distribution & Extracted Skills Dual Card -->
+          <div class="grid-2-col margin-bottom-md">
+            
+            <!-- Language Distribution Card (Unified GitHub Multi-Segment Bar) -->
+            <div class="card gh-analysis-card">
+              <div class="gh-card-header">
+                <div class="gh-card-title-row">
+                  <h3>Language Distribution</h3>
+                  <span class="gh-header-badge">{{ app.getGitHubLanguageSegments().length }} Languages</span>
+                </div>
+                <p class="gh-card-desc">Breakdown of programming languages detected across scanned repositories.</p>
+              </div>
+              
+              <!-- Multi-Segment Visual Bar -->
+              <div class="gh-multi-lang-bar" *ngIf="app.getGitHubLanguageSegments().length">
+                <div 
+                  *ngFor="let seg of app.getGitHubLanguageSegments()" 
+                  class="gh-lang-segment" 
+                  [style.width.%]="seg.percentage" 
+                  [style.background-color]="seg.color"
+                  [title]="seg.name + ': ' + seg.percentage + '% (' + seg.count + ' repos)'">
+                </div>
+              </div>
+
+              <!-- Language Legend List -->
+              <div class="gh-lang-legend-grid margin-bottom-sm" *ngIf="app.getGitHubLanguageSegments().length">
+                <div *ngFor="let seg of app.getGitHubLanguageSegments()" class="gh-lang-legend-item">
+                  <span class="gh-lang-dot" [style.background-color]="seg.color"></span>
+                  <span class="gh-lang-name"><strong>{{ seg.name }}</strong></span>
+                  <span class="gh-lang-pct">{{ seg.percentage }}%</span>
+                  <span class="gh-lang-count">({{ seg.count }})</span>
+                </div>
+              </div>
+
+              <!-- Language Insights Ecosystem Stats -->
+              <div class="gh-lang-insights-row" *ngIf="app.getGitHubLanguageSegments().length">
+                <div class="gh-lang-stat-chip">
+                  <span class="stat-chip-label">Primary Stack</span>
+                  <strong class="stat-chip-value text-accent">{{ app.getGitHubLanguageSegments()[0]?.name || 'N/A' }} ({{ app.getGitHubLanguageSegments()[0]?.percentage }}%)</strong>
+                </div>
+                <div class="gh-lang-stat-chip">
+                  <span class="stat-chip-label">Ecosystem Focus</span>
+                  <strong class="stat-chip-value">{{ app.getEcosystemFocus() }}</strong>
+                </div>
+                <div class="gh-lang-stat-chip">
+                  <span class="stat-chip-label">Total Codebases</span>
+                  <strong class="stat-chip-value">{{ app.githubScanData()?.summary?.total_scanned_repos || 0 }} Scanned</strong>
+                </div>
+              </div>
+
+              <div *ngIf="!app.getGitHubLanguageSegments().length" class="empty-state-text">
+                No language data available.
+              </div>
+            </div>
+
+            <!-- Top Detected Technologies Card -->
+            <div class="card gh-analysis-card">
+              <div class="gh-card-header">
+                <div class="gh-card-title-row">
+                  <h3>Extracted Tech Stack & Tools</h3>
+                  <span class="gh-header-badge primary">{{ app.githubScanData()?.summary?.unique_skills_count || 0 }} Skills</span>
+                </div>
+                <p class="gh-card-desc">Frameworks, libraries, and tools identified across repository manifests and codebases.</p>
+              </div>
+              
+              <div class="gh-detected-skills-cloud" *ngIf="app.githubScanData()?.summary?.top_skills?.length">
+                <span class="gh-tech-tag" *ngFor="let item of app.githubScanData()?.summary?.top_skills">
+                  <span class="tech-name">{{ item.skill }}</span>
+                  <span class="tech-badge">{{ item.repo_count }}</span>
+                </span>
+              </div>
+
+              <div class="gh-skills-card-footer margin-top-md" *ngIf="app.githubScanData()?.summary?.top_skills?.length">
+                <div class="flex-between flex-wrap gap-xs">
+                  <span class="text-muted text-xs">Extracted from repository imports & manifests</span>
+                  <button class="btn btn-outline btn-xs" (click)="app.setTab('skills')" title="Explore in Developer Skills Profile">
+                    Explore Skills Profile →
+                  </button>
+                </div>
+              </div>
+
+              <div *ngIf="!app.githubScanData()?.summary?.top_skills?.length" class="empty-state-text">
+                No technologies extracted yet.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Benchmark Notice for Unlinked / External Accounts -->
+          <div class="alert-info margin-bottom-md" *ngIf="!app.isScannedAccountLinked()">
+            <strong>Read-Only Benchmark Mode:</strong> You are exploring public repositories from <strong>@{{ app.githubScanData()?.profile?.username }}</strong>. Importing is restricted to your verified GitHub account (<strong>@{{ app.isGitHubOAuthVerified() ? app.verifiedGitHubUsername() : app.linkedGitHubUsername() }}</strong>).
+          </div>
+          <div class="alert-warning margin-bottom-md" *ngIf="app.isScannedAccountLinked() && !app.isGitHubOAuthVerified()">
+            <strong>GitHub Verification Required:</strong> Please connect your GitHub account to verify ownership and import your repositories.
+          </div>
+
+          <!-- Repositories Section Header with Batch Import -->
+          <div class="gh-repos-header flex-between margin-top-md margin-bottom-sm">
+            <div class="gh-repos-header-info">
+              <div class="flex-align gap-xs margin-bottom-xs">
+                <h3>Scanned Repositories</h3>
+                <span class="gh-header-badge">{{ app.filteredGitHubRepos().length }} of {{ app.githubScanData()?.repos?.length || 0 }}</span>
+              </div>
+              <p class="gh-card-desc" *ngIf="app.isScannedAccountLinked() && app.isGitHubOAuthVerified()">Verified owner. Review and import your repositories directly into your portfolio with detected skills attached.</p>
+              <p class="gh-card-desc text-warning" *ngIf="app.isScannedAccountLinked() && !app.isGitHubOAuthVerified()">Connect your GitHub account to import repositories into your portfolio.</p>
+              <p class="gh-card-desc text-muted" *ngIf="!app.isScannedAccountLinked()">Browsing external profile for skill benchmarking & exploration (Read-Only).</p>
+            </div>
+            <div class="gh-repos-header-actions">
+              <button *ngIf="app.isScannedAccountLinked() && app.isGitHubOAuthVerified()" class="btn btn-secondary btn-sm" (click)="app.openBatchImportModal()" [disabled]="app.isBatchImporting() || app.importingRepoId() !== null || app.githubNotImportedCount() === 0">
+                Import All Repositories ({{ app.githubNotImportedCount() }})
+              </button>
+              <button *ngIf="app.isScannedAccountLinked() && !app.isGitHubOAuthVerified()" class="btn btn-warning btn-sm" (click)="app.connectGitHubOAuth()">
+                Connect GitHub to Import All
+              </button>
+              <button *ngIf="!app.isScannedAccountLinked()" class="btn btn-outline btn-sm" disabled title="Import restricted to @{{ app.isGitHubOAuthVerified() ? app.verifiedGitHubUsername() : app.linkedGitHubUsername() }}">
+                Import Restricted (External Profile)
+              </button>
+            </div>
+          </div>
+
+          <!-- NEW: Repo Search & Filter Toolbar -->
+          <div class="gh-repo-filter-toolbar margin-bottom-md">
+            <div class="gh-repo-search-box">
+              <svg class="search-svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input 
+                type="text" 
+                class="form-input gh-repo-search-input" 
+                placeholder="Search repositories or skills..." 
+                [ngModel]="app.githubRepoSearchQuery()" 
+                (ngModelChange)="app.githubRepoSearchQuery.set($event)" 
+              />
+              <button class="btn-clear-search" *ngIf="app.githubRepoSearchQuery()" (click)="app.githubRepoSearchQuery.set('')">✕</button>
+            </div>
+
+            <div class="gh-filter-controls">
+              <!-- Status Pills -->
+              <div class="gh-status-pills">
+                <button 
+                  class="gh-filter-pill" 
+                  [class.active]="app.githubRepoFilter() === 'all'" 
+                  (click)="app.githubRepoFilter.set('all')">
+                  All ({{ app.githubScanData()?.repos?.length || 0 }})
+                </button>
+                <button 
+                  class="gh-filter-pill" 
+                  [class.active]="app.githubRepoFilter() === 'not_imported'" 
+                  (click)="app.githubRepoFilter.set('not_imported')">
+                  Available to Import ({{ app.githubNotImportedCount() }})
+                </button>
+                <button 
+                  class="gh-filter-pill" 
+                  [class.active]="app.githubRepoFilter() === 'imported'" 
+                  (click)="app.githubRepoFilter.set('imported')">
+                  In Portfolio ({{ app.githubImportedCount() }})
+                </button>
+              </div>
+
+              <!-- Domain Dropdown -->
+              <div class="gh-domain-select-wrapper" *ngIf="app.getGitHubDomainList().length">
+                <select 
+                  class="form-select gh-domain-select" 
+                  [ngModel]="app.githubRepoDomainFilter()" 
+                  (ngModelChange)="app.githubRepoDomainFilter.set($event)">
+                  <option value="all">All Domains ({{ app.getGitHubDomainList().length }})</option>
+                  <option *ngFor="let dom of app.getGitHubDomainList()" [value]="dom">{{ dom }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Repositories Grid -->
+          <div class="gh-repo-grid" *ngIf="app.filteredGitHubRepos().length">
+            <div class="card gh-repo-card" *ngFor="let repo of app.filteredGitHubRepos()">
+              
+              <div class="gh-repo-card-top flex-between">
+                <div class="gh-repo-title-row">
+                  <span class="gh-repo-name">
+                    {{ repo.name }}
+                  </span>
+                  <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer" class="gh-repo-link-icon" title="View on GitHub">
+                    ↗
+                  </a>
+                  <span class="gh-repo-fork-badge" *ngIf="repo.is_fork">Fork</span>
+                </div>
+                <div class="gh-repo-stats">
+                  <span class="gh-meta-pill" title="Stars">★ {{ repo.stars }}</span>
+                  <span class="gh-meta-pill" title="Forks">⑂ {{ repo.forks }}</span>
+                </div>
+              </div>
+
+              <p class="gh-repo-desc" [class.text-muted-italic]="!repo.description">
+                {{ repo.description || 'No description provided for this repository.' }}
+              </p>
+
+              <!-- ML Category & Primary Language Badges -->
+              <div class="gh-repo-badges">
+                <ng-container *ngIf="repo.languages?.length; else singleLangBadge">
+                  <span 
+                    class="gh-lang-pill" 
+                    *ngFor="let lang of repo.languages" 
+                    [style.border-left-color]="app.getLanguageColor(lang)">
+                    {{ lang }}
+                  </span>
+                </ng-container>
+                <ng-template #singleLangBadge>
+                  <span class="gh-lang-pill" *ngIf="repo.language" [style.border-left-color]="app.getLanguageColor(repo.language)">
+                    {{ repo.language }}
+                  </span>
+                </ng-template>
+                <span class="gh-ml-category-badge" [title]="'ML Confidence: ' + repo.confidence_score + '%'">
+                  {{ repo.predicted_category }} ({{ repo.confidence_score }}%)
+                </span>
+              </div>
+
+              <!-- Detected Skills Tags (Deduplicated with language) -->
+              <div class="gh-repo-skills-row" *ngIf="app.getDeduplicatedRepoSkills(repo).length">
+                <span class="gh-repo-skill-tag" *ngFor="let skill of app.getDeduplicatedRepoSkills(repo)">
+                  {{ skill }}
+                </span>
+              </div>
+
+              <!-- Card Action Footer -->
+              <div class="gh-repo-card-footer flex-between">
+                <span class="gh-repo-updated text-muted">Updated {{ repo.updated_at | slice:0:10 }}</span>
+                
+                <div class="flex-align gap-xs">
+                  <ng-container *ngIf="app.isScannedAccountLinked()">
+                    <ng-container *ngIf="app.isGitHubOAuthVerified()">
+                      <div class="gh-import-group flex-align gap-xs" *ngIf="!app.isRepoAlreadyImported(repo.name)">
+                        <button 
+                          class="btn btn-primary btn-sm gh-import-btn" 
+                          (click)="app.openImportRepoModal(repo)" 
+                          [disabled]="app.importingRepoId() === repo.id">
+                          <span *ngIf="app.importingRepoId() !== repo.id">+ Import</span>
+                          <span *ngIf="app.importingRepoId() === repo.id">Importing...</span>
+                        </button>
+                      </div>
+                      <div class="flex-align gap-xs" *ngIf="app.isRepoAlreadyImported(repo.name)">
+                        <button 
+                          class="btn btn-outline btn-sm gh-repo-analysis-btn" 
+                          (click)="app.openProjectAnalysisForRepo(repo)"
+                          title="View AI Machine Learning classification & skills breakdown">
+                          <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                          </svg>
+                          <span>AI Analysis</span>
+                        </button>
+                        <span class="badge badge-success gh-imported-badge">
+                          In Portfolio
+                        </span>
+                      </div>
+                    </ng-container>
+                    <button 
+                      *ngIf="!app.isGitHubOAuthVerified()" 
+                      class="btn btn-warning btn-sm gh-import-btn" 
+                      (click)="app.connectGitHubOAuth()" 
+                      [disabled]="app.isOAuthConnecting()">
+                      Connect GitHub to Import
+                    </button>
+                  </ng-container>
+                  <span *ngIf="!app.isScannedAccountLinked()" class="badge badge-secondary" title="Only the verified account can import this repository">
+                    View Only
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Empty State when filters return 0 results -->
+          <div class="card gh-empty-search-card" *ngIf="!app.filteredGitHubRepos().length && app.githubScanData()?.repos?.length">
+            <p>No repositories match your active search or filters.</p>
+            <button class="btn btn-outline btn-sm margin-top-xs" (click)="app.githubRepoSearchQuery.set(''); app.githubRepoFilter.set('all'); app.githubRepoDomainFilter.set('all')">
+              Reset Filters
+            </button>
+          </div>
+        </div>

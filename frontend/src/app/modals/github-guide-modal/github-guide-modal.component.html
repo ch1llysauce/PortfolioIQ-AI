@@ -1,0 +1,61 @@
+<!-- GITHUB SETUP GUIDE MODAL -->
+<div class="modal-backdrop" *ngIf="app.showOAuthHelpModal()" (click)="app.closeOAuthHelpModal()">
+  <div class="modal-card oauth-help-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <h2>GitHub Connection Guide</h2>
+      <button class="btn-icon" (click)="app.closeOAuthHelpModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="sub-text margin-bottom-md">
+        To enable secure GitHub account linking and project importing, connect your GitHub App in Supabase in 2 minutes:
+      </p>
+
+      <div class="oauth-setup-steps">
+        <div class="oauth-step-card">
+          <span class="step-badge">Step 1</span>
+          <h4>Create an OAuth App on GitHub</h4>
+          <p>Go to <a href="https://github.com/settings/developers" target="_blank" rel="noopener noreferrer" class="text-primary">github.com/settings/developers ↗</a> and click <strong>New OAuth App</strong>.</p>
+        </div>
+
+        <div class="oauth-step-card">
+          <span class="step-badge">Step 2</span>
+          <h4>Configure URLs</h4>
+          <p>• <strong>Application Name:</strong> <code>PortfolioIQ-AI</code></p>
+          <p>• <strong>Homepage URL:</strong> <code>http://localhost:4200</code></p>
+          <p>• <strong>Authorization callback URL:</strong></p>
+          <div class="copy-box">
+            <code>https://rigtwkuypixwwontbckr.supabase.co/auth/v1/callback</code>
+          </div>
+        </div>
+
+        <div class="oauth-step-card">
+          <span class="step-badge">Step 3</span>
+          <h4>Enable in Supabase Dashboard</h4>
+          <p>Generate a <strong>Client Secret</strong> in GitHub, then go to your <a href="https://supabase.com/dashboard/project/rigtwkuypixwwontbckr/auth/providers" target="_blank" rel="noopener noreferrer" class="text-primary">Supabase Auth Providers ↗</a>.</p>
+          <p>Enable <strong>GitHub</strong>, paste your <strong>Client ID</strong> &amp; <strong>Client Secret</strong>, and click <strong>Save</strong>.</p>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer flex-end">
+      <button class="btn btn-secondary btn-sm" (click)="app.closeOAuthHelpModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" *ngIf="app.toasts().length">
+  <div 
+    *ngFor="let toast of app.toasts()" 
+    class="toast-item" 
+    [class]="'toast-' + toast.type" 
+    (click)="app.dismissToast(toast.id)">
+    <span class="toast-msg">{{ toast.message }}</span>
+    <button 
+      *ngIf="toast.actionLabel" 
+      class="toast-action-btn" 
+      (click)="toast.onAction && toast.onAction(); app.dismissToast(toast.id); $event.stopPropagation()">
+      {{ toast.actionLabel }}
+    </button>
+    <button class="toast-close" (click)="app.dismissToast(toast.id); $event.stopPropagation()">✕</button>
+  </div>
+</div>

@@ -12,6 +12,21 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+app-project-analysis-modal,
+app-edit-project-modal,
+app-github-import-modal,
+app-profile-modal,
+app-auth-modal,
+app-onboarding-modal,
+app-github-guide-modal,
+app-resume-viewer-modal,
+app-confirm-dialog,
+app-score-rubric-modal,
+app-printable-dossier,
+app-skill-dropdown-portal {
+  display: contents !important;
+}
+
 button, input, select, textarea {
   font-family: inherit;
 }
@@ -319,7 +334,10 @@ h1, h2, h3, h4, h5, h6 {
    LIGHT MODE — GLOBAL MARKDOWN & CHAT OVERRIDES (innerHTML scope)
    ========================================================================== */
 
-app-root[data-theme="light"] {
+html[data-theme="light"],
+body[data-theme="light"],
+app-root[data-theme="light"],
+[data-theme="light"] {
 
   /* Body background */
   background-color: #f1f5f9;

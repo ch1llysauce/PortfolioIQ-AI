@@ -1,0 +1,23 @@
+<!-- GLOBAL FIXED SKILL PICKER DROPDOWN PORTAL -->
+<div
+  class="attach-skill-dropdown-portal"
+  *ngIf="app.activeSkillPickerProjectId() && app.projectSkillSearch[app.activeSkillPickerProjectId()!]?.length > 0"
+  [style.top.px]="app.skillPickerPosition().top"
+  [style.left.px]="app.skillPickerPosition().left"
+  [style.width.px]="app.skillPickerPosition().width"
+  (mousedown)="$event.preventDefault()"
+>
+  <div
+    *ngFor="let s of app.getFilteredAttachSkills(app.activeSkillPickerProjectId()!) | slice:0:8"
+    class="attach-skill-option"
+    (mousedown)="app.attachSkillFromPicker(app.activeSkillPickerProjectId()!, s.id)"
+  >{{ s.name }}</div>
+  <div class="attach-skill-empty" *ngIf="app.getFilteredAttachSkills(app.activeSkillPickerProjectId()!).length === 0">No matching skills</div>
+  <div class="attach-skill-empty" *ngIf="app.getFilteredAttachSkills(app.activeSkillPickerProjectId()!).length === 0">
+    <div class="attach-skill-option attach-skill-create"
+      (mousedown)="app.createAndAttachSkill(app.activeSkillPickerProjectId()!, app.projectSkillSearch[app.activeSkillPickerProjectId()!])">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create &amp; attach "{{ app.projectSkillSearch[app.activeSkillPickerProjectId()!] }}"
+    </div>
+  </div>
+</div>

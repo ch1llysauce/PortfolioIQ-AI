@@ -1,0 +1,359 @@
+<!-- DEVELOPER PROFILE & ACCOUNT MODAL -->
+<div class="modal-backdrop" *ngIf="app.showProfileModal()" (click)="app.handleCloseProfileModal()">
+  <div class="modal-card profile-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <h2>Developer Profile & Account</h2>
+      </div>
+      <button class="btn-icon" (click)="app.handleCloseProfileModal()">✕</button>
+    </div>
+
+    <div class="modal-body profile-modal-body" [class.password-open]="app.showProfilePasswordSection()">
+      <!-- Top Hero Identity Card -->
+      <div class="profile-hero-card">
+        <div class="profile-hero-avatar clickable-profile-avatar" (click)="avatarFileInput.click()" title="Click to upload custom profile photo">
+          <img *ngIf="app.getModalPreviewAvatar()" [src]="app.getModalPreviewAvatar()" alt="Avatar" class="profile-hero-avatar-img" />
+          <span *ngIf="!app.getModalPreviewAvatar()">{{ app.getUserInitial() }}</span>
+          <div class="avatar-edit-overlay">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          </div>
+        </div>
+        <input #avatarFileInput type="file" accept="image/*" style="display: none" (change)="app.onAvatarFileSelected($event)" />
+        <div class="profile-hero-details">
+          <h3 class="profile-hero-name">{{ app.getUserDisplayName() }}</h3>
+          <span class="profile-hero-email">{{ app.currentUser()?.email }}</span>
+          <div class="profile-hero-badges flex-align gap-xs">
+            <span class="badge badge-primary">{{ app.selectedRole()?.title || 'Developer' }}</span>
+            <span class="badge badge-success" *ngIf="app.isGitHubOAuthVerified()">GitHub Verified</span>
+            <span class="badge badge-secondary" *ngIf="!app.isGitHubOAuthVerified()">Standard Account</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Portfolio Statistics Grid -->
+      <div class="profile-stats-grid">
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ app.projects().length }}</span>
+          <span class="profile-stat-lbl">Projects</span>
+        </div>
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ app.getUserSkillNames().length }}</span>
+          <span class="profile-stat-lbl">Verified Skills</span>
+        </div>
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ app.portfolioScore()?.overall_health_score ?? 0 }}/100</span>
+          <span class="profile-stat-lbl">Health Score</span>
+        </div>
+        <div class="profile-stat-box">
+          <span class="profile-stat-num">{{ app.savedResumeMeta() ? 'Active' : 'Pending' }}</span>
+          <span class="profile-stat-lbl">Resume ATS</span>
+        </div>
+      </div>
+
+      <!-- Profile Edit Form -->
+      <form (ngSubmit)="app.saveProfileChanges()" class="profile-form">
+        <div class="profile-form-grid">
+          <div class="form-group profile-field-group">
+            <div class="flex-between">
+              <label class="form-label" for="profileDisplayNameInput">Display Name <span class="text-danger">*</span></label>
+              <small class="text-muted" style="font-size: 0.76rem;">{{ app.profileDisplayName.length }}/32</small>
+            </div>
+            <input
+              id="profileDisplayNameInput"
+              type="text"
+              class="form-input"
+              [(ngModel)]="app.profileDisplayName"
+              name="profileDisplayName"
+              placeholder="e.g. John Doe"
+              maxlength="32"
+              required
+            />
+            <small class="profile-field-hint">
+              Max 32 chars. Shown across dashboard & portfolio.
+            </small>
+          </div>
+
+          <div class="form-group profile-field-group">
+            <label class="form-label" for="profileRoleSelect">Target Career Role</label>
+            <select 
+              id="profileRoleSelect"
+              class="form-select"
+              [(ngModel)]="app.profileSelectedRoleId"
+              name="profileSelectedRoleId">
+              <option value="" disabled>Select Target Career Role</option>
+              <option *ngFor="let role of app.careerRoles()" [value]="role.id">
+                {{ role.title }}
+              </option>
+            </select>
+            <small class="profile-field-hint">
+              Used in AI Coach, ATS Audit & Skill Gap.
+            </small>
+          </div>
+
+          <!-- Profile Photo Manager (No raw URL input) -->
+          <div class="form-group profile-field-group full-width-profile-field profile-photo-manage-group">
+            <label class="form-label">Profile Photo</label>
+            <div class="profile-photo-control-card">
+              <div class="profile-photo-preview-wrapper">
+                <div class="profile-photo-preview-box">
+                  <img *ngIf="app.getModalPreviewAvatar()" [src]="app.getModalPreviewAvatar()" alt="Profile Photo" class="profile-photo-preview-img" />
+                  <span *ngIf="!app.getModalPreviewAvatar()" class="profile-photo-preview-placeholder">{{ app.getUserInitial() }}</span>
+                </div>
+              </div>
+
+              <div class="profile-photo-info">
+                <div class="profile-photo-status-row flex-align gap-xs">
+                  <span *ngIf="app.profileAvatarUrl?.startsWith('data:image')" class="photo-source-badge local">
+                    <svg class="badge-mini-svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Custom Uploaded Photo
+                  </span>
+                  <span *ngIf="app.profileAvatarUrl && !app.profileAvatarUrl.startsWith('data:image') && app.profileAvatarUrl.includes('github')" class="photo-source-badge github">
+                    <svg class="badge-mini-svg" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                    GitHub Profile Photo
+                  </span>
+                  <span *ngIf="app.profileAvatarUrl && !app.profileAvatarUrl.startsWith('data:image') && !app.profileAvatarUrl.includes('github')" class="photo-source-badge web">
+                    <svg class="badge-mini-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    Web Photo
+                  </span>
+                  <span *ngIf="!app.profileAvatarUrl" class="photo-source-badge default">
+                    No photo set (Default avatar)
+                  </span>
+                </div>
+
+                <div class="profile-photo-actions-row flex-align gap-xs flex-wrap">
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm photo-action-btn" 
+                    (click)="avatarFileInput.click()">
+                    <svg class="btn-sm-svg" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    <span>{{ app.profileAvatarUrl ? 'Change Photo' : 'Upload Photo' }}</span>
+                  </button>
+
+                  <button 
+                    *ngIf="app.verifiedGitHubUsername() || app.githubUsername" 
+                    type="button" 
+                    class="btn btn-secondary btn-sm photo-action-btn" 
+                    (click)="app.useGitHubAvatar()">
+                    <svg class="btn-sm-svg" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                    <span>Use GitHub Photo</span>
+                  </button>
+
+                  <button 
+                    *ngIf="app.profileAvatarUrl" 
+                    type="button" 
+                    class="btn btn-danger-soft btn-sm photo-action-btn" 
+                    (click)="app.removeProfileAvatar()">
+                    <svg class="btn-sm-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Remove</span>
+                  </button>
+                </div>
+
+                <small class="profile-field-hint">
+                  Supports PNG, JPG, or WebP up to 10MB. Staged changes will apply when you click Save Changes.
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GitHub Integration Status Card -->
+        <div class="profile-section-card margin-bottom-sm">
+          <div class="flex-between">
+            <div class="flex-align gap-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              <div>
+                <span class="profile-section-title">GitHub Integration</span>
+                <span class="profile-section-sub" *ngIf="app.isGitHubOAuthVerified()">
+                  Connected as @{{ app.verifiedGitHubUsername() }}
+                </span>
+                <span class="profile-section-sub" *ngIf="!app.isGitHubOAuthVerified()">
+                  Not connected
+                </span>
+              </div>
+            </div>
+            <div>
+              <span class="badge badge-success" *ngIf="app.isGitHubOAuthVerified()">Verified</span>
+              <button 
+                *ngIf="!app.isGitHubOAuthVerified()" 
+                type="button" 
+                class="btn btn-warning btn-sm" 
+                (click)="app.connectGitHubOAuth()" 
+                [disabled]="app.isOAuthConnecting()">
+                Connect
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Security & Password Toggle -->
+        <div class="profile-section-card margin-bottom-sm">
+          <div class="flex-between" style="cursor: pointer;" (click)="app.showProfilePasswordSection.set(!app.showProfilePasswordSection())">
+            <div class="flex-align gap-sm">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span class="profile-section-title">Account Security & Password</span>
+            </div>
+            <span class="profile-toggle-indicator">
+              {{ app.showProfilePasswordSection() ? '▲ Close' : '▼ Change' }}
+            </span>
+          </div>
+
+          <div class="profile-password-expand" *ngIf="app.showProfilePasswordSection()" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            
+            <!-- 1. Current Password -->
+            <div class="form-group margin-bottom-sm">
+              <label class="form-label" for="profileCurrentPasswordInput">Current Password <span class="text-danger">*</span></label>
+              <div class="password-input-wrapper">
+                <input
+                  id="profileCurrentPasswordInput"
+                  [type]="app.showCurrentPassword() ? 'text' : 'password'"
+                  class="form-input password-input"
+                  [(ngModel)]="app.profileCurrentPassword"
+                  (input)="app.passwordErrorMessage.set('')"
+                  name="profileCurrentPassword"
+                  placeholder="Enter your current password"
+                  required
+                />
+                <button 
+                  type="button" 
+                  class="password-eye-btn" 
+                  (click)="app.showCurrentPassword.set(!app.showCurrentPassword())"
+                  [title]="app.showCurrentPassword() ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!app.showCurrentPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="7" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="app.showCurrentPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. New Password -->
+            <div class="form-group margin-bottom-sm">
+              <label class="form-label" for="profileNewPasswordInput">New Password <span class="text-danger">*</span></label>
+              <div class="password-input-wrapper">
+                <input
+                  id="profileNewPasswordInput"
+                  [type]="app.showNewPassword() ? 'text' : 'password'"
+                  class="form-input password-input"
+                  [(ngModel)]="app.profileNewPassword"
+                  (input)="app.passwordErrorMessage.set('')"
+                  name="profileNewPassword"
+                  placeholder="Enter at least 6 characters"
+                  minlength="6"
+                  required
+                />
+                <button 
+                  type="button" 
+                  class="password-eye-btn" 
+                  (click)="app.showNewPassword.set(!app.showNewPassword())"
+                  [title]="app.showNewPassword() ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!app.showNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="7" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="app.showNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Confirm New Password -->
+            <div class="form-group margin-bottom-sm">
+              <label class="form-label" for="profileConfirmPasswordInput">Confirm New Password <span class="text-danger">*</span></label>
+              <div class="password-input-wrapper">
+                <input
+                  id="profileConfirmPasswordInput"
+                  [type]="app.showConfirmPassword() ? 'text' : 'password'"
+                  class="form-input password-input"
+                  [(ngModel)]="app.profileConfirmPassword"
+                  (input)="app.passwordErrorMessage.set('')"
+                  name="profileConfirmPassword"
+                  placeholder="Re-enter your new password"
+                  minlength="6"
+                  required
+                />
+                <button 
+                  type="button" 
+                  class="password-eye-btn" 
+                  (click)="app.showConfirmPassword.set(!app.showConfirmPassword())"
+                  [title]="app.showConfirmPassword() ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!app.showConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="7" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="app.showConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Password Rules Checklist -->
+            <div class="password-rules-list margin-bottom-sm">
+              <div class="password-rule-item" [class.rule-valid]="app.profileNewPassword.length >= 6">
+                <span class="rule-icon">{{ app.profileNewPassword.length >= 6 ? '✓' : '•' }}</span>
+                <span>At least 6 characters</span>
+              </div>
+              <div class="password-rule-item" [class.rule-valid]="app.profileNewPassword && app.profileCurrentPassword && app.profileNewPassword !== app.profileCurrentPassword">
+                <span class="rule-icon">{{ (app.profileNewPassword && app.profileCurrentPassword && app.profileNewPassword !== app.profileCurrentPassword) ? '✓' : '•' }}</span>
+                <span>Different from current password</span>
+              </div>
+              <div class="password-rule-item" [class.rule-valid]="app.profileConfirmPassword && app.profileNewPassword === app.profileConfirmPassword">
+                <span class="rule-icon">{{ (app.profileConfirmPassword && app.profileNewPassword === app.profileConfirmPassword) ? '✓' : '•' }}</span>
+                <span>Passwords match</span>
+              </div>
+            </div>
+
+            <!-- Inline Error Alert -->
+            <div class="password-error-alert" *ngIf="app.passwordErrorMessage() || (app.profileConfirmPassword && app.profileNewPassword && app.profileConfirmPassword.length >= app.profileNewPassword.length && app.profileNewPassword !== app.profileConfirmPassword)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ app.passwordErrorMessage() || 'Passwords do not match. Please re-enter your new password.' }}</span>
+            </div>
+
+            <button 
+              type="button" 
+              class="btn btn-primary btn-sm profile-update-pass-btn" 
+              (click)="app.updateAccountPassword()" 
+              [disabled]="app.isUpdatingProfilePassword()">
+              <span *ngIf="!app.isUpdatingProfilePassword()">Update Password</span>
+              <span *ngIf="app.isUpdatingProfilePassword()">Verifying & Updating...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-footer flex-between profile-modal-footer">
+          <button type="button" class="profile-btn profile-btn-signout" (click)="app.closeProfileModal(); app.confirmSignOut()">
+            Sign Out
+          </button>
+          <div class="profile-footer-actions">
+            <button type="button" class="profile-btn profile-btn-close" (click)="app.handleCloseProfileModal()">Close</button>
+            <button type="submit" class="profile-btn profile-btn-save" [disabled]="app.isSavingProfile() || app.isUpdatingProfilePassword() || !app.profileDisplayName.trim()">
+              <span *ngIf="!app.isSavingProfile() && !app.isUpdatingProfilePassword()">Save Changes</span>
+              <span *ngIf="app.isSavingProfile() || app.isUpdatingProfilePassword()">Saving...</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

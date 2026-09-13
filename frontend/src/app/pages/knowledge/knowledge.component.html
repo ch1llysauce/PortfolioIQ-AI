@@ -1,0 +1,327 @@
+<!-- Knowledge Header Card & Mode Switcher -->
+        <div class="card knowledge-header-card">
+          <div class="card-header flex-between">
+            <div>
+              <h2>Developer Knowledge Graph & Skill Trees</h2>
+              <p class="section-subtitle">
+                In-memory ontology connecting <strong>{{ app.knowledgeGraphData()?.total_nodes || 76 }} Technologies & Skills</strong> 
+                across <strong>{{ app.knowledgeGraphData()?.total_edges || 148 }} Relationships</strong>.
+              </p>
+            </div>
+            
+            <div class="view-mode-tabs">
+              <button 
+                type="button" 
+                class="view-mode-btn" 
+                [class.active]="app.knowledgeViewMode() === 'tree'" 
+                (click)="app.setKnowledgeViewMode('tree')">
+                Role Roadmaps
+              </button>
+              <button 
+                type="button" 
+                class="view-mode-btn" 
+                [class.active]="app.knowledgeViewMode() === 'inspector'" 
+                (click)="app.setKnowledgeViewMode('inspector')">
+                Skill Explorer
+              </button>
+              <button 
+                type="button" 
+                class="view-mode-btn" 
+                [class.active]="app.knowledgeViewMode() === 'path'" 
+                (click)="app.setKnowledgeViewMode('path')">
+                My Learning Path
+              </button>
+            </div>
+          </div>
+
+          <!-- Role Selector Bar (for Role Tree View) -->
+          <div class="role-selector-bar" *ngIf="app.knowledgeViewMode() === 'tree'">
+            <span class="bar-label">Explore Career Skill Tree:</span>
+
+            <!-- Mobile Dropdown Selector (<= 768px) -->
+            <div class="knowledge-role-select-wrapper">
+              <select 
+                class="form-select modern-knowledge-select" 
+                [ngModel]="app.selectedKnowledgeRole()" 
+                (ngModelChange)="app.selectRoleTree($event)">
+                <option *ngFor="let r of app.careerRoles()" [value]="r.title">
+                  Role: {{ r.title }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Desktop Pills Scroll (> 768px) -->
+            <div class="role-pill-scroll">
+              <button 
+                type="button" 
+                class="role-pill" 
+                *ngFor="let r of app.careerRoles()" 
+                [class.active]="app.selectedKnowledgeRole() === r.title" 
+                (click)="app.selectRoleTree(r.title)">
+                {{ r.title }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW MODE 1: ROLE SKILL TREE TIERS -->
+        <div class="role-tree-container" *ngIf="app.knowledgeViewMode() === 'tree'">
+          
+          <!-- Role Header Overview Card -->
+          <div class="card role-overview-hero" *ngIf="app.roleSkillTree()">
+            <div class="flex-between">
+              <div>
+                <h3 class="role-hero-title">{{ app.roleSkillTree()?.role }}</h3>
+                <p class="role-hero-desc">{{ app.roleSkillTree()?.description }}</p>
+              </div>
+              <div class="role-domains-badges">
+                <span class="badge badge-primary" *ngFor="let d of app.roleSkillTree()?.core_domains">{{ d }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Tier Grid: Foundational, Intermediate, Advanced -->
+          <div class="tree-tiers-grid" *ngIf="app.roleSkillTree()">
+            
+            <!-- TIER 1: FOUNDATIONAL -->
+            <div class="tier-column tier-foundational">
+              <div class="tier-header">
+                <div class="tier-badge foundational">Tier 1 • Foundational</div>
+                <h4>Core Basics & Languages</h4>
+                <p class="tier-subtitle">Prerequisites needed before building complex projects.</p>
+              </div>
+
+              <div class="tier-cards-list">
+                <div class="tier-node-card" *ngFor="let node of app.roleSkillTree()?.foundational" (click)="app.inspectNode(node.name); app.setKnowledgeViewMode('inspector')" title="Click to view in Skill Explorer">
+                  <div class="flex-between">
+                    <strong class="node-name">{{ node.name }}</strong>
+                    <button class="btn btn-outline btn-xs" (click)="$event.stopPropagation(); app.inspectNode(node.name); app.setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
+                  </div>
+                  <span class="node-cat">{{ node.category }}</span>
+                  <div class="prereqs-box" *ngIf="node.prerequisites?.length">
+                    <span class="prereq-label">Prerequisites:</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites" (click)="$event.stopPropagation(); app.inspectNode(p); app.setKnowledgeViewMode('inspector')" [title]="'Inspect ' + p">{{ p }}</span>
+                  </div>
+                </div>
+                <div class="empty-tier-box" *ngIf="!app.roleSkillTree()?.foundational?.length">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>No foundational skills classified for this role.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- TIER 2: INTERMEDIATE / CORE -->
+            <div class="tier-column tier-intermediate">
+              <div class="tier-header">
+                <div class="tier-badge intermediate">Tier 2 • Core Tech</div>
+                <h4>Frameworks & Tools</h4>
+                <p class="tier-subtitle">Day-to-day technologies and practical tooling.</p>
+              </div>
+
+              <div class="tier-cards-list">
+                <div class="tier-node-card" *ngFor="let node of app.roleSkillTree()?.intermediate" (click)="app.inspectNode(node.name); app.setKnowledgeViewMode('inspector')" title="Click to view in Skill Explorer">
+                  <div class="flex-between">
+                    <strong class="node-name">{{ node.name }}</strong>
+                    <button class="btn btn-outline btn-xs" (click)="$event.stopPropagation(); app.inspectNode(node.name); app.setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
+                  </div>
+                  <span class="node-cat">{{ node.category }}</span>
+                  <div class="prereqs-box" *ngIf="node.prerequisites?.length">
+                    <span class="prereq-label">Prerequisites:</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites" (click)="$event.stopPropagation(); app.inspectNode(p); app.setKnowledgeViewMode('inspector')" [title]="'Inspect ' + p">{{ p }}</span>
+                  </div>
+                </div>
+                <div class="empty-tier-box" *ngIf="!app.roleSkillTree()?.intermediate?.length">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>No intermediate skills listed for this role.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- TIER 3: ADVANCED -->
+            <div class="tier-column tier-advanced">
+              <div class="tier-header">
+                <div class="tier-badge advanced">Tier 3 • Advanced</div>
+                <h4>Architecture & Systems</h4>
+                <p class="tier-subtitle">High-impact specialization & scalability skills.</p>
+              </div>
+
+              <div class="tier-cards-list">
+                <div class="tier-node-card" *ngFor="let node of app.roleSkillTree()?.advanced" (click)="app.inspectNode(node.name); app.setKnowledgeViewMode('inspector')" title="Click to view in Skill Explorer">
+                  <div class="flex-between">
+                    <strong class="node-name">{{ node.name }}</strong>
+                    <button class="btn btn-outline btn-xs" (click)="$event.stopPropagation(); app.inspectNode(node.name); app.setKnowledgeViewMode('inspector')" title="Inspect connections">Inspect</button>
+                  </div>
+                  <span class="node-cat">{{ node.category }}</span>
+                  <div class="prereqs-box" *ngIf="node.prerequisites?.length">
+                    <span class="prereq-label">Prerequisites:</span>
+                    <span class="prereq-pill" *ngFor="let p of node.prerequisites" (click)="$event.stopPropagation(); app.inspectNode(p); app.setKnowledgeViewMode('inspector')" [title]="'Inspect ' + p">{{ p }}</span>
+                  </div>
+                </div>
+                <div class="empty-tier-box" *ngIf="!app.roleSkillTree()?.advanced?.length">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: #a78bfa; opacity: 0.85;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <span>All core competencies covered in Tiers 1 & 2.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- VIEW MODE 2: ENTITY INSPECTOR -->
+        <div class="entity-inspector-view" *ngIf="app.knowledgeViewMode() === 'inspector'">
+          
+          <div class="card inspector-search-card">
+            <div class="knowledge-search-group">
+              <label class="knowledge-search-label">Explore Skill Connections (General Info):</label>
+              <select class="form-select modern-knowledge-select" [ngModel]="app.inspectedNodeName()" (ngModelChange)="app.inspectNode($event)">
+                <option *ngFor="let n of app.knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card inspector-details-hero" *ngIf="app.inspectedNodeName()">
+            <div class="flex-between">
+              <div>
+                <span class="inspector-badge">Selected Entity</span>
+                <h2>{{ app.inspectedNodeName() }}</h2>
+              </div>
+              <button class="btn btn-primary btn-sm" (click)="app.calculateGoalSkillPath(app.inspectedNodeName()); app.setKnowledgeViewMode('path')">
+                Calculate Roadmap to {{ app.inspectedNodeName() }}
+              </button>
+            </div>
+
+            <!-- 3 Inspection Panels -->
+            <div class="inspector-grid">
+              
+              <!-- Prerequisites Panel -->
+              <div class="inspector-panel">
+                <h4 class="panel-title text-warning">What to Learn First (Prerequisites)</h4>
+                <p class="panel-desc">Technologies and concepts that should precede {{ app.inspectedNodeName() }}:</p>
+                <div class="panel-items-list" *ngIf="app.inspectedNodePrereqs().length; else noPrereqs">
+                  <div class="panel-item-card" *ngFor="let p of app.inspectedNodePrereqs()" (click)="app.inspectNode(p.name)">
+                    <strong>{{ p.name }}</strong>
+                    <span class="item-sub">{{ p.level }} • {{ p.category }}</span>
+                  </div>
+                </div>
+                <ng-template #noPrereqs>
+                  <p class="empty-hint">Foundational entity — No prior technical prerequisites required.</p>
+                </ng-template>
+              </div>
+
+              <!-- Unlocked Skills Panel -->
+              <div class="inspector-panel">
+                <h4 class="panel-title text-success">What It Unlocks</h4>
+                <p class="panel-desc">Advanced technologies unlocked once you master {{ app.inspectedNodeName() }}:</p>
+                <div class="panel-items-list" *ngIf="app.inspectedNodeUnlocked().length; else noUnlocked">
+                  <div class="panel-item-card" *ngFor="let u of app.inspectedNodeUnlocked()" (click)="app.inspectNode(u.name)">
+                    <strong>{{ u.name }}</strong>
+                    <span class="item-sub">{{ u.level }} • {{ u.category }}</span>
+                  </div>
+                </div>
+                <ng-template #noUnlocked>
+                  <p class="empty-hint">Terminal specialization node — unlocks architectural depth.</p>
+                </ng-template>
+              </div>
+
+              <!-- Complementary Tech Panel -->
+              <div class="inspector-panel">
+                <h4 class="panel-title text-primary">Commonly Paired With</h4>
+                <p class="panel-desc">Ecosystem tools and libraries that complement {{ app.inspectedNodeName() }}:</p>
+                <div class="panel-items-list" *ngIf="app.inspectedNodeComplements().length; else noComplements">
+                  <div class="panel-item-card" *ngFor="let c of app.inspectedNodeComplements()" (click)="app.inspectNode(c.name)">
+                    <strong>{{ c.name }}</strong>
+                    <span class="item-sub">{{ c.category }}</span>
+                  </div>
+                </div>
+                <ng-template #noComplements>
+                  <p class="empty-hint">Standard standalone component.</p>
+                </ng-template>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW MODE 3: PREREQUISITE PATH SOLVER -->
+        <div class="path-solver-view" *ngIf="app.knowledgeViewMode() === 'path'">
+          
+          <div class="card path-search-card">
+            <div class="knowledge-search-group">
+              <label class="knowledge-search-label">Calculate My Personal Learning Path for:</label>
+              <select class="form-select modern-knowledge-select" [ngModel]="app.goalSkillInput()" (ngModelChange)="app.calculateGoalSkillPath($event)">
+                <option *ngFor="let n of app.knowledgeGraphData()?.nodes" [value]="n.id">{{ n.label }} ({{ n.category }})</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card path-results-card" *ngIf="app.goalSkillRoadmap()">
+            
+            <!-- Readiness Status Banner -->
+            <div class="readiness-banner" [class.ready]="app.goalSkillRoadmap()?.is_ready_to_learn" [class.not-ready]="!app.goalSkillRoadmap()?.is_ready_to_learn">
+              <div class="readiness-banner-content">
+                <div class="readiness-header-row">
+                  <span class="badge readiness-status-badge" [class.badge-success]="app.goalSkillRoadmap()?.is_ready_to_learn" [class.badge-warning]="!app.goalSkillRoadmap()?.is_ready_to_learn">
+                    {{ app.goalSkillRoadmap()?.is_ready_to_learn ? 'Learning Path Ready' : 'Prerequisites Required' }}
+                  </span>
+                  <span class="readiness-eval-text">Evaluated against {{ app.getUserSkillNames().length }} verified skills</span>
+                </div>
+                <h3 class="readiness-title" *ngIf="app.goalSkillRoadmap()?.is_ready_to_learn">You Are Ready to Learn {{ app.goalSkillRoadmap()?.goal_skill }}!</h3>
+                <h3 class="readiness-title" *ngIf="!app.goalSkillRoadmap()?.is_ready_to_learn">Prerequisites Needed Before Learning {{ app.goalSkillRoadmap()?.goal_skill }}</h3>
+                <p class="readiness-desc" *ngIf="app.goalSkillRoadmap()?.is_ready_to_learn">
+                  Your portfolio projects already demonstrate all foundational prerequisites needed.
+                </p>
+                <p class="readiness-desc" *ngIf="!app.goalSkillRoadmap()?.is_ready_to_learn">
+                  You are missing {{ app.goalSkillRoadmap()?.missing_prerequisites_in_order?.length }} prerequisite(s). Learning them in sequence will maximize your retention.
+                </p>
+              </div>
+            </div>
+
+            <!-- 2-Column Comparison -->
+            <div class="path-columns-grid">
+              
+              <div class="path-col">
+                <h4 class="text-success">Already Acquired Prerequisites</h4>
+                <div class="path-list" *ngIf="app.goalSkillRoadmap()?.already_acquired_prereqs?.length; else noneAcquired">
+                  <div class="path-item acquired clickable-path-item" *ngFor="let p of app.goalSkillRoadmap()?.already_acquired_prereqs" (click)="app.calculateGoalSkillPath(p)" title="Calculate Learning Path for {{ p }}">
+                    <span class="path-skill-name">{{ p }}</span>
+                    <div class="flex-align gap-xs path-action-badge" (click)="$event.stopPropagation(); app.inspectNode(p); app.setKnowledgeViewMode('inspector')" title="Inspect {{ p }} in Skill Explorer">
+                      <span class="badge badge-success">Mastered</span>
+                      <span class="path-inspect-arrow">→</span>
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noneAcquired>
+                  <p class="empty-hint" *ngIf="!app.goalSkillRoadmap()?.missing_prerequisites_in_order?.length">
+                    No prior prerequisites required for this skill. You can start learning right away!
+                  </p>
+                  <p class="empty-hint" *ngIf="app.goalSkillRoadmap()?.missing_prerequisites_in_order?.length">
+                    None of the required prerequisites are currently demonstrated in your portfolio.
+                  </p>
+                </ng-template>
+              </div>
+
+              <div class="path-col">
+                <h4 [class.text-danger]="app.goalSkillRoadmap()?.missing_prerequisites_in_order?.length" [class.text-success]="!app.goalSkillRoadmap()?.missing_prerequisites_in_order?.length">
+                  Missing Prerequisites (In Sequence)
+                </h4>
+                <div class="path-list" *ngIf="app.goalSkillRoadmap()?.missing_prerequisites_in_order?.length; else noneMissing">
+                  <div class="path-item missing clickable-path-item" *ngFor="let m of app.goalSkillRoadmap()?.missing_prerequisites_in_order; let i = index" (click)="app.calculateGoalSkillPath(m)" title="Calculate Learning Path for {{ m }}">
+                    <span><strong>Step {{ i + 1 }}:</strong> {{ m }}</span>
+                    <div class="flex-align gap-xs path-action-badge" (click)="$event.stopPropagation(); app.inspectNode(m); app.setKnowledgeViewMode('inspector')" title="Inspect {{ m }} in Skill Explorer">
+                      <span class="badge badge-warning">Required First</span>
+                      <span class="path-inspect-arrow">→</span>
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noneMissing>
+                  <p class="empty-hint text-success">
+                    No missing prerequisites! You can start directly with {{ app.goalSkillRoadmap()?.goal_skill }}.
+                  </p>
+                </ng-template>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>

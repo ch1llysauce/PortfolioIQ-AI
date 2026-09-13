@@ -107,6 +107,40 @@ class GitHubClient:
             else:
                 repos_raw = repos_res.json()
 
+            # 3. Concurrently fetch full language breakdown for repositories
+            repo_languages_map: Dict[str, List[str]] = {}
+            if repos_raw:
+                def _fetch_languages(repo_item):
+                    r_id = str(repo_item.get("id", ""))
+                    lang_url = repo_item.get("languages_url")
+                    primary_lang = repo_item.get("language")
+                    fallback = [primary_lang] if primary_lang and primary_lang != "Other" else []
+                    if not lang_url:
+                        return r_id, fallback
+                    try:
+                        l_res = client.get(lang_url, headers=headers, timeout=5.0)
+                        if l_res.status_code == 200:
+                            data = l_res.json()
+                            if isinstance(data, dict) and data:
+                                total_bytes = sum(data.values())
+                                significant = [
+                                    l for l, bytes_cnt in data.items()
+                                    if total_bytes == 0 or (bytes_cnt / total_bytes) >= 0.01
+                                ]
+                                return r_id, significant[:6] if significant else list(data.keys())[:6]
+                    except Exception:
+                        pass
+                    return r_id, fallback
+
+                try:
+                    from concurrent.futures import ThreadPoolExecutor
+                    with ThreadPoolExecutor(max_workers=8) as executor:
+                        results = list(executor.map(_fetch_languages, repos_raw))
+                        for r_id, langs in results:
+                            repo_languages_map[r_id] = langs
+                except Exception:
+                    pass
+
         parsed_repos = []
         all_skills_counter = Counter()
         lang_counter = Counter()
@@ -114,6 +148,7 @@ class GitHubClient:
         total_forks = 0
 
         for r in repos_raw:
+            repo_id = str(r.get("id"))
             # Skip fork repos if desired, or keep them with flag
             is_fork = r.get("fork", False)
             name = r.get("name", "")
@@ -125,17 +160,26 @@ class GitHubClient:
 
             total_stars += stars
             total_forks += forks
-            if language and language != "Other":
+
+            repo_langs = repo_languages_map.get(repo_id, [])
+            if not repo_langs and language and language != "Other":
+                repo_langs = [language]
+
+            for l in repo_langs:
+                if l and l != "Other":
+                    lang_counter[l] += 1
+            if not repo_langs and language and language != "Other":
                 lang_counter[language] += 1
 
             # Combine metadata for semantic entity extraction
-            combined_text = f"{name} {description} {' '.join(topics)} {language}"
+            combined_text = f"{name} {description} {' '.join(topics)} {' '.join(repo_langs)}"
             extracted = extract_entities_from_text(combined_text)
             
             detected_skills = list(set(extracted["skills"] + extracted["technologies"]))
-            if language and language not in ["Other", "HTML", "CSS"]:
-                if language not in detected_skills:
-                    detected_skills.append(language)
+            for l in repo_langs:
+                if l and l not in ["Other"]:
+                    if l not in detected_skills:
+                        detected_skills.append(l)
             
             detected_skills.sort()
 
@@ -154,12 +198,13 @@ class GitHubClient:
                     pass
 
             parsed_repos.append({
-                "id": str(r.get("id")),
+                "id": repo_id,
                 "name": name,
                 "full_name": r.get("full_name", f"{clean_user}/{name}"),
                 "description": description or "No description provided.",
                 "html_url": r.get("html_url", ""),
                 "language": language,
+                "languages": repo_langs,
                 "stars": stars,
                 "forks": forks,
                 "topics": topics,

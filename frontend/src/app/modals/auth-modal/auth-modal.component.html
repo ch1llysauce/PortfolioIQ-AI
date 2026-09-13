@@ -1,0 +1,384 @@
+<!-- AUTHENTICATION MODAL DIALOG -->
+<div class="modal-backdrop" *ngIf="app.showAuthModal()" (click)="app.closeAuthModal()">
+  <div class="modal-card auth-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between auth-modal-header">
+      <div class="flex-align gap-sm">
+        <div class="auth-header-icon-badge">
+          <img [src]="app.isDarkMode() ? '/portfolioiq.png' : '/portfolioiqlight.png'" alt="PortfolioIQ" class="auth-header-logo" width="34" height="34" loading="lazy" decoding="async" />
+        </div>
+        <div>
+          <h2 class="auth-modal-title">
+            {{ app.authMode() === 'login' ? 'Sign In to PortfolioIQ' : (app.authMode() === 'register' ? 'Create Developer Account' : 'Reset Password') }}
+          </h2>
+          <p class="auth-modal-subtitle" *ngIf="app.authMode() === 'login'">Welcome back! Access your portfolio & AI Coach</p>
+          <p class="auth-modal-subtitle" *ngIf="app.authMode() === 'register'">Level up your developer portfolio & track skills</p>
+          <p class="auth-modal-subtitle" *ngIf="app.authMode() === 'forgot'">Follow steps to securely recover your account</p>
+        </div>
+      </div>
+      <button class="btn-icon" (click)="app.closeAuthModal()" aria-label="Close modal">✕</button>
+    </div>
+
+    <!-- Stepper Bar for Forgot Password -->
+    <div class="auth-stepper" *ngIf="app.authMode() === 'forgot'">
+      <div class="stepper-item" [class.active]="app.forgotStep() === 1" [class.completed]="app.forgotStep() > 1">
+        <div class="stepper-bubble">1</div>
+        <span class="stepper-label">Email</span>
+      </div>
+      <div class="stepper-divider" [class.active]="app.forgotStep() > 1"></div>
+      <div class="stepper-item" [class.active]="app.forgotStep() === 2" [class.completed]="app.forgotStep() > 2">
+        <div class="stepper-bubble">2</div>
+        <span class="stepper-label">Verify</span>
+      </div>
+      <div class="stepper-divider" [class.active]="app.forgotStep() > 2"></div>
+      <div class="stepper-item" [class.active]="app.forgotStep() === 3">
+        <div class="stepper-bubble">3</div>
+        <span class="stepper-label">New Password</span>
+      </div>
+    </div>
+
+    <!-- Segmented Pill Switcher (Login/Register) -->
+    <div class="auth-segmented-pill" *ngIf="app.authMode() !== 'forgot'">
+      <button type="button" class="auth-pill-btn" [class.active]="app.authMode() === 'login'" (click)="app.switchAuthMode('login')">
+        <svg class="auth-pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+        </svg>
+        <span>Sign In</span>
+      </button>
+      <button type="button" class="auth-pill-btn" [class.active]="app.authMode() === 'register'" (click)="app.switchAuthMode('register')">
+        <svg class="auth-pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+        </svg>
+        <span>Register</span>
+      </button>
+    </div>
+
+    <!-- Feedback Banners -->
+    <div class="alert-danger flex-between" *ngIf="app.authError()">
+      <span>{{ app.authError() }}</span>
+      <button type="button" class="alert-close-btn" (click)="app.clearAuthMessages()" aria-label="Dismiss error">✕</button>
+    </div>
+    <div class="alert-success flex-between" *ngIf="app.forgotSuccessMsg()">
+      <span>{{ app.forgotSuccessMsg() }}</span>
+      <button type="button" class="alert-close-btn" (click)="app.clearAuthMessages()" aria-label="Dismiss message">✕</button>
+    </div>
+
+    <!-- STANDARD LOGIN / REGISTER FORMS -->
+    <div class="auth-form-body" *ngIf="app.authMode() !== 'forgot'">
+      <div class="form-group" *ngIf="app.authMode() === 'register'">
+        <div class="flex-between">
+          <label class="form-label" for="authDisplayNameInput">Display Name <span class="text-danger">*</span></label>
+          <small class="text-muted" style="font-size: 0.76rem;">{{ app.authDisplayName.length }}/32</small>
+        </div>
+        <div class="auth-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input 
+            id="authDisplayNameInput"
+            type="text" 
+            placeholder="e.g. John Doe" 
+            [(ngModel)]="app.authDisplayName" 
+            class="form-input auth-form-input with-icon" 
+            maxlength="32" 
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="authEmailInput">Email Address <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <input 
+            id="authEmailInput"
+            type="email" 
+            placeholder="developer@example.com" 
+            [(ngModel)]="app.authEmail" 
+            class="form-input auth-form-input with-icon" 
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="flex-between">
+          <label class="form-label" for="authPasswordInput">Password <span class="text-danger">*</span></label>
+          <a href="javascript:void(0)" *ngIf="app.authMode() === 'login'" (click)="app.switchAuthMode('forgot')" class="auth-link-subtle">
+            Forgot Password?
+          </a>
+        </div>
+        <div class="auth-input-wrapper password-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <input 
+            id="authPasswordInput"
+            [type]="app.showAuthPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [(ngModel)]="app.authPassword" 
+            class="form-input auth-form-input password-input with-icon" 
+            (keydown.enter)="app.authMode() === 'login' ? app.login() : app.register()" 
+          />
+          <button 
+            type="button" 
+            class="password-eye-btn" 
+            (click)="app.showAuthPassword.set(!app.showAuthPassword())"
+            [title]="app.showAuthPassword() ? 'Hide password' : 'Show password'">
+            <svg *ngIf="!app.showAuthPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="7" r="3"></circle>
+            </svg>
+            <svg *ngIf="app.showAuthPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+        <small class="auth-field-hint" *ngIf="app.authMode() === 'register'">
+          Minimum of 6 characters.
+        </small>
+      </div>
+
+      <button class="btn btn-primary full-width-btn auth-submit-btn" *ngIf="app.authMode() === 'login'" (click)="app.login()">
+        <span>Sign In</span>
+      </button>
+      <button class="btn btn-primary full-width-btn auth-submit-btn" *ngIf="app.authMode() === 'register'" (click)="app.register()">
+        <span>Create Account</span>
+      </button>
+
+      <div class="auth-divider">
+        <span>OR</span>
+      </div>
+
+      <button class="btn btn-github full-width-btn" (click)="app.signInWithGitHub()" [disabled]="app.isOAuthConnecting()">
+        <svg class="github-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        <span>{{ app.isOAuthConnecting() ? 'Connecting to GitHub...' : 'Continue with GitHub' }}</span>
+      </button>
+    </div>
+
+    <div class="auth-modal-footer" *ngIf="app.authMode() !== 'forgot'">
+      <p *ngIf="app.authMode() === 'login'">
+        Don't have an account yet? 
+        <a href="javascript:void(0)" (click)="app.switchAuthMode('register')" class="auth-link">Create one</a>
+      </p>
+      <p *ngIf="app.authMode() === 'register'">
+        Already have an account? 
+        <a href="javascript:void(0)" (click)="app.switchAuthMode('login')" class="auth-link">Sign in here</a>
+      </p>
+    </div>
+
+    <!-- 3-STEP FORGOT PASSWORD FLOW -->
+    <!-- Step 1: Email Input -->
+    <div class="auth-form-body" *ngIf="app.authMode() === 'forgot' && app.forgotStep() === 1">
+      <p class="forgot-instructions">
+        Enter your registered email address and we'll send a password reset link to recover your account.
+      </p>
+      <div class="form-group">
+        <label class="form-label" for="forgotEmailInput">Account Email Address <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <input 
+            id="forgotEmailInput"
+            type="email" 
+            placeholder="developer@example.com" 
+            [(ngModel)]="app.forgotEmail" 
+            class="form-input auth-form-input with-icon" 
+            (keydown.enter)="app.sendForgotOtp()" 
+            [disabled]="app.forgotLoading()" 
+          />
+        </div>
+      </div>
+
+      <div class="auth-btn-stack">
+        <button type="button" class="btn btn-primary full-width-btn auth-submit-btn" (click)="app.sendForgotOtp()" [disabled]="app.forgotLoading()">
+          {{ app.forgotLoading() ? 'Sending Reset Link...' : 'Send Reset Link' }}
+        </button>
+        <button type="button" class="btn btn-auth-back full-width-btn" (click)="app.switchAuthMode('login')" [disabled]="app.forgotLoading()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Sign In</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Verification / Email Check -->
+    <div class="auth-form-body forgot-step2-container" *ngIf="app.authMode() === 'forgot' && app.forgotStep() === 2">
+      <h3 class="step2-title">Enter Verification Code</h3>
+      <p class="forgot-instructions text-center">
+        We sent a verification code to <strong>{{ app.forgotEmail }}</strong>. Enter it below.
+      </p>
+
+      <!-- Code Expiry Timer Badge -->
+      <div class="code-expiry-badge" *ngIf="app.codeExpiry() > 0">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Code expires in <strong>{{ app.formatExpiry(app.codeExpiry()) }}</strong></span>
+      </div>
+      <div class="code-expiry-badge code-expired-badge" *ngIf="app.codeExpiry() === 0">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Code expired. Please click <strong>Resend Code</strong>.</span>
+      </div>
+
+      <!-- OTP 6-Box Segmented Inputs -->
+      <div class="otp-boxes-wrapper" (paste)="app.onOtpPasteEvent($event)">
+        <label class="form-label text-center" style="display: block; width: 100%; margin-bottom: 6px;">
+          Verification Code
+        </label>
+        <div class="otp-boxes-grid">
+          <input
+            *ngFor="let digit of app.otpDigits(); let i = index"
+            [id]="'otp-box-' + i"
+            type="text"
+            class="otp-digit-box"
+            [class.filled]="app.otpDigits()[i] !== ''"
+            maxlength="1"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="one-time-code"
+            [value]="app.otpDigits()[i]"
+            (input)="app.onOtpDigitInput(i, $event)"
+            (keydown)="app.onOtpKeyDown(i, $event)"
+            (keyup.enter)="app.verifyForgotOtp()"
+            (focus)="$any($event.target).select()"
+            [disabled]="app.otpAttempts() >= app.OTP_MAX_ATTEMPTS || app.codeExpiry() === 0 || app.forgotLoading()"
+          />
+        </div>
+      </div>
+
+      <!-- Verify Button -->
+      <button
+        type="button"
+        class="btn btn-primary full-width-btn auth-submit-btn"
+        style="margin-top: 4px;"
+        (click)="app.verifyForgotOtp()"
+        [disabled]="app.forgotLoading() || app.forgotOtp().length < 6 || app.otpAttempts() >= app.OTP_MAX_ATTEMPTS || app.codeExpiry() === 0"
+      >
+        <span *ngIf="app.forgotLoading()">Verifying...</span>
+        <span *ngIf="!app.forgotLoading()">Verify Code</span>
+      </button>
+
+      <!-- Actions Card -->
+      <div class="step2-actions-card">
+        <div class="step2-actions-header">
+          <span>Didn't receive the code?</span>
+        </div>
+        <div class="step2-actions-grid">
+          <button type="button" class="step2-action-btn" (click)="app.setForgotStep(1)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>Change Email</span>
+          </button>
+          <button type="button" class="step2-action-btn step2-action-btn-resend" (click)="app.resendForgotOtp()" [disabled]="app.forgotLoading() || app.resendCooldown() > 0">
+            <svg *ngIf="!app.forgotLoading() && app.resendCooldown() === 0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>{{ app.forgotLoading() ? 'Resending...' : (app.resendCooldown() > 0 ? 'Resend in ' + app.resendCooldown() + 's' : 'Resend Code') }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-modal-footer" style="margin-top: 10px; width: 100%;">
+        <button type="button" class="btn btn-auth-back full-width-btn" (click)="app.switchAuthMode('login')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Sign In</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Set New Password -->
+    <div class="auth-form-body" *ngIf="app.authMode() === 'forgot' && app.forgotStep() === 3">
+      <p class="forgot-instructions">
+        Identity verified! Please enter your new password below.
+      </p>
+      <div class="form-group">
+        <label class="form-label" for="forgotNewPassInput">New Password (min 6 characters) <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper password-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <input 
+            id="forgotNewPassInput"
+            [type]="app.showForgotNewPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [(ngModel)]="app.forgotNewPassword" 
+            class="form-input auth-form-input password-input with-icon" 
+            [disabled]="app.forgotLoading()" 
+          />
+          <button 
+            type="button" 
+            class="password-eye-btn" 
+            (click)="app.showForgotNewPassword.set(!app.showForgotNewPassword())"
+            [title]="app.showForgotNewPassword() ? 'Hide password' : 'Show password'">
+            <svg *ngIf="!app.showForgotNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="7" r="3"></circle>
+            </svg>
+            <svg *ngIf="app.showForgotNewPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="forgotConfirmPassInput">Confirm New Password <span class="text-danger">*</span></label>
+        <div class="auth-input-wrapper password-input-wrapper">
+          <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <input 
+            id="forgotConfirmPassInput"
+            [type]="app.showForgotConfirmPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [(ngModel)]="app.forgotConfirmPassword" 
+            class="form-input auth-form-input password-input with-icon" 
+            (keydown.enter)="app.submitNewPassword()" 
+            [disabled]="app.forgotLoading()" 
+          />
+          <button 
+            type="button" 
+            class="password-eye-btn" 
+            (click)="app.showForgotConfirmPassword.set(!app.showForgotConfirmPassword())"
+            [title]="app.showForgotConfirmPassword() ? 'Hide password' : 'Show password'">
+            <svg *ngIf="!app.showForgotConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+              <circle cx="12" cy="7" r="3"></circle>
+            </svg>
+            <svg *ngIf="app.showForgotConfirmPassword()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-btn-stack">
+        <button type="button" class="btn btn-primary full-width-btn auth-submit-btn" (click)="app.submitNewPassword()" [disabled]="app.forgotLoading()">
+          {{ app.forgotLoading() ? 'Updating Password...' : 'Save New Password & Sign In' }}
+        </button>
+        <button type="button" class="btn btn-auth-back full-width-btn" (click)="app.switchAuthMode('login')" [disabled]="app.forgotLoading()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Sign In</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -23,6 +23,7 @@ export interface GitHubRepository {
   description: string;
   html_url: string;
   language: string;
+  languages?: string[];
   stars: number;
   forks: number;
   topics: string[];

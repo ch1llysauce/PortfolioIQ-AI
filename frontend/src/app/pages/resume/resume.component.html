@@ -1,0 +1,232 @@
+<!-- Main Container Card -->
+        <div class="card resume-hub-card">
+          <div class="card-header flex-between">
+            <div>
+              <h2>AI Resume & ATS Intelligence Hub</h2>
+              <p class="section-subtitle">Automated NLP parser, ATS compatibility scoring, and target role keyword matching.</p>
+            </div>
+            <span class="badge badge-success">AI Powered</span>
+          </div>
+
+          <!-- Cloud-Saved Resume Profile Banner (Isolated to logged-in user) -->
+          <div class="saved-resume-card margin-bottom-md" *ngIf="app.savedResumeMeta()">
+            <div class="flex-between flex-wrap gap-sm">
+              <div class="flex-align gap-sm">
+                <div class="resume-icon-box">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <div>
+                  <div class="flex-align gap-xs flex-wrap">
+                    <h3 class="saved-resume-title">{{ app.savedResumeMeta()?.fileName }}</h3>
+                    <span class="badge badge-success">Saved to Cloud Profile</span>
+                  </div>
+                  <p class="sub-text">
+                    Uploaded: {{ app.savedResumeMeta()?.uploadedAt | date:'medium' }} 
+                    <span *ngIf="app.getResumeExtractedSkills().length">• {{ app.getResumeExtractedSkills().length }} Skills Extracted</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="saved-resume-actions">
+                <button class="btn btn-primary btn-sm" (click)="app.openResumeViewer()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span>View PDF</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" (click)="app.auditResumeWithCoach()" title="Ask Groq AI Coach for bullet-point critique">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <span>Audit with AI Coach</span>
+                </button>
+                <label for="resume-file-input" class="btn btn-outline btn-sm cursor-pointer" title="Upload a new PDF to replace this resume">
+                  Replace
+                </label>
+                <button class="btn btn-danger btn-sm" (click)="app.deleteSavedResume()" title="Delete this resume from your cloud profile">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State Upload Box -->
+          <div class="resume-upload-box" *ngIf="!app.savedResumeMeta()">
+            <div class="upload-dropzone">
+              <div class="upload-hero-icon">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              </div>
+              <h3>Upload Your Developer Resume (PDF)</h3>
+              <p class="resume-upload-instructions">
+                Our NLP engine will extract verified technical skills, detect portfolio projects, and run real-time ATS keyword matching.
+              </p>
+              
+              <div class="file-upload-row">
+                <input type="file" accept=".pdf" (change)="app.onResumeUpload($event)" #resumeFileInput class="file-input-hidden" id="resume-file-input" />
+                <label for="resume-file-input" class="btn btn-primary btn-lg cursor-pointer">
+                  Select PDF File...
+                </label>
+                <div class="margin-top-xs" *ngIf="app.resumeParsing() || app.isSavingResume()">
+                  <span class="loading-spinner" *ngIf="app.resumeParsing()">Extracting skills & projects from PDF...</span>
+                  <span class="loading-spinner" *ngIf="app.isSavingResume()">Saving to cloud profile...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden file input for Replace action when saved resume already exists -->
+          <input *ngIf="app.savedResumeMeta()" type="file" accept=".pdf" (change)="app.onResumeUpload($event)" class="file-input-hidden" id="resume-file-input" />
+
+          <!-- RESUME INTELLIGENCE DASHBOARD (Visible when Resume is Loaded) -->
+          <div class="resume-dashboard-container margin-top-md" *ngIf="app.savedResumeMeta() || app.resumeData()">
+            
+            <!-- 2-Column Telemetry & Alignment Grid -->
+            <div class="resume-intel-grid">
+              
+              <!-- Card 1: AI ATS Score & Format Health -->
+              <div class="card resume-ats-card">
+                <div class="card-header-row margin-bottom-sm">
+                  <div class="flex-align gap-xs">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <h4>ATS Compatibility Score</h4>
+                  </div>
+                  <span class="badge badge-success">ATS Optimized</span>
+                </div>
+
+                <div class="ats-score-display flex-align gap-md margin-bottom-md">
+                  <div class="ats-score-circle">
+                    <span class="ats-score-num">{{ app.getResumeAtsScore() }}</span>
+                    <span class="ats-score-denom">/100</span>
+                  </div>
+                  <div class="ats-score-verdict">
+                    <strong>High Applicant Pass Rate</strong>
+                    <p class="sub-text">Format is easily readable by enterprise ATS parsers (Workday, Greenhouse, Lever).</p>
+                  </div>
+                </div>
+
+                <div class="ats-sub-metrics">
+                  <div class="metric-row flex-between">
+                    <span>Technical Keyword Density</span>
+                    <strong class="text-indigo-400">92%</strong>
+                  </div>
+                  <div class="progress-bar-bg margin-bottom-sm">
+                    <div class="progress-bar-fill bg-indigo" style="width: 92%;"></div>
+                  </div>
+
+                  <div class="metric-row flex-between">
+                    <span>Format & Parseability</span>
+                    <strong class="text-emerald-400">96%</strong>
+                  </div>
+                  <div class="progress-bar-bg margin-bottom-sm">
+                    <div class="progress-bar-fill bg-emerald" style="width: 96%;"></div>
+                  </div>
+
+                  <div class="metric-row flex-between">
+                    <span>Project & Action Depth</span>
+                    <strong class="text-amber-400">84%</strong>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill bg-amber" style="width: 84%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Target Role Keyword Alignment -->
+              <div class="card resume-alignment-card" *ngIf="app.getResumeRoleAlignment() as roleAlign">
+                <div class="card-header-row margin-bottom-sm">
+                  <div class="flex-align gap-xs">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <h4>Target Role Alignment</h4>
+                  </div>
+                  <span class="badge badge-primary">{{ roleAlign.targetRole }}</span>
+                </div>
+
+                <div class="alignment-summary flex-between margin-bottom-sm">
+                  <span class="sub-text">Match Ratio for {{ roleAlign.targetRole }}:</span>
+                  <strong class="text-indigo-300">{{ roleAlign.matching.length }} of {{ roleAlign.requiredSkills.length }} Skills Matched ({{ roleAlign.matchPercentage }}%)</strong>
+                </div>
+
+                <div class="progress-bar-bg margin-bottom-md">
+                  <div class="progress-bar-fill bg-indigo" [style.width.%]="roleAlign.matchPercentage"></div>
+                </div>
+
+                <!-- Matched vs Missing Tags -->
+                <div class="alignment-tags-section">
+                  <div class="tags-group margin-bottom-sm">
+                    <span class="tag-group-label text-success">✓ Matched on Resume ({{ roleAlign.matching.length }}):</span>
+                    <div class="chip-container mini-chips">
+                      <span class="chip chip-success" *ngFor="let s of roleAlign.matching">{{ s }}</span>
+                      <span class="sub-text" *ngIf="!roleAlign.matching.length">No matching role keywords detected.</span>
+                    </div>
+                  </div>
+
+                  <div class="tags-group">
+                    <span class="tag-group-label text-amber-400">+ Missing from Resume ({{ roleAlign.missing.length }}):</span>
+                    <div class="chip-container mini-chips">
+                      <span class="chip chip-warning" *ngFor="let m of roleAlign.missing" [title]="'Consider adding ' + m + ' experience or projects to your resume'">
+                        + {{ m }}
+                      </span>
+                      <span class="sub-text text-success" *ngIf="!roleAlign.missing.length">All core role keywords present!</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Extracted Technical Skills Section -->
+            <div class="card resume-skills-card margin-top-md" *ngIf="app.getResumeExtractedSkills().length">
+              <div class="extracted-results-header flex-between flex-wrap gap-sm margin-bottom-md">
+                <div>
+                  <div class="flex-align gap-xs">
+                    <h3>Extracted Technical Skills ({{ app.getResumeExtractedSkills().length }})</h3>
+                    <span class="badge badge-info">NLP Detected</span>
+                  </div>
+                  <p class="sub-text">Click any individual skill to add/verify in your portfolio, or sync all at once.</p>
+                </div>
+                <button 
+                  class="btn btn-primary btn-sm" 
+                  (click)="app.syncAllResumeSkillsToPortfolio()" 
+                  [disabled]="app.syncingResumeSkills()"
+                >
+                  <span *ngIf="!app.syncingResumeSkills()">Sync All ({{ app.getResumeExtractedSkills().length }}) to My Portfolio</span>
+                  <span *ngIf="app.syncingResumeSkills()">Syncing to Portfolio...</span>
+                </button>
+              </div>
+
+              <div class="chip-container">
+                <span 
+                  class="chip clickable-chip" 
+                  [class.chip-verified]="app.isResumeSkillInPortfolio(s)" 
+                  [class.chip-unadded]="!app.isResumeSkillInPortfolio(s)"
+                  *ngFor="let s of app.getResumeExtractedSkills()" 
+                  (click)="app.importExtractedSkill(s)" 
+                  [title]="app.isResumeSkillInPortfolio(s) ? s + ' is already verified in your portfolio' : 'Click to add ' + s + ' to your portfolio'"
+                >
+                  <span *ngIf="app.isResumeSkillInPortfolio(s)">✓ {{ s }}</span>
+                  <span *ngIf="!app.isResumeSkillInPortfolio(s)">+ {{ s }}</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Extracted Projects Section -->
+            <div class="card resume-projects-card margin-top-md" *ngIf="app.getResumeExtractedProjects().length">
+              <div class="flex-between margin-bottom-md">
+                <div>
+                  <h3>Extracted Projects ({{ app.getResumeExtractedProjects().length }})</h3>
+                  <p class="sub-text">Candidate projects detected from your PDF work history and portfolio sections.</p>
+                </div>
+              </div>
+              <div class="extracted-projects-grid">
+                <div class="extracted-project-card" *ngFor="let proj of app.getResumeExtractedProjects()">
+                  <div class="flex-between">
+                    <strong>{{ proj.name }}</strong>
+                    <button class="btn btn-outline btn-sm" (click)="app.importExtractedProject(proj)">+ Import to Portfolio</button>
+                  </div>
+                  <p class="project-desc">{{ proj.description }}</p>
+                  <div class="chip-container" *ngIf="proj.detected_skills?.length">
+                    <span class="chip chip-primary" *ngFor="let sk of proj.detected_skills">{{ sk }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>

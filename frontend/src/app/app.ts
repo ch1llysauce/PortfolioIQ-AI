@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, OnInit, HostListener, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
@@ -15,6 +15,30 @@ import { KnowledgeService, KnowledgeGraphData, RoleSkillTreeResponse, LearningPa
 import { CoachService, ChatMessage, PortfolioContext, CoachStatus, formatSmartCoachTimestamp } from './services/coach.service';
 import { GitHubService, GitHubScanResponse, GitHubRepository, GitHubStatus } from './services/github.service';
 import { SystemService, SystemTelemetryResponse } from './services/system.service';
+import { SidebarComponent } from './layout/sidebar/sidebar.component';
+import { HeaderComponent } from './layout/header/header.component';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ProjectsComponent } from './pages/projects/projects.component';
+import { SkillsComponent } from './pages/skills/skills.component';
+import { CareerComponent } from './pages/career/career.component';
+import { ResumeComponent } from './pages/resume/resume.component';
+import { KnowledgeComponent } from './pages/knowledge/knowledge.component';
+import { CoachComponent } from './pages/coach/coach.component';
+import { GithubComponent } from './pages/github/github.component';
+import { ProjectAnalysisModalComponent } from './modals/project-analysis-modal/project-analysis-modal.component';
+import { EditProjectModalComponent } from './modals/edit-project-modal/edit-project-modal.component';
+import { GithubImportModalComponent } from './modals/github-import-modal/github-import-modal.component';
+import { ProfileModalComponent } from './modals/profile-modal/profile-modal.component';
+import { AuthModalComponent } from './modals/auth-modal/auth-modal.component';
+import { OnboardingModalComponent } from './modals/onboarding-modal/onboarding-modal.component';
+import { GithubGuideModalComponent } from './modals/github-guide-modal/github-guide-modal.component';
+import { PrintableDossierComponent } from './modals/printable-dossier/printable-dossier.component';
+import { ResumeViewerModalComponent } from './modals/resume-viewer-modal/resume-viewer-modal.component';
+import { ConfirmDialogComponent } from './modals/confirm-dialog/confirm-dialog.component';
+import { ScoreRubricModalComponent } from './modals/score-rubric-modal/score-rubric-modal.component';
+import { SkillDropdownPortalComponent } from './modals/skill-dropdown-portal/skill-dropdown-portal.component';
+
+
 
 export interface ToastItem {
   id: number;
@@ -38,9 +62,35 @@ export interface ConfirmModalState {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SidebarComponent,
+    HeaderComponent,
+    DashboardComponent,
+    ProjectsComponent,
+    SkillsComponent,
+    CareerComponent,
+    ResumeComponent,
+    KnowledgeComponent,
+    CoachComponent,
+    GithubComponent,
+    ProjectAnalysisModalComponent,
+    EditProjectModalComponent,
+    GithubImportModalComponent,
+    ProfileModalComponent,
+    AuthModalComponent,
+    OnboardingModalComponent,
+    GithubGuideModalComponent,
+    PrintableDossierComponent,
+    ResumeViewerModalComponent,
+    ConfirmDialogComponent,
+    ScoreRubricModalComponent,
+    SkillDropdownPortalComponent
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class App implements OnInit {
   // Navigation State
@@ -148,13 +198,21 @@ export class App implements OnInit {
     }
   }
 
+  applyTheme(theme: string) {
+    this.elRef.nativeElement.setAttribute('data-theme', theme);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+      if (document.body) document.body.setAttribute('data-theme', theme);
+    }
+    this.updateFavicon(theme === 'dark');
+  }
+
   toggleTheme() {
     const next = !this.isDarkMode();
     this.isDarkMode.set(next);
     const theme = next ? 'dark' : 'light';
     if (typeof localStorage !== 'undefined') localStorage.setItem('portfolioiq_theme', theme);
-    this.elRef.nativeElement.setAttribute('data-theme', theme);
-    this.updateFavicon(next);
+    this.applyTheme(theme);
   }
   
   newProjectName = '';
@@ -397,7 +455,7 @@ export class App implements OnInit {
     // Apply theme immediately so auth modal renders with correct theme
     if (typeof localStorage !== 'undefined') {
       const theme = localStorage.getItem('portfolioiq_theme') !== 'light' ? 'dark' : 'light';
-      this.elRef.nativeElement.setAttribute('data-theme', theme);
+      this.applyTheme(theme);
     }
   }
 
@@ -449,7 +507,7 @@ export class App implements OnInit {
     this.loadCoachMessages();
     this.loadGitHubStatus();
     this.fetchSystemTelemetry();
-    this.elRef.nativeElement.setAttribute('data-theme', this.isDarkMode() ? 'dark' : 'light');
+    this.applyTheme(this.isDarkMode() ? 'dark' : 'light');
     this.updateFavicon(this.isDarkMode());
     this.setupVisualViewport();
   }
@@ -746,6 +804,17 @@ export class App implements OnInit {
     await this.fetchSkills();
     await this.fetchCareerRoles();
     if (this.currentUser()) {
+      const user = this.currentUser();
+      const targetRoleId = user?.user_metadata?.target_role_id;
+      const savedRoleId = typeof localStorage !== 'undefined' ? localStorage.getItem('portfolioiq_selected_role_id') : null;
+      if (savedRoleId && this.careerRoles().some(r => r.id === savedRoleId)) {
+        await this.selectCareerRole(savedRoleId);
+      } else if (targetRoleId && this.careerRoles().some(r => r.id === targetRoleId)) {
+        await this.selectCareerRole(targetRoleId);
+      } else if (this.careerRoles().length > 0 && !this.selectedRoleId()) {
+        const aimlRole = this.careerRoles().find(r => r.title.toLowerCase().includes('ai') || r.title.toLowerCase().includes('ml')) || this.careerRoles()[0];
+        await this.selectCareerRole(aimlRole.id);
+      }
       await this.fetchProjects();
     }
   }
@@ -4772,6 +4841,42 @@ export class App implements OnInit {
     return this.projects().some(p => p.name.toLowerCase() === repoName.toLowerCase());
   }
 
+  getImportedProjectForRepo(repoName: string): any {
+    const clean = (s: string) => (s || '').toLowerCase().replace(/[-_.\s]/g, '');
+    const target = clean(repoName);
+    return this.projects().find(p => clean(p.name) === target)
+        || this.projects().find(p => p.name.toLowerCase().includes(repoName.toLowerCase()) || repoName.toLowerCase().includes(p.name.toLowerCase()))
+        || null;
+  }
+
+  openProjectAnalysisForRepo(repo: any) {
+    const repoName = typeof repo === 'string' ? repo : repo?.name;
+    const project = this.getImportedProjectForRepo(repoName);
+    if (project) {
+      this.openProjectAnalysis(project);
+    } else if (typeof repo === 'object' && repo?.name) {
+      const mockProject = {
+        id: `gh_${repo.id || repo.name}`,
+        name: repo.name,
+        description: repo.description || '',
+        status: 'completed',
+        project_skills: (repo.skills || []).map((s: string) => ({ skills: { name: s } }))
+      };
+      this.activeAnalysisProject.set(mockProject);
+      if (repo.predicted_category) {
+        this.mlPredictions.update(map => ({
+          ...map,
+          [mockProject.id]: {
+            predicted_category: repo.predicted_category,
+            confidence_score: repo.confidence_score || 50,
+            probabilities: { [repo.predicted_category]: (repo.confidence_score || 50) / 100 },
+            needs_details: (repo.confidence_score || 0) <= 30
+          }
+        }));
+      }
+    }
+  }
+
   async importAllScannedRepos() {
     this.openBatchImportModal();
   }
@@ -4848,14 +4953,20 @@ export class App implements OnInit {
 
   getDeduplicatedRepoSkills(repo: any): string[] {
     if (!repo) return [];
-    const mainLang = (repo.language || '').toLowerCase().trim();
+    const langs = new Set<string>();
+    if (repo.languages && repo.languages.length) {
+      for (const l of repo.languages) langs.add(l.toLowerCase().trim());
+    } else if (repo.language) {
+      langs.add(repo.language.toLowerCase().trim());
+    }
+
     const skills = repo.detected_skills || [];
     const seen = new Set<string>();
     const result: string[] = [];
 
     for (const s of skills) {
       const sLower = s.toLowerCase().trim();
-      if (sLower === mainLang) continue; // Skip if already shown as primary language pill
+      if (langs.has(sLower)) continue; // Skip if already shown as language pill
       if (!seen.has(sLower)) {
         seen.add(sLower);
         result.push(s);
@@ -4873,9 +4984,10 @@ export class App implements OnInit {
     return repos.filter(repo => {
       // 1. Text Search Query
       if (query) {
-        const matchName = (repo.name || '').toLowerCase().includes(query);
+        const matchName = repo.name.toLowerCase().includes(query);
         const matchDesc = (repo.description || '').toLowerCase().includes(query);
-        const matchLang = (repo.language || '').toLowerCase().includes(query);
+        const langString = repo.languages && repo.languages.length ? repo.languages.join(' ') : (repo.language || '');
+        const matchLang = langString.toLowerCase().includes(query);
         const matchSkills = (repo.detected_skills || []).some((s: string) => s.toLowerCase().includes(query));
         if (!matchName && !matchDesc && !matchLang && !matchSkills) return false;
       }

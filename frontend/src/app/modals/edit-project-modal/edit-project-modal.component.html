@@ -1,0 +1,77 @@
+<!-- EDIT PROJECT MODAL DIALOG -->
+<div class="modal-backdrop" *ngIf="app.editingProject()" (click)="app.closeEditProjectModal()">
+  <div class="modal-card edit-project-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <h2>Edit Project Details</h2>
+      </div>
+      <button class="btn-icon" (click)="app.closeEditProjectModal()">✕</button>
+    </div>
+
+    <form (ngSubmit)="app.saveProjectEdits()" class="modal-body">
+      <div class="form-group margin-bottom-md">
+        <label class="form-label" for="editProjectNameInput">Project Title / Name <span class="text-danger">*</span></label>
+        <input
+          id="editProjectNameInput"
+          type="text"
+          class="form-input"
+          [(ngModel)]="app.editProjectName"
+          name="editProjectName"
+          placeholder="e.g. MediaHub: Local-First Multimedia Manager"
+          required
+        />
+      </div>
+
+      <div class="form-group margin-bottom-md edit-desc-group">
+        <label class="form-label" for="editProjectDescInput">Project Description</label>
+        <textarea
+          id="editProjectDescInput"
+          class="form-textarea"
+          rows="10"
+          [(ngModel)]="app.editProjectDesc"
+          name="editProjectDesc"
+          placeholder="Describe your project, key features, architecture, and technologies used..."
+        ></textarea>
+        <small class="text-muted" style="margin-top: 6px; display: block; font-size: 0.82rem; line-height: 1.4;">
+          Tip: Adding specific framework names and architectural tools directly in the title or description helps the Machine Learning Classifier produce accurate domain predictions.
+        </small>
+      </div>
+
+      <div class="form-group margin-bottom-md edit-phase-group">
+        <label class="form-label">Project Phase / Lifecycle</label>
+        <div class="phase-selector-group">
+          <button 
+            type="button" 
+            class="phase-btn phase-idea" 
+            [class.active]="app.editProjectStatus === 'idea'" 
+            (click)="app.editProjectStatus = 'idea'">
+            <span class="status-dot dot-idea"></span> Idea
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-active" 
+            [class.active]="app.editProjectStatus === 'active'" 
+            (click)="app.editProjectStatus = 'active'">
+            <span class="status-dot dot-active"></span> In Progress
+          </button>
+          <button 
+            type="button" 
+            class="phase-btn phase-completed" 
+            [class.active]="app.editProjectStatus === 'completed'" 
+            (click)="app.editProjectStatus = 'completed'">
+            <span class="status-dot dot-completed"></span> Completed
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer flex-between edit-modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="app.closeEditProjectModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="app.isSavingProjectEdit() || !app.editProjectName.trim()">
+          <span *ngIf="!app.isSavingProjectEdit()">Save Changes</span>
+          <span *ngIf="app.isSavingProjectEdit()">Saving Changes...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

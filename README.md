@@ -19,16 +19,18 @@ The system combines machine learning classification, mathematical optimization, 
 | Module | Description |
 |--------|-------------|
 | **Portfolio Health Score** | 100-point scoring model across skill coverage, project volume, detail quality, and activity status |
-| **ML Project Classification** | Scikit-Learn TF-IDF + Logistic Regression classifier predicts project domain (Web, AI/ML, Mobile, etc.) |
-| **Skill Gap Analysis** | Compares your skills against target role requirements and shows what's missing |
-| **Portfolio Optimizer** | Knapsack-based mathematical optimizer recommends the highest-ROI projects to build next |
+| **ML Project Classification** | Hybrid Scikit-Learn TF-IDF + Logistic Regression model with keyword affinity scoring across 6 software engineering domains |
+| **Skill Gap Analysis** | Compares your skills against target role requirements and shows what's missing with visual radar charts |
+| **Portfolio Optimizer** | Knapsack-based mathematical optimizer recommends the highest-ROI projects to build next within an effort hour budget |
 | **AI Dynamic Blueprint** | Groq LLM generates custom project blueprints tailored to your exact skill gaps |
-| **AI Developer Coach** | Context-aware chat coach powered by Groq with portfolio awareness |
-| **GitHub Profile Scanner** | Scans public GitHub repos, extracts tech stacks via NLP, classifies domains via ML |
-| **Knowledge Graph** | NetworkX-based ontology of 125+ technologies and 475+ relationships with skill trees per role |
+| **AI Developer Coach** | Context-aware chat coach powered by Groq with real-time portfolio awareness and critique capabilities |
+| **GitHub Scanner & Multi-Language Sync** | Scans public GitHub repos with concurrent multi-language detection (`languages_url`) and skill mapping |
+| **Pre-Import AI Analysis** | Live ML domain prediction and probability distribution preview directly from GitHub repository cards |
+| **Knowledge Graph** | NetworkX-based ontology of 125+ technologies and 475+ relationships with skill trees and learning paths per role |
 | **Resume ATS Intelligence** | PDF resume parser with NLP skill extraction and ATS compatibility scoring |
+| **Mobile & PWA Ready** | Web App Manifest with safe-zone adaptive icons, maskable PWA icons, and Apple Touch Icon support |
 | **Secure Auth & Recovery** | Segmented 6-box OTP cards, real-time rate limit countdowns, and GitHub OAuth |
-| **Light / Dark Mode** | Dynamic theme switching with matching branding, favicon, and high-contrast palettes |
+| **Light / Dark Mode** | Dynamic theme switching with matching branding, favicons, and accessible high-contrast palettes |
 | **Profile & Avatar Engine** | Client-side 10MB image upload with Canvas compression and persistent customization |
 
 ---
@@ -36,16 +38,18 @@ The system combines machine learning classification, mathematical optimization, 
 ## Tech Stack
 
 ### Frontend
-- **Angular 22** (standalone components, signals)
-- **TypeScript**
+- **Angular 22** (modular standalone components, signals-based reactive state)
+- **TypeScript 5.8+**
 - **Supabase JS** (auth, database, storage)
+- **HTML5 Canvas** (client-side avatar image compression)
+- **Web App Manifest & PWA** (mobile home screen installation & maskable adaptive icons)
 
 ### Backend
-- **FastAPI** (Python)
+- **FastAPI** (asynchronous Python framework)
 - **Scikit-Learn** (TF-IDF + Logistic Regression classifier)
-- **NetworkX** (knowledge graph)
-- **Groq API** (LLM — AI Coach and Blueprint generation)
-- **httpx** (GitHub API client)
+- **NetworkX** (knowledge graph ontology)
+- **Groq API** (Llama 3 LLM — AI Coach and Blueprint generation)
+- **httpx** (async client for concurrent GitHub API scanning)
 - **PyPDF** (resume PDF parsing)
 
 ### Infrastructure
@@ -58,9 +62,9 @@ The system combines machine learning classification, mathematical optimization, 
 ## Architecture
 
 ```
-Angular Frontend (Vercel)
+Angular 22 Frontend (Vercel)
          │
-         │ REST API
+         │ REST API (JSON / Async)
          ▼
 FastAPI Backend (Render)
          │
@@ -78,7 +82,7 @@ FastAPI Backend (Render)
    AI Coach / Blueprint
 
 Supabase (Auth + DB + Storage)
-GitHub API (repo scanning)
+GitHub API (concurrent repo & language scanning)
 ```
 
 ---
@@ -111,7 +115,7 @@ Required environment variables:
 
 ```
 GROQ_API_KEY=your_groq_api_key
-GITHUB_TOKEN=your_github_token      # optional but recommended
+GITHUB_TOKEN=your_github_token      # optional but recommended (5000 req/hr vs 60)
 FRONTEND_URL=http://localhost:4200
 ```
 
@@ -160,33 +164,41 @@ App available at: `http://localhost:4200`
 
 ```
 PortfolioIQ-AI/
-├── frontend/               # Angular app
-│   └── src/
-│       ├── app/
-│       │   ├── app.ts      # Main component (signals-based)
-│       │   ├── app.html    # Template
-│       │   ├── app.css     # Global styles + light/dark theme
-│       │   └── services/   # API, auth, GitHub, ML, etc.
-│       └── environments/   # environment.ts / environment.prod.ts
+├── frontend/                       # Angular app
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── app.ts              # Root coordinator (signals state)
+│   │   │   ├── app.html / app.css  # Shell template & responsive styles
+│   │   │   ├── layout/             # Header, Sidebar
+│   │   │   ├── pages/              # Dashboard, Projects, Skills, Career, GitHub, Coach, Resume, Optimization, Analytics
+│   │   │   ├── modals/             # Auth, Project, GitHub Import, AI Analysis, Resume, Skill Picker, Confirm
+│   │   │   └── services/           # API, Auth, GitHub, ML, Skills, Analytics services
+│   │   ├── environments/           # environment.ts / environment.prod.ts
+│   │   ├── index.html              # HTML entry with PWA & mobile icon tags
+│   │   └── styles.css              # Global styling & fonts
+│   ├── public/                     # Static assets (manifest.json, mobile safe icons, branding)
+│   └── vercel.json                 # Vercel SPA rewrites
 │
-├── backend/                # FastAPI app
-│   └── app/
-│       ├── main.py
-│       ├── routes/         # analytics, ml, github, coach, knowledge, etc.
-│       ├── analytics/      # portfolio scoring, skill gap, resume parser
-│       ├── ai/             # Groq coach
-│       ├── github/         # GitHub API client
-│       ├── knowledge/      # knowledge graph, entity extractor
-│       └── optimization/   # knapsack optimizer
+├── backend/                        # FastAPI app
+│   ├── app/
+│   │   ├── main.py                 # App entry & CORS
+│   │   ├── routes/                 # analytics, ml, github, coach, knowledge, system
+│   │   ├── analytics/              # scoring, resume parser, skill gap
+│   │   ├── ai/                     # Groq LLM coach
+│   │   ├── github/                 # GitHub async client with multi-language parsing
+│   │   ├── knowledge/              # Knowledge graph ontology & learning paths
+│   │   └── optimization/           # Knapsack optimizer & constraints
+│   ├── database/                   # SQL schemas
+│   └── requirements.txt
 │
-├── ml/                     # ML training and inference
-│   ├── classifier.py       # Inference — TF-IDF + Logistic Regression
-│   ├── train_model.py      # Training script
-│   ├── models/             # Trained joblib model
-│   └── data/               # Training dataset (GitHub projects CSV)
+├── ml/                             # ML training and inference
+│   ├── classifier.py               # Hybrid TF-IDF + Logistic Regression inference
+│   ├── train_model.py              # Model training script
+│   ├── models/                     # Serialized joblib classifier model
+│   └── data/                       # Training dataset (GitHub projects CSV)
 │
-├── docs/                   # Project documentation
-├── render.yaml             # Render deployment config
+├── docs/                           # Architecture and development docs
+├── render.yaml                     # Render deployment config
 └── README.md
 ```
 
@@ -203,29 +215,29 @@ The project classifier uses a **Scikit-Learn pipeline** (TF-IDF vectorizer + Log
 - Cloud & DevOps
 - Cybersecurity & Systems
 
-Prediction uses a hybrid approach: 60% ML probability + 40% keyword domain affinity scoring for better calibration on multi-domain projects.
+Prediction uses a hybrid approach: **60% ML probability + 40% keyword domain affinity scoring** for calibrated results on multi-stack projects.
 
-If the model file is missing on deployment, it auto-retrains from `ml/data/github_projects.csv`.
+If the model file is missing on deployment, it automatically retrains from `ml/data/github_projects.csv`.
 
 ---
 
 ## API Endpoints
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/health` | Backend health check |
-| `POST /api/analytics/portfolio-score` | Calculate portfolio health score |
-| `POST /api/analytics/skill-gap` | Compute skill gap against target role |
-| `POST /api/analytics/parse-resume` | Parse PDF resume and extract skills |
-| `POST /api/ml/classify-project` | Classify a project by domain |
-| `GET /api/github/scan/{username}` | Scan GitHub profile and repos |
-| `POST /api/coach/chat` | Send message to AI coach |
-| `POST /api/coach/critique` | Generate portfolio critique |
-| `POST /api/optimization/recommend` | Run knapsack portfolio optimizer |
-| `POST /api/optimization/generate-custom-blueprint` | Generate AI project blueprint |
-| `GET /api/knowledge/graph` | Fetch full knowledge graph |
-| `GET /api/knowledge/role-tree/{role}` | Get skill tree for a role |
-| `POST /api/knowledge/learning-path` | Compute learning path to a skill |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Backend health check |
+| `/api/analytics/portfolio-score` | POST | Calculate portfolio health score |
+| `/api/analytics/skill-gap` | POST | Compute skill gap against target role |
+| `/api/analytics/parse-resume` | POST | Parse PDF resume and extract skills |
+| `/api/ml/classify-project` | POST | Classify a project by domain using hybrid ML |
+| `/api/github/scan/{username}` | GET | Scan GitHub profile with multi-language detection |
+| `/api/coach/chat` | POST | Send message to AI coach |
+| `/api/coach/critique` | POST | Generate portfolio critique |
+| `/api/optimization/recommend` | POST | Run knapsack portfolio optimizer |
+| `/api/optimization/generate-custom-blueprint` | POST | Generate AI project blueprint |
+| `/api/knowledge/graph` | GET | Fetch full knowledge graph |
+| `/api/knowledge/role-tree/{role}` | GET | Get skill tree for a role |
+| `/api/knowledge/learning-path` | POST | Compute learning path to a skill |
 
 ---
 

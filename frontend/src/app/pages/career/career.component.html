@@ -1,0 +1,387 @@
+<!-- Target Career Role & Skill Gap Analysis Card -->
+        <div class="card career-role-card">
+          <div class="career-header flex-between">
+            <div>
+              <h2 class="career-main-title">Target Career Role & Skill Gap Analysis</h2>
+              <p class="career-subtitle">Benchmark your active skills against industry career requirements</p>
+            </div>
+            <div class="role-selector-wrapper" *ngIf="app.careerRoles().length > 0">
+              <select class="form-select modern-role-select" [ngModel]="app.selectedRoleId()" (ngModelChange)="app.selectCareerRole($event)">
+                <option *ngFor="let role of app.careerRoles()" [value]="role.id">
+                  Target: {{ role.title }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Sleek Role Summary Box -->
+          <div class="role-summary-box-compact" *ngIf="app.selectedRole()">
+            <div class="role-badge-title">{{ app.selectedRole()?.title }}</div>
+            <p class="role-desc-text">{{ app.selectedRole()?.description }}</p>
+          </div>
+
+          <div class="career-gap-grid">
+            <!-- Alignment Score -->
+            <div class="alignment-score-card">
+              <div class="flex-between flex-align">
+                <span class="alignment-label">Role Alignment Score</span>
+                <span class="match-badge-compact" [class.high-match]="(app.skillGap()?.match_percentage ?? 0) >= 70">
+                  {{ app.skillGap()?.match_percentage ?? 0 }}% Match
+                </span>
+              </div>
+              <div class="progress-bar-bg-compact">
+                <div class="progress-bar-fill-compact" [style.width.%]="app.skillGap()?.match_percentage ?? 0"></div>
+              </div>
+            </div>
+
+            <!-- Skills Split -->
+            <div class="career-skills-split">
+              <div class="career-skill-group">
+                <span class="skill-group-header text-success">Matching Skills ({{ app.skillGap()?.matching_skills?.length ?? 0 }})</span>
+                <div class="compact-chip-cloud">
+                  <span class="compact-chip chip-match" *ngFor="let skill of app.skillGap()?.matching_skills">
+                    {{ skill }}
+                  </span>
+                  <span class="empty-skills-text" *ngIf="!app.skillGap()?.matching_skills?.length">No matching skills yet</span>
+                </div>
+              </div>
+
+              <div class="career-skill-group">
+                <span class="skill-group-header text-danger">Skill Gaps Needed ({{ app.skillGap()?.missing_skills?.length ?? 0 }})</span>
+                <div class="compact-chip-cloud">
+                  <span class="compact-chip chip-gap" *ngFor="let skill of app.skillGap()?.missing_skills">
+                    {{ skill }}
+                  </span>
+                  <span class="empty-skills-text text-success" *ngIf="!app.skillGap()?.missing_skills?.length">All target role skills acquired!</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls & Configuration Header Card -->
+        <div class="card optimizer-header-card">
+          <div class="optimizer-top-row flex-between">
+            <div>
+              <h2 class="optimizer-title">AI Portfolio Optimizer & Project Recommender</h2>
+              <p class="optimizer-subtext">
+                Multi-objective constraint optimization to calculate the highest-yield projects and skills for your target role.
+              </p>
+            </div>
+            <div class="optimizer-role-badge">
+              <span class="badge badge-primary">
+                Target Role: <strong>{{ app.selectedRole()?.title || 'General Developer' }}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="optimizer-controls-row">
+            <div class="control-group">
+              <span class="control-label">Development Effort Budget:</span>
+              <div class="budget-pill-group">
+                <button 
+                  type="button" 
+                  class="budget-pill" 
+                  [class.active]="app.effortBudgetHours() === 20" 
+                  (click)="app.setEffortBudget(20)">
+                  Sprint (~20 hrs)
+                </button>
+                <button 
+                  type="button" 
+                  class="budget-pill" 
+                  [class.active]="app.effortBudgetHours() === 40" 
+                  (click)="app.setEffortBudget(40)">
+                  Standard (~40 hrs)
+                </button>
+                <button 
+                  type="button" 
+                  class="budget-pill" 
+                  [class.active]="app.effortBudgetHours() === 80" 
+                  (click)="app.setEffortBudget(80)">
+                  Comprehensive (~80 hrs)
+                </button>
+              </div>
+            </div>
+
+            <div class="opt-action-buttons-row">
+              <button 
+                class="btn btn-primary run-opt-btn" 
+                [disabled]="app.isOptimizing() || app.isGeneratingCustomBlueprint()" 
+                (click)="app.runPortfolioOptimization()">
+                <span *ngIf="!app.isOptimizing()">Run Portfolio Optimization</span>
+                <span *ngIf="app.isOptimizing()">Computing Optimal Path...</span>
+              </button>
+
+              <button 
+                class="btn btn-outline-ai generate-ai-btn" 
+                [disabled]="app.isGeneratingCustomBlueprint() || app.isOptimizing()" 
+                (click)="app.generateDynamicAiBlueprint()">
+                <span *ngIf="!app.isGeneratingCustomBlueprint()">Synthesize AI Dynamic Blueprint</span>
+                <span *ngIf="app.isGeneratingCustomBlueprint()">AI Coach Generating Custom Project...</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State Prompt -->
+        <div class="card optimizer-empty-state" *ngIf="!app.optimizationResult() && !app.customAiBlueprint() && !app.isOptimizing() && !app.isGeneratingCustomBlueprint()">
+          <h3>Ready to Optimize Your Developer Portfolio</h3>
+          <p>
+            Choose between <strong>Mathematical Knapsack Optimization</strong> (highest ROI from curated blueprints) 
+            or <strong>Dynamic AI Synthesis</strong> (100% bespoke project blueprint generated on-the-fly by Groq Llama-3).
+          </p>
+          <div class="optimizer-empty-actions margin-top-sm">
+            <button class="btn btn-primary run-opt-btn" (click)="app.runPortfolioOptimization()">
+              Run Portfolio Optimization
+            </button>
+            <button class="btn btn-outline-ai generate-ai-btn" (click)="app.generateDynamicAiBlueprint()">
+              Synthesize AI Dynamic Blueprint
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Generating Loading Banner -->
+        <div class="card ai-synthesis-loading-card" *ngIf="app.isGeneratingCustomBlueprint()">
+          <div class="ai-pulse-spinner"></div>
+          <h4>PortfolioIQ AI is Synthesizing a Custom Blueprint...</h4>
+          <p>Analyzing {{ app.selectedRole()?.title || 'your target role' }} requirements, identified skill gaps, and your {{ app.effortBudgetHours() }}-hour budget to construct a production-grade architecture.</p>
+        </div>
+
+        <!-- Results View -->
+        <div class="optimization-results-container" *ngIf="app.optimizationResult() || app.customAiBlueprint()">
+          
+          <!-- Impact Simulation Bar (when optimizationResult exists) -->
+          <div class="card simulation-hero-card" *ngIf="app.optimizationResult()">
+            <div class="sim-metrics-grid">
+              <div class="sim-metric-box">
+                <span class="sim-label">Target Role Alignment</span>
+                <div class="sim-value-row">
+                  <span class="sim-val current">{{ app.optimizationResult()?.impact_simulation?.current_match_percentage }}%</span>
+                  <span class="sim-arrow">➔</span>
+                  <span class="sim-val projected">{{ app.optimizationResult()?.impact_simulation?.projected_match_percentage }}%</span>
+                </div>
+                <span class="sim-gain-badge">+{{ app.optimizationResult()?.impact_simulation?.match_increase }}% Match Increase</span>
+              </div>
+
+              <div class="sim-metric-box">
+                <span class="sim-label">Estimated Health Score Boost</span>
+                <div class="sim-value-row">
+                  <span class="sim-val highlight">+{{ app.optimizationResult()?.impact_simulation?.projected_health_gain }} pts</span>
+                </div>
+                <span class="sim-sub">Comprehensive portfolio boost</span>
+              </div>
+
+              <div class="sim-metric-box">
+                <span class="sim-label">Allocated Development Hours</span>
+                <div class="sim-value-row">
+                  <span class="sim-val">{{ app.optimizationResult()?.allocated_effort_hours }} hrs</span>
+                  <span class="sim-sub">/ {{ app.optimizationResult()?.effort_budget_hours }} hrs budget</span>
+                </div>
+                <span class="sim-sub">Maximized efficiency</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hybrid Blueprint View Switcher (when both or custom exists) -->
+          <div class="blueprint-view-switcher" *ngIf="app.optimizationResult() && app.customAiBlueprint()">
+            <button 
+              type="button" 
+              class="switcher-pill" 
+              [class.active]="app.activeBlueprintView() === 'curated'" 
+              (click)="app.setActiveBlueprintView('curated')">
+              Curated Optimal Blueprints ({{ app.optimizationResult()?.recommended_projects?.length }})
+            </button>
+            <button 
+              type="button" 
+              class="switcher-pill ai-pill" 
+              [class.active]="app.activeBlueprintView() === 'ai_custom'" 
+              (click)="app.setActiveBlueprintView('ai_custom')">
+              AI-Synthesized Custom Blueprint (Groq)
+            </button>
+          </div>
+
+          <!-- 1. AI Custom Generated Blueprint View -->
+          <div class="custom-ai-blueprint-view" *ngIf="app.customAiBlueprint() && (app.activeBlueprintView() === 'ai_custom' || !app.optimizationResult())">
+            <div class="custom-ai-heading-card">
+              <div class="custom-ai-heading-content">
+                <div class="ai-badge-row flex-align gap-xs">
+                  <span class="ai-generated-badge">Groq LLM Synthesized</span>
+                </div>
+                <h3 class="custom-ai-title">{{ app.customAiBlueprint()?.title }}</h3>
+                <p class="custom-ai-sub">100% custom-tailored project blueprint designed on-the-fly for your exact profile.</p>
+              </div>
+              <button class="btn btn-outline-ai btn-sm custom-ai-resynth-btn" (click)="app.generateDynamicAiBlueprint()" [disabled]="app.isGeneratingCustomBlueprint()">
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                <span>Re-Synthesize New AI Idea</span>
+              </button>
+            </div>
+
+            <div class="card custom-ai-blueprint-card">
+              <div class="rec-card-header">
+                <div class="rec-tags-cloud">
+                  <span class="domain-tag">{{ app.customAiBlueprint()?.domain }}</span>
+                  <span class="difficulty-tag diff-intermediate">{{ app.customAiBlueprint()?.difficulty }}</span>
+                  <span class="model-tag">{{ app.customAiBlueprint()?.model || 'Groq Llama-3' }}</span>
+                </div>
+                <span class="hours-tag">~{{ app.customAiBlueprint()?.estimated_hours }} hrs budget</span>
+              </div>
+
+              <p class="rec-desc margin-top-sm">{{ app.customAiBlueprint()?.description }}</p>
+
+              <div class="rec-arch-box margin-top-sm">
+                <strong>Architecture Highlights:</strong>
+                <p>{{ app.customAiBlueprint()?.architecture_highlights }}</p>
+              </div>
+
+              <!-- Key Deliverables -->
+              <div class="rec-deliverables-box margin-top-sm" *ngIf="app.customAiBlueprint()?.key_deliverables?.length">
+                <strong>Concrete Key Deliverables:</strong>
+                <ul class="deliverables-list">
+                  <li *ngFor="let item of app.customAiBlueprint()?.key_deliverables">{{ item }}</li>
+                </ul>
+              </div>
+
+              <!-- Hiring ROI Rationale -->
+              <div class="rec-roi-box margin-top-sm" *ngIf="app.customAiBlueprint()?.roi_rationale">
+                <strong>Hiring ROI Rationale:</strong>
+                <p class="text-secondary">{{ app.customAiBlueprint()?.roi_rationale }}</p>
+              </div>
+
+              <!-- Skills Addressed -->
+              <div class="rec-skills-section margin-top-sm">
+                <div class="skills-group" *ngIf="app.customAiBlueprint()?.covered_gaps?.length">
+                  <span class="skills-group-label text-success">Closes Target Gap:</span>
+                  <div class="compact-chip-cloud">
+                    <span class="compact-chip chip-gap-covered" *ngFor="let s of app.customAiBlueprint()?.covered_gaps">{{ s }}</span>
+                  </div>
+                </div>
+
+                <div class="skills-group" *ngIf="app.customAiBlueprint()?.new_skills?.length">
+                  <span class="skills-group-label text-primary">Complementary Stack:</span>
+                  <div class="compact-chip-cloud">
+                    <span class="compact-chip chip-complementary" *ngFor="let s of app.customAiBlueprint()?.new_skills">{{ s }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rec-card-footer margin-top-md">
+                <span class="custom-ai-label text-secondary">Ready to start building this project?</span>
+                <button class="btn btn-primary btn-sm btn-adopt-blueprint" (click)="app.adoptRecommendedProject(app.customAiBlueprint()!)">
+                  + Add to My Projects
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Curated Optimal Projects Section (when viewing curated or no custom) -->
+          <div class="curated-blueprints-view" *ngIf="app.optimizationResult() && (app.activeBlueprintView() === 'curated' || !app.customAiBlueprint())">
+            <div class="optimizer-section-heading">
+              <h3>Recommended Blueprint Projects</h3>
+              <p>Tailored projects mathematically proven to close your biggest skill gaps with highest ROI.</p>
+            </div>
+
+            <div class="rec-projects-grid">
+              <div class="card rec-project-card" *ngFor="let rec of app.optimizationResult()?.recommended_projects">
+                <div class="rec-card-header">
+                  <div class="rec-tags-cloud">
+                    <span class="domain-tag">{{ rec.domain }}</span>
+                    <span class="difficulty-tag" [class]="'diff-' + rec.difficulty.toLowerCase()">{{ rec.difficulty }}</span>
+                  </div>
+                  <span class="hours-tag">~{{ rec.estimated_hours }} hrs</span>
+                </div>
+
+                <h4 class="rec-title">{{ rec.title }}</h4>
+                <p class="rec-desc">{{ rec.description }}</p>
+
+                <div class="rec-arch-box">
+                  <strong>Architecture Highlights:</strong>
+                  <p>{{ rec.architecture_highlights }}</p>
+                </div>
+
+                <!-- Skills Addressed -->
+                <div class="rec-skills-section">
+                  <div class="skills-group" *ngIf="rec.covered_gaps?.length">
+                    <span class="skills-group-label text-success">Closes Target Gap:</span>
+                    <div class="compact-chip-cloud">
+                      <span class="compact-chip chip-gap-covered" *ngFor="let s of rec.covered_gaps">{{ s }}</span>
+                    </div>
+                  </div>
+
+                  <div class="skills-group" *ngIf="rec.new_skills?.length">
+                    <span class="skills-group-label text-primary">New Complementary Skills:</span>
+                    <div class="compact-chip-cloud">
+                      <span class="compact-chip chip-complementary" *ngFor="let s of rec.new_skills">{{ s }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rec-card-footer">
+                  <div class="rec-stats">
+                    <span class="efficiency-badge" title="Gain per hour">ROI Efficiency: {{ rec.efficiency_score }}x</span>
+                  </div>
+                  <button class="btn btn-primary btn-sm btn-adopt-blueprint" (click)="app.adoptRecommendedProject(rec)">
+                    + Add to My Projects
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- End-to-End Skill Progression Roadmap (Horizontal Pipeline Visualizer) -->
+          <div class="card skill-roadmap-card" *ngIf="app.getFullRoleRoadmapNodes().length">
+            <div class="roadmap-card-header flex-between flex-wrap gap-xs">
+              <div>
+                <div class="flex-align gap-xs flex-wrap">
+                  <h3 class="roadmap-title">End-to-End Skill Progression Roadmap</h3>
+                  <span class="roadmap-completion-tag">
+                    {{ app.getMasteredSkillsCount() }} of {{ app.getTotalRoleSkillsCount() }} Skills Mastered ({{ app.getRoleMasteryPercentage() }}%)
+                  </span>
+                </div>
+                <p class="roadmap-subtitle">
+                  Visualizer of your verified competencies (<span class="text-success font-semibold">Acquired</span>) and upcoming learning milestones (<span class="text-primary font-semibold">Target Gaps</span>) for {{ app.selectedRole()?.title || 'Target Role' }}.
+                </p>
+              </div>
+              <div class="roadmap-legend-chips flex-align gap-xs">
+                <span class="legend-chip legend-mastered">Verified Acquired</span>
+                <span class="legend-chip legend-gap">Next Milestones</span>
+              </div>
+            </div>
+
+            <!-- Horizontal Connected Pipeline Flow -->
+            <div class="roadmap-pipeline-flow">
+              <ng-container *ngFor="let node of app.getFullRoleRoadmapNodes(); let i = index; let isLast = last">
+                <!-- Mastered Node -->
+                <div class="roadmap-step-node node-mastered" *ngIf="node.status === 'mastered'">
+                  <div class="step-badge-counter badge-mastered">
+                    <svg class="check-mini-svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Acquired
+                  </div>
+                  <div class="step-node-body">
+                    <span class="step-skill-text text-mastered">{{ node.name }}</span>
+                    <span class="step-verified-tag">In Portfolio</span>
+                  </div>
+                </div>
+
+                <!-- Target Gap Node -->
+                <div class="roadmap-step-node node-pending" [class.priority-node]="node.isPriority" *ngIf="node.status === 'pending'">
+                  <div class="step-badge-counter badge-pending">{{ node.stepLabel }}</div>
+                  <div class="step-node-body">
+                    <span class="step-skill-text">{{ node.name }}</span>
+                    <span class="step-status-tag" *ngIf="node.isPriority">Highest Priority Gap</span>
+                    <span class="step-cat-tag" *ngIf="!node.isPriority">Target Gap</span>
+                  </div>
+                </div>
+
+                <!-- Connector Arrow between nodes -->
+                <div class="roadmap-connector" *ngIf="!isLast" [class.connector-mastered]="node.status === 'mastered'">
+                  <svg class="connector-arrow-svg" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+        </div>

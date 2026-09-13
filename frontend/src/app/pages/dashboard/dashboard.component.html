@@ -1,0 +1,101 @@
+<div class="dashboard-grid-layout">
+          
+          <!-- Health Score Box -->
+          <div class="card health-card">
+            <div class="card-header flex-between">
+              <div class="flex-align gap-xs">
+                <h2>Portfolio Health Status</h2>
+                <button class="btn-icon info-score-btn" (click)="app.openScoreInfoModal()" title="How is this score calculated? Click for full rubric">
+                  <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
+              <div class="flex-align gap-xs">
+                <span class="status-indicator-tag" *ngIf="(app.portfolioScore()?.overall_health_score ?? 0) >= 70">GOOD PORTFOLIO</span>
+                <span class="status-indicator-tag status-warning" *ngIf="(app.portfolioScore()?.overall_health_score ?? 0) < 70">NEEDS IMPROVEMENT</span>
+              </div>
+            </div>
+
+            <div class="health-hero-display">
+              <div class="score-display">
+                <span class="score-number">{{ app.portfolioScore()?.overall_health_score ?? 0 }}</span>
+                <span class="score-max">/ 100</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" [style.width.%]="app.portfolioScore()?.overall_health_score ?? 0"></div>
+              </div>
+            </div>
+
+            <div class="sub-metrics-list" *ngIf="app.portfolioScore()?.metrics">
+              <div class="sub-metric-item">
+                <span>Skill Coverage</span>
+                <span class="sub-val">{{ app.portfolioScore()?.metrics?.skill_diversity_score }}/35</span>
+              </div>
+              <div class="sub-metric-item">
+                <span>Project Volume</span>
+                <span class="sub-val">{{ app.portfolioScore()?.metrics?.project_volume_score }}/25</span>
+              </div>
+              <div class="sub-metric-item">
+                <span>Detail Quality</span>
+                <span class="sub-val">{{ app.portfolioScore()?.metrics?.detail_quality_score }}/20</span>
+              </div>
+              <div class="sub-metric-item">
+                <span>Role Alignment</span>
+                <span class="sub-val">{{ app.skillGap()?.match_percentage ?? 0 }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strengths & Weaknesses Checklist Card (UI 3 Spec) -->
+          <div class="card evaluation-card">
+            <div class="card-header">
+              <h2>Portfolio Strengths & Weaknesses</h2>
+            </div>
+
+            <div class="evaluation-section">
+              <h4 class="eval-title text-success">✓ Strengths</h4>
+              <ul class="eval-list" *ngIf="app.strengthsList().length; else noStrengths">
+                <li *ngFor="let item of app.strengthsList()" class="eval-item eval-item-success">
+                  <span class="icon">✓</span> {{ item }}
+                </li>
+              </ul>
+              <ng-template #noStrengths>
+                <p class="empty-hint">Add more projects and skills to build strengths.</p>
+              </ng-template>
+            </div>
+
+            <div class="evaluation-section margin-top-md">
+              <h4 class="eval-title text-danger">! Areas for Improvement</h4>
+              <ul class="eval-list" *ngIf="app.weaknessesList().length; else noWeaknesses">
+                <li *ngFor="let item of app.weaknessesList()" class="eval-item eval-item-danger">
+                  <span class="icon">!</span> {{ item }}
+                </li>
+              </ul>
+              <ng-template #noWeaknesses>
+                <p class="empty-hint text-success">Great job! No major portfolio weaknesses detected.</p>
+              </ng-template>
+            </div>
+          </div>
+
+          <!-- Quick Summary Stat Cards -->
+          <div class="card stats-summary-card full-width">
+            <div class="stats-grid">
+              <div class="stat-box" (click)="app.setTab('projects')">
+                <span class="stat-num">{{ app.projects().length }}</span>
+                <span class="stat-label">Total Projects</span>
+              </div>
+              <div class="stat-box" (click)="app.setTab('skills')">
+                <span class="stat-num">{{ app.currentUser() ? app.getUserSkillNames().length : 0 }}</span>
+                <span class="stat-label">Acquired Skills</span>
+              </div>
+              <div class="stat-box" (click)="app.setTab('career')">
+                <span class="stat-num">{{ app.currentUser() ? (app.skillGap()?.match_percentage ?? 0) : 0 }}%</span>
+                <span class="stat-label">Target Role Match ({{ app.currentUser() ? (app.selectedRole()?.title || 'None') : 'Guest' }})</span>
+              </div>
+            </div>
+          </div>
+
+        </div>

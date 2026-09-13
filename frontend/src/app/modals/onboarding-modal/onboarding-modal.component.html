@@ -1,0 +1,91 @@
+<!-- FIRST-TIME QUICK ONBOARDING MODAL -->
+<div class="modal-backdrop onboarding-backdrop" *ngIf="app.showOnboardingModal()">
+  <div class="modal-card onboarding-modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="onboarding-header text-center">
+      <div class="onboarding-avatar-wrapper">
+        <img 
+          *ngIf="app.getOnboardingAvatar()" 
+          [src]="app.getOnboardingAvatar()" 
+          alt="Avatar" 
+          class="onboarding-avatar"
+        />
+        <div *ngIf="!app.getOnboardingAvatar()" class="onboarding-avatar onboarding-avatar-fallback">
+          {{ app.getOnboardingName()[0].toUpperCase() }}
+        </div>
+        <div class="onboarding-verified-badge" title="Verified GitHub Developer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
+      </div>
+
+      <h2 class="onboarding-title">Welcome to PortfolioIQ, {{ app.getOnboardingName() }}!</h2>
+      <p class="onboarding-subtitle">
+        Let's personalize your AI analytics. Select your primary target developer role:
+      </p>
+    </div>
+
+    <!-- Role Selection Grid -->
+    <div class="onboarding-roles-container">
+      <div class="onboarding-roles-grid">
+        <div 
+          *ngFor="let role of app.careerRoles()"
+          class="onboarding-role-card"
+          [class.selected]="app.onboardingSelectedRoleId() === role.id"
+          (click)="app.onboardingSelectedRoleId.set(role.id)"
+        >
+          <div class="onboarding-role-radio">
+            <div class="onboarding-radio-dot" *ngIf="app.onboardingSelectedRoleId() === role.id"></div>
+          </div>
+          <div class="onboarding-role-info">
+            <div class="onboarding-role-title">{{ role.title }}</div>
+            <div class="onboarding-role-desc" *ngIf="role.description">{{ role.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GitHub Username Input -->
+    <div class="onboarding-github-section">
+      <label class="onboarding-github-label">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub Username <span class="onboarding-optional">(optional)</span>
+      </label>
+      <div class="onboarding-github-input-wrapper">
+        <span class="onboarding-github-prefix">github.com/</span>
+        <input
+          type="text"
+          class="onboarding-github-input"
+          placeholder="your-username"
+          [(ngModel)]="app.onboardingGitHubUsername"
+          [disabled]="app.onboardingSaving()"
+        />
+      </div>
+      <p class="onboarding-github-hint">Auto-scan your repositories and detect your tech stack after setup.</p>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="onboarding-footer">
+      <button 
+        type="button" 
+        class="btn btn-primary onboarding-submit-btn full-width-btn" 
+        (click)="app.completeOnboarding()"
+        [disabled]="app.onboardingSaving() || !app.onboardingSelectedRoleId()"
+      >
+        <span *ngIf="app.onboardingSaving()">Setting up your portfolio...</span>
+        <span *ngIf="!app.onboardingSaving()" class="flex-center gap-xs">
+          <span>Get Started & Analyze Portfolio</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </button>
+      <p class="onboarding-hint text-center">
+        You can change your target role and customize skills anytime in the dashboard.
+      </p>
+    </div>
+  </div>
+</div>

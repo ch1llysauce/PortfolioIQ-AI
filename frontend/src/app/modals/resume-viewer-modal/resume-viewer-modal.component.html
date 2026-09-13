@@ -1,0 +1,38 @@
+<!-- ============================================
+     RESUME PDF VIEWER MODAL
+     ============================================ -->
+<div class="modal-backdrop" *ngIf="app.showResumeModal()" (click)="app.closeResumeViewer()">
+  <div class="modal-card resume-viewer-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <div class="flex-align gap-sm">
+        <div>
+          <h3>{{ app.savedResumeMeta()?.fileName || 'Resume Document' }}</h3>
+          <span class="modal-subtitle">Uploaded: {{ app.savedResumeMeta()?.uploadedAt | date:'medium' }}</span>
+        </div>
+      </div>
+      <button class="btn-icon modal-close-btn" (click)="app.closeResumeViewer()">✕</button>
+    </div>
+
+    <div class="resume-viewer-body">
+      <iframe 
+        *ngIf="app.resumePdfUrlSafe()" 
+        [src]="app.resumePdfUrlSafe()!" 
+        class="resume-pdf-iframe" 
+        title="PDF Resume Preview"
+      ></iframe>
+      <div class="resume-viewer-fallback" *ngIf="!app.resumePdfUrlSafe()">
+        <p>Unable to render PDF preview.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer flex-between">
+      <span class="sub-text">Securely stored in your authenticated PortfolioIQ cloud profile</span>
+      <div class="flex-align gap-sm">
+        <a *ngIf="app.savedResumeMeta()?.dataUrl" [href]="app.savedResumeMeta()?.dataUrl" [download]="app.savedResumeMeta()?.fileName || 'resume.pdf'" class="btn btn-outline btn-sm">
+          Download PDF
+        </a>
+        <button class="btn btn-primary btn-sm" (click)="app.closeResumeViewer()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

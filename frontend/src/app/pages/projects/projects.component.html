@@ -1,0 +1,326 @@
+<!-- Case 1: Signed Out (Guest) - ZERO Projects displayed, 100% Locked -->
+        <div class="card locked-card text-center" *ngIf="!app.currentUser()" style="padding: 48px 24px;">
+          <h2>Developer Projects Portfolio Locked</h2>
+          <p class="text-muted" style="max-width: 520px; margin: 8px auto 24px; line-height: 1.5;">
+            Sign in to view your verified software engineering projects, repository sync, and AI architecture analysis. Private developer projects are never visible to guests.
+          </p>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" (click)="app.openAuthModal('login')">Sign In</button>
+            <button class="btn btn-outline" (click)="app.openAuthModal('register')">Create Account</button>
+          </div>
+        </div>
+
+        <!-- Case 2: Signed In - User's Projects Portfolio -->
+        <div *ngIf="app.currentUser()">
+        
+          <!-- Top Toolbar Header -->
+          <div class="card projects-header-card">
+          <div class="projects-top-bar flex-between flex-wrap gap-md">
+            <div>
+              <div class="flex-align gap-xs">
+                <h2>My Projects</h2>
+                <span class="count-badge">{{ app.projects().length }} Projects</span>
+              </div>
+              <p class="section-subtitle">Manage, categorize, and analyze your verified software engineering projects.</p>
+            </div>
+
+            <div class="projects-top-actions flex-align gap-sm" *ngIf="app.currentUser()">
+              <button 
+                class="btn btn-primary new-project-toggle-btn" 
+                (click)="app.toggleAddProjectForm()">
+                <svg *ngIf="!app.showAddProjectForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <svg *ngIf="app.showAddProjectForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>{{ app.showAddProjectForm() ? 'Close Form' : 'New Project' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Modern Search & Status Filter Controls -->
+          <div class="projects-filter-bar flex-between flex-wrap gap-sm margin-top-md" *ngIf="app.projects().length > 0">
+            <!-- Search Input -->
+            <div class="project-search-box">
+              <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input 
+                type="text" 
+                class="project-search-input" 
+                placeholder="Search projects or tech stack..." 
+                [ngModel]="app.projectSearchQuery()" 
+                (ngModelChange)="app.projectSearchQuery.set($event)" 
+              />
+              <button class="search-clear-btn" *ngIf="app.projectSearchQuery()" (click)="app.projectSearchQuery.set('')">✕</button>
+            </div>
+
+            <!-- Status Filter Pills -->
+            <div class="project-filter-pills flex-align gap-xs">
+              <button 
+                class="filter-pill" 
+                [class.active]="app.projectStatusFilter() === 'all'" 
+                (click)="app.setProjectStatusFilter('all')">
+                All ({{ app.getProjectCountByStatus('all') }})
+              </button>
+              <button 
+                class="filter-pill pill-active" 
+                [class.active]="app.projectStatusFilter() === 'active'" 
+                (click)="app.setProjectStatusFilter('active')">
+                <span class="status-dot dot-active"></span> In Progress ({{ app.getProjectCountByStatus('active') }})
+              </button>
+              <button 
+                class="filter-pill pill-completed" 
+                [class.active]="app.projectStatusFilter() === 'completed'" 
+                (click)="app.setProjectStatusFilter('completed')">
+                <span class="status-dot dot-completed"></span> Completed ({{ app.getProjectCountByStatus('completed') }})
+              </button>
+              <button 
+                class="filter-pill pill-idea" 
+                [class.active]="app.projectStatusFilter() === 'idea'" 
+                (click)="app.setProjectStatusFilter('idea')">
+                <span class="status-dot dot-idea"></span> Idea ({{ app.getProjectCountByStatus('idea') }})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Modern "Create Project" Drawer/Card -->
+        <div class="card add-project-card margin-bottom-md" *ngIf="app.showAddProjectForm() && app.currentUser()">
+          <div class="card-header flex-between">
+            <div class="flex-align gap-xs">
+              <div class="add-proj-icon-bubble">
+                <svg class="btn-svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+              </div>
+              <div>
+                <h3>Create New Developer Project</h3>
+                <span class="sub-text">Add a project to track tech skills and compute ML domain predictions</span>
+              </div>
+            </div>
+            <button class="btn-icon" (click)="app.toggleAddProjectForm()">✕</button>
+          </div>
+
+          <div class="add-project-form-body">
+            <div class="form-row-grid">
+              <div class="form-group flex-2">
+                <label class="form-label">Project Name <span class="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. PortfolioIQ AI, CloudSentinel, MathMentor" 
+                  [(ngModel)]="app.newProjectName" 
+                  class="form-input" 
+                />
+              </div>
+
+              <div class="form-group flex-1">
+                <label class="form-label">Project Phase / Lifecycle</label>
+                <div class="phase-selector-group">
+                  <button 
+                    type="button" 
+                    class="phase-btn phase-idea" 
+                    [class.active]="app.newProjectStatus === 'idea'" 
+                    (click)="app.setNewProjectStatus('idea')">
+                    <span class="status-dot dot-idea"></span> Idea
+                  </button>
+                  <button 
+                    type="button" 
+                    class="phase-btn phase-active" 
+                    [class.active]="app.newProjectStatus === 'active'" 
+                    (click)="app.setNewProjectStatus('active')">
+                    <span class="status-dot dot-active"></span> In Progress
+                  </button>
+                  <button 
+                    type="button" 
+                    class="phase-btn phase-completed" 
+                    [class.active]="app.newProjectStatus === 'completed'" 
+                    (click)="app.setNewProjectStatus('completed')">
+                    <span class="status-dot dot-completed"></span> Completed
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group margin-top-sm">
+              <label class="form-label">Architecture, Technologies, & Description</label>
+              <textarea 
+                placeholder="Describe key features, system architecture, tools used, and business logic..." 
+                [(ngModel)]="app.newProjectDesc" 
+                class="form-textarea"
+                rows="3">
+              </textarea>
+            </div>
+
+            <div class="add-project-actions flex-align gap-sm margin-top-md">
+              <button class="btn btn-primary" (click)="app.createProject()" [disabled]="!app.newProjectName.trim()">
+                + Create Project
+              </button>
+              <button class="btn btn-secondary" (click)="app.toggleAddProjectForm()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-modern-grid" *ngIf="app.getFilteredProjects().length > 0">
+          <div 
+            class="project-glass-card" 
+            *ngFor="let project of app.getFilteredProjects()"
+            [id]="'project-card-' + project.id"
+            [class.project-card-highlighted]="app.highlightedProjectId() === project.id">
+            
+            <!-- Card Header -->
+            <div class="proj-card-top">
+              <div class="proj-header-main">
+                <div class="proj-title-group">
+                  <div class="proj-icon-badge">
+                    <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+                  </div>
+                  <h3 class="proj-title">{{ project.name }}</h3>
+                </div>
+
+                <div class="proj-header-actions">
+                  <button class="btn-icon proj-edit-btn" (click)="app.openEditProjectModal(project)" title="Edit Project Title & Description">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="btn-icon proj-delete-btn" (click)="app.deleteProject(project.id, project.name)" title="Delete Project">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Phase Status & ML Classification Meta Bar -->
+              <div class="proj-meta-bar">
+                <div class="proj-status-dropdown-wrapper" [class]="'wrapper-status-' + project.status">
+                  <span class="status-dot"></span>
+                  <select 
+                    [ngModel]="project.status" 
+                    (ngModelChange)="app.updateProjectStatus(project.id, $event, project.name)"
+                    class="modern-status-select" 
+                    [class]="'select-status-' + project.status"
+                    title="Change Project Phase">
+                    <option value="idea">Idea</option>
+                    <option value="active">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+
+                <!-- ML Classification AI Pill -->
+                <div class="proj-ai-domain-wrapper" *ngIf="app.mlPredictions()[project.id]">
+                  <div class="proj-ai-domain-pill" [class.ai-warning]="app.mlPredictions()[project.id].needs_details || app.mlPredictions()[project.id].confidence_score <= 30">
+                    <svg class="ai-sparkle-svg" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                    <span *ngIf="!app.mlPredictions()[project.id].needs_details && app.mlPredictions()[project.id].confidence_score > 30">
+                      ML Domain: <strong>{{ app.mlPredictions()[project.id].predicted_category }}</strong>
+                      <span class="ai-score">({{ app.mlPredictions()[project.id].confidence_score }}%)</span>
+                    </span>
+                    <span *ngIf="app.mlPredictions()[project.id].needs_details || app.mlPredictions()[project.id].confidence_score <= 30">
+                      ML Domain: <strong>Needs Details</strong>
+                      <span class="ai-score">({{ app.mlPredictions()[project.id].confidence_score }}%)</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tech Stack Chips -->
+            <div class="proj-tech-stack-section">
+              <div class="proj-tech-label flex-between">
+                <span>Tech Stack ({{ project.project_skills?.length || 0 }})</span>
+                <button 
+                  *ngIf="(project.project_skills?.length || 0) > 6"
+                  type="button"
+                  class="btn-tech-toggle" 
+                  (click)="app.toggleProjectSkillsExpanded(project.id)"
+                  title="Toggle visible skills">
+                  {{ app.isProjectSkillsExpanded(project.id) ? 'Show less' : '+' + (project.project_skills.length - 6) + ' more' }}
+                </button>
+              </div>
+              <div class="proj-chips-container" *ngIf="project.project_skills?.length">
+                <ng-container *ngFor="let ps of project.project_skills; let i = index">
+                  <span 
+                    class="modern-tech-chip" 
+                    *ngIf="app.isProjectSkillsExpanded(project.id) || i < 6">
+                    <span>{{ ps.skills?.name }}</span>
+                    <button class="chip-remove-btn" (click)="app.detachSkillFromProject(project.id, ps.skill_id, ps.skills?.name)" title="Remove {{ ps.skills?.name }}">×</button>
+                  </span>
+                </ng-container>
+              </div>
+              <div class="empty-tech-hint" *ngIf="!project.project_skills?.length">
+                <span>No skills attached yet. Attach below:</span>
+              </div>
+            </div>
+
+            <!-- Card Bottom Actions -->
+            <div class="proj-card-footer flex-between">
+              <button class="btn btn-outline btn-sm proj-analysis-btn" (click)="app.openProjectAnalysis(project)">
+                <svg class="btn-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>View AI Analysis</span>
+              </button>
+
+              <div class="modern-attach-picker">
+                <div class="attach-skill-search-wrapper">
+                  <input
+                    #attachInput
+                    type="text"
+                    class="form-input form-input-sm attach-skill-search"
+                    placeholder="Search & attach skill..."
+                    [(ngModel)]="app.projectSkillSearch[project.id]"
+                    (focus)="app.openSkillPicker(project.id, attachInput)"
+                    (input)="app.openSkillPicker(project.id, attachInput)"
+                    (blur)="app.closeSkillPicker()"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Zero / Empty State -->
+        <div class="card empty-projects-card text-center" *ngIf="app.currentUser() && app.projects().length === 0">
+          <div class="empty-icon-circle">
+            <svg class="nav-svg" viewBox="0 0 24 24" style="width: 32px; height: 32px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+          </div>
+          <h3>No Projects Added Yet</h3>
+          <p class="text-muted" style="max-width: 480px; margin: 8px auto 20px;">
+            Start tracking your developer portfolio by creating your first project or importing existing repositories from GitHub!
+          </p>
+          <div class="optimizer-empty-actions margin-top-sm">
+            <button class="btn btn-primary" (click)="app.toggleAddProjectForm()">+ Create First Project</button>
+            <button class="btn btn-outline-ai" (click)="app.setTab('github')">Sync with GitHub</button>
+          </div>
+        </div>
+
+        <!-- Filter / Search Zero State -->
+        <div class="card empty-projects-card text-center" *ngIf="app.currentUser() && app.projects().length > 0 && app.getFilteredProjects().length === 0">
+          <div class="empty-icon-circle">
+            <svg class="nav-svg" viewBox="0 0 24 24" style="width: 32px; height: 32px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+          </div>
+          
+          <h3 *ngIf="app.projectSearchQuery().trim()">No Matching Projects</h3>
+          <h3 *ngIf="!app.projectSearchQuery().trim() && app.projectStatusFilter() !== 'all'">
+            No {{ app.projectStatusFilter() === 'active' ? 'In Progress' : (app.projectStatusFilter() === 'completed' ? 'Completed' : 'Idea') }} Projects
+          </h3>
+
+          <p class="text-muted" style="margin: 8px auto 20px; max-width: 480px;" *ngIf="app.projectSearchQuery().trim() && app.projectStatusFilter() !== 'all'">
+            No <strong>{{ app.projectStatusFilter() === 'active' ? 'In Progress' : (app.projectStatusFilter() === 'completed' ? 'Completed' : 'Idea') }}</strong> projects matched your search query "<strong>{{ app.projectSearchQuery() }}</strong>".
+          </p>
+
+          <p class="text-muted" style="margin: 8px auto 20px; max-width: 480px;" *ngIf="app.projectSearchQuery().trim() && app.projectStatusFilter() === 'all'">
+            No projects matched your search query "<strong>{{ app.projectSearchQuery() }}</strong>".
+          </p>
+
+          <p class="text-muted" style="margin: 8px auto 20px; max-width: 480px;" *ngIf="!app.projectSearchQuery().trim() && app.projectStatusFilter() !== 'all'">
+            You currently have 0 projects marked as <strong>{{ app.projectStatusFilter() === 'active' ? 'In Progress' : (app.projectStatusFilter() === 'completed' ? 'Completed' : 'Idea') }}</strong>.
+          </p>
+
+          <div class="optimizer-empty-actions margin-top-sm">
+            <button class="btn btn-primary" (click)="app.setProjectStatusFilter('all')">
+              Show All ({{ app.projects().length }}) Projects
+            </button>
+            <button class="btn btn-outline-ai" *ngIf="app.projectSearchQuery().trim()" (click)="app.clearProjectFilters()">
+              Clear Search
+            </button>
+            <button class="btn btn-outline-ai" *ngIf="!app.projectSearchQuery().trim() && app.projectStatusFilter() !== 'all'" (click)="app.openAddProjectWithCurrentFilter()">
+              + Add {{ app.projectStatusFilter() === 'active' ? 'In Progress' : (app.projectStatusFilter() === 'completed' ? 'Completed' : 'Idea') }} Project
+            </button>
+          </div>
+        </div>
+
+        </div>

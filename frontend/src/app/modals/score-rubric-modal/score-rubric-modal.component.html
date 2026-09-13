@@ -1,0 +1,115 @@
+<!-- ============================================
+     PORTFOLIO HEALTH SCORE CALCULATION MODAL
+     ============================================ -->
+<div class="modal-backdrop score-info-backdrop" *ngIf="app.showScoreInfoModal()" (click)="app.closeScoreInfoModal()">
+  <div class="modal-card score-info-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between score-info-header">
+      <div class="flex-align gap-sm">
+        <div class="score-info-icon-bubble">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 class="score-info-title">Portfolio Health Score Calculation</h3>
+          <span class="score-info-subtitle">100-Point Industry-Standard Evaluation Model</span>
+        </div>
+      </div>
+      <button class="btn-icon modal-close-btn" (click)="app.closeScoreInfoModal()">✕</button>
+    </div>
+
+    <div class="modal-body score-info-body">
+      <!-- Total Formula Summary Banner -->
+      <div class="score-formula-banner">
+        <div class="formula-label">Total Formula:</div>
+        <div class="formula-math">
+          <strong>Skill Coverage (35)</strong> + <strong>Project Volume (25)</strong> + <strong>Detail Quality (20)</strong> + <strong>Activity Status (20)</strong> = <strong>100 Max</strong>
+        </div>
+      </div>
+
+      <!-- 4-Part Evaluation Rubric Grid -->
+      <div class="rubric-grid">
+        <!-- Metric 1: Skill Coverage -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">1. Skill Coverage</strong>
+            <span class="badge badge-primary">35 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Measures breadth of active technical stack across languages, frameworks, and databases.
+          </p>
+          <div class="rubric-formula-box">
+            <code>min(35, (Unique Skills / 10) * 35)</code>
+            <p class="rubric-rule">• 10+ verified skills award full 35/35 points.</p>
+          </div>
+        </div>
+
+        <!-- Metric 2: Project Volume -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">2. Project Volume</strong>
+            <span class="badge badge-primary">25 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Evaluates verified proof-of-work and overall software delivery experience.
+          </p>
+          <div class="rubric-formula-box">
+            <code>min(25, (Total Projects / 5) * 25)</code>
+            <p class="rubric-rule">• 5+ active/completed projects award full 25/25 points.</p>
+          </div>
+        </div>
+
+        <!-- Metric 3: Detail Quality -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">3. Detail Quality</strong>
+            <span class="badge badge-primary">20 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Rewards thorough project descriptions, architecture, and context for recruiters.
+          </p>
+          <div class="rubric-formula-box">
+            <code>(Projects with desc >= 15 chars / Total Projects) * 20</code>
+            <p class="rubric-rule">• Requires substantive description text per project.</p>
+          </div>
+        </div>
+
+        <!-- Metric 4: Activity & Status -->
+        <div class="rubric-card">
+          <div class="rubric-card-header flex-between">
+            <strong class="rubric-title">4. Activity & Status</strong>
+            <span class="badge badge-primary">20 pts max</span>
+          </div>
+          <p class="rubric-desc">
+            Assesses whether projects are completed or active vs unstarted backlog ideas.
+          </p>
+          <div class="rubric-formula-box">
+            <code>(Completed or In-Progress Projects / Total Projects) * 20</code>
+            <p class="rubric-rule">• "Completed" or "In Progress" projects receive full points.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role Alignment Context Card -->
+      <div class="role-alignment-info-card">
+        <div class="flex-align gap-xs role-align-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+          <strong class="text-indigo-300">Target Role Alignment (%)</strong>
+        </div>
+        <p class="sub-text">
+          Measures current skill match vs required benchmark skills for your selected Target Role: <code>(Matching Skills / Required Role Skills) * 100%</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="modal-footer flex-end score-info-footer">
+      <button class="btn btn-primary btn-sm" (click)="app.closeScoreInfoModal()">Got it</button>
+    </div>
+  </div>
+</div>

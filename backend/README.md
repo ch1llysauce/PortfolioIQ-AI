@@ -9,13 +9,45 @@ FastAPI backend for the PortfolioIQ AI platform.
 
 ## Stack
 
-- **FastAPI** — REST API framework
-- **Scikit-Learn** — ML project classifier (TF-IDF + Logistic Regression)
-- **NetworkX** — Knowledge graph
-- **Groq API** — AI Coach and Blueprint generation (Llama 3)
-- **httpx** — GitHub API client
-- **PyPDF** — Resume PDF parsing
-- **Supabase** — Auth (JWT validation via frontend)
+- **FastAPI** — High-performance asynchronous REST API framework
+- **Scikit-Learn** — ML project domain classifier (TF-IDF + Logistic Regression)
+- **NetworkX** — Knowledge graph representing tech ontologies & skill trees
+- **Groq API** — AI Developer Coach and Blueprint generation (Llama 3 70B / 8B)
+- **httpx** — Async HTTP client for concurrent GitHub API requests
+- **PyPDF** — Resume PDF text extraction & parsing
+- **Supabase** — Auth (JWT validation via frontend & database integration)
+
+---
+
+## Key Modules
+
+### 1. Machine Learning Project Classifier (`app/routes/ml.py`)
+- Predicts project domains into 6 categories:
+  - Web Development
+  - Mobile Development
+  - AI / Machine Learning
+  - Data Science & Analytics
+  - Cloud & DevOps
+  - Cybersecurity & Systems
+- Employs a hybrid scoring mechanism: 60% Scikit-Learn model probability + 40% keyword domain affinity scoring for calibrated multi-domain predictions.
+
+### 2. GitHub Profile & Repository Scanner (`app/github/github_client.py`)
+- Scans user repositories and extracts:
+  - Repository metadata (stars, forks, description, primary language, topics).
+  - **Multi-Language Detection**: Concurrently queries `languages_url` across all repositories to capture all technologies used beyond just the primary language, weighted by bytes written.
+  - Automatic mapping from repository languages and topics to standardized technical skills.
+
+### 3. AI Developer Coach & Blueprint Synthesis (`app/ai/groq_coach.py`)
+- Context-aware portfolio coaching powered by Groq LLM.
+- Generates targeted critiques, gap mitigation roadmaps, and custom project blueprints tailored to the user's specific skill deficiencies.
+
+### 4. Mathematical Portfolio Optimizer (`app/optimization/`)
+- Knapsack-based optimization algorithm calculating maximum ROI projects given an effort budget in hours.
+- Suggests new projects that maximize target role alignment and fill the highest-impact skill gaps.
+
+### 5. Knowledge Graph & Ontology (`app/knowledge/`)
+- NetworkX-powered graph containing 125+ technologies and 475+ relationships.
+- Generates career role skill trees, prerequisite chains, and ordered learning paths.
 
 ---
 
@@ -58,7 +90,7 @@ Interactive docs at `http://localhost:8000/docs`
 
 ## API Endpoints
 
-### Health
+### Health & System
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/health` | Backend health check |
@@ -74,18 +106,18 @@ Interactive docs at `http://localhost:8000/docs`
 ### Machine Learning
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/ml/classify-project` | Classify project domain using ML |
+| POST | `/api/ml/classify-project` | Classify project domain using hybrid ML pipeline |
 
 ### GitHub
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/github/status` | GitHub API status and rate limit |
-| GET | `/api/github/scan/{username}` | Scan GitHub profile — repos, skills, domains |
+| GET | `/api/github/status` | GitHub API status and rate limit quota |
+| GET | `/api/github/scan/{username}` | Scan GitHub profile — repos, multi-language breakdown, skills |
 
 ### AI Coach
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/coach/status` | Coach availability and active model |
+| GET | `/api/coach/status` | Coach availability and active model status |
 | POST | `/api/coach/chat` | Send message to AI Developer Coach |
 | POST | `/api/coach/critique` | Generate full portfolio critique |
 | POST | `/api/coach/project-ideas` | Generate project ideas based on skill gaps |
@@ -130,17 +162,17 @@ backend/
 │   ├── ai/
 │   │   └── groq_coach.py    # Groq LLM integration
 │   ├── github/
-│   │   └── github_client.py # httpx-based GitHub API client
+│   │   └── github_client.py # Async httpx-based GitHub client with multi-language parsing
 │   ├── knowledge/
 │   │   ├── knowledge_graph.py
 │   │   ├── entity_extractor.py
 │   │   ├── retrieval.py
-│   │   └── data/            # JSON knowledge base files
+│   │   └── data/            # JSON knowledge base files (technologies, roles, aliases)
 │   └── optimization/
 │       ├── portfolio_optimizer.py
 │       ├── objective_functions.py
 │       └── constraints.py
-├── database/                # SQL schema files
+├── database/                # SQL schema files (career_roles.sql, etc.)
 ├── requirements.txt
 └── .env.example
 ```

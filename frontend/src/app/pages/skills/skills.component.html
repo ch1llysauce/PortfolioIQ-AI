@@ -1,0 +1,282 @@
+<!-- Case 1: Signed Out (Guest) - ZERO Skills displayed, 100% Locked -->
+        <div class="card locked-card text-center" *ngIf="!app.currentUser()" style="padding: 48px 24px;">
+          <h2>Developer Skills Profile Locked</h2>
+          <p class="text-muted" style="max-width: 520px; margin: 8px auto 24px; line-height: 1.5;">
+            Sign in to view your verified skills, project tech stack breakdown, and career goal alignment. Private developer skills are never visible to guests.
+          </p>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" (click)="app.openAuthModal('login')">Sign In</button>
+            <button class="btn btn-outline" (click)="app.openAuthModal('register')">Create Account</button>
+          </div>
+        </div>
+
+        <!-- Case 2: Signed In - User's Verified Skills Portfolio -->
+        <div *ngIf="app.currentUser()">
+          
+          <!-- SUB-VIEW 1: MY VERIFIED SKILLS -->
+          <ng-container *ngIf="app.skillsSubView() === 'my-skills'">
+            <!-- Top Toolbar Header (Matched with Projects Header UI Card) -->
+            <div class="card projects-header-card">
+              <div class="projects-top-bar flex-between flex-wrap gap-md">
+                <div>
+                  <div class="flex-align gap-xs">
+                    <h2>My Verified Developer Skills</h2>
+                    <span class="count-badge">{{ app.getUserSkillNames().length }} Skills</span>
+                  </div>
+                  <p class="section-subtitle">Technologies extracted and verified across your active portfolio projects.</p>
+                </div>
+
+                <div class="projects-top-actions flex-align gap-sm" *ngIf="app.currentUser()">
+                  <button class="btn btn-primary new-project-toggle-btn" (click)="app.showAddSkillForm.update(v => !v)">
+                    <svg *ngIf="!app.showAddSkillForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg *ngIf="app.showAddSkillForm()" class="btn-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span>{{ app.showAddSkillForm() ? 'Close Form' : 'Add Skill' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Skills Search & Category Filter Toolbar (Inside Header Card when skills exist) -->
+              <div class="skills-filter-toolbar margin-top-md" *ngIf="app.getUserSkillNames().length > 0">
+                <div class="skills-toolbar-layout">
+                  <!-- Search Input Row -->
+                  <div class="skill-search-box">
+                    <svg class="search-svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input 
+                      type="text" 
+                      class="form-input skill-search-input" 
+                      placeholder="Search skills or projects..." 
+                      [(ngModel)]="app.skillSearchQuery" 
+                    />
+                    <button *ngIf="app.skillSearchQuery()" class="btn-clear-search" (click)="app.skillSearchQuery.set('')" title="Clear search">✕</button>
+                  </div>
+
+                  <!-- Mobile Category Filter Dropdown (<= 768px) -->
+                  <div class="skill-category-select-wrapper">
+                    <svg class="category-select-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <select 
+                      class="skill-category-select"
+                      [ngModel]="app.skillCategoryFilter()"
+                      (ngModelChange)="app.setSkillCategoryFilter($event)">
+                      <option value="all">All Categories ({{ app.getUserSkillsDetailed().length }})</option>
+                      <option *ngFor="let cat of app.getSkillCategories()" [value]="cat">
+                        {{ cat }} ({{ app.getSkillCountByCategory(cat) }})
+                      </option>
+                    </select>
+                    <svg class="select-chevron-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+
+                  <!-- Desktop Category Filter Pills (> 768px) -->
+                  <div class="skill-category-pills">
+                    <button 
+                      class="filter-pill" 
+                      [class.active]="app.skillCategoryFilter() === 'all'" 
+                      (click)="app.setSkillCategoryFilter('all')">
+                      All ({{ app.getUserSkillsDetailed().length }})
+                    </button>
+                    <button 
+                      class="filter-pill" 
+                      *ngFor="let cat of app.getSkillCategories()"
+                      [class.active]="app.skillCategoryFilter() === cat" 
+                      (click)="app.setSkillCategoryFilter(cat)">
+                      {{ cat }} ({{ app.getSkillCountByCategory(cat) }})
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collapsible Modern "Add Skill" Drawer/Card -->
+            <div class="card add-project-card margin-bottom-md" *ngIf="app.showAddSkillForm()">
+              <div class="card-header flex-between">
+                <div class="flex-align gap-xs">
+                  <div class="add-proj-icon-bubble">
+                    <svg class="btn-svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  </div>
+                  <div>
+                    <h3>Add Skill to Portfolio</h3>
+                    <span class="sub-text">Skill will be canonicalized and auto-categorized based on our knowledge base</span>
+                  </div>
+                </div>
+                <button class="btn-icon" (click)="app.resetAddSkillForm()">✕</button>
+              </div>
+
+              <div class="add-project-form-body">
+                <div class="form-row-grid">
+                  <div class="form-group flex-2">
+                    <label class="form-label">Skill Name <span class="text-danger">*</span></label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      placeholder="e.g. React, Docker, Python, TypeScript..."
+                      [(ngModel)]="app.newSkillName"
+                      (keydown.enter)="app.addSkillDirectly()"
+                      autocomplete="off"
+                    />
+                    <span class="sub-text" *ngIf="app.newSkillName.trim()" style="font-size: 0.78rem; margin-top: 2px;">
+                      Will be saved as: <strong>{{ app.getCanonicalSkillName(app.newSkillName) }}</strong>
+                    </span>
+                  </div>
+
+                  <div class="form-group flex-1">
+                    <div class="flex-between">
+                      <label class="form-label">Attach to Project(s) <span class="text-danger">*</span></label>
+                      <span *ngIf="app.newSkillProjectIds.length > 0" class="sub-text" style="font-size: 0.76rem; font-weight: 600; color: var(--accent-primary);">
+                        {{ app.newSkillProjectIds.length }} selected
+                      </span>
+                    </div>
+
+                    <!-- Custom Searchable Multi-Select Dropdown -->
+                    <div class="multiselect-container" (click)="$event.stopPropagation()">
+                      <div 
+                        class="form-select multiselect-trigger" 
+                        (click)="app.showProjectMultiSelect.set(!app.showProjectMultiSelect())"
+                        [class.open]="app.showProjectMultiSelect()">
+                        <span *ngIf="app.newSkillProjectIds.length === 0" class="text-muted">Choose projects...</span>
+                        <span *ngIf="app.newSkillProjectIds.length === 1" class="multiselect-label">{{ app.getProjectName(app.newSkillProjectIds[0]) }}</span>
+                        <span *ngIf="app.newSkillProjectIds.length > 1" class="multiselect-badge">
+                          {{ app.newSkillProjectIds.length }} projects selected
+                        </span>
+                        <svg class="multiselect-chevron" viewBox="0 0 24 24" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                      </div>
+
+                      <!-- Floating Multi-select Dropdown -->
+                      <div class="multiselect-dropdown" *ngIf="app.showProjectMultiSelect()" (click)="$event.stopPropagation()">
+                        <div class="multiselect-header flex-between">
+                          <span class="multiselect-count">{{ app.newSkillProjectIds.length }}/{{ app.projects().length }} attached</span>
+                          <div class="flex-align gap-xs">
+                            <button type="button" class="btn-link-xs" (click)="app.selectAllProjectsForSkill()">Select All</button>
+                            <span class="text-muted">•</span>
+                            <button type="button" class="btn-link-xs" (click)="app.clearAllProjectsForSkill()" [disabled]="app.newSkillProjectIds.length === 0">Clear</button>
+                          </div>
+                        </div>
+
+                        <div class="multiselect-search" *ngIf="app.projects().length > 4">
+                          <input 
+                            type="text" 
+                            class="form-input form-input-sm" 
+                            placeholder="Filter projects..." 
+                            [(ngModel)]="app.projectDropdownSearch" 
+                          />
+                        </div>
+
+                        <div class="multiselect-list">
+                          <label 
+                            *ngFor="let p of app.getFilteredProjectsForDropdown()" 
+                            class="multiselect-item flex-align gap-xs">
+                            <input 
+                              type="checkbox" 
+                              [checked]="app.isProjectSelectedForSkill(p.id)" 
+                              (change)="app.toggleProjectSelectionForSkill(p.id)"
+                            />
+                            <span class="multiselect-label" [title]="p.name">{{ p.name }}</span>
+                          </label>
+                          <div *ngIf="app.getFilteredProjectsForDropdown().length === 0" class="multiselect-empty">
+                            No matching projects
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Selected project chips -->
+                    <div class="selected-projects-chips margin-top-xs" *ngIf="app.newSkillProjectIds.length > 0">
+                      <span class="selected-proj-chip" *ngFor="let pid of (app.isExpandedSelectedProjects ? app.newSkillProjectIds : (app.newSkillProjectIds | slice:0:3))">
+                        {{ app.getProjectName(pid) }}
+                        <button type="button" class="chip-remove" (click)="app.removeProjectFromSkill(pid)" title="Remove project">✕</button>
+                      </span>
+                      <span class="chip-more" *ngIf="app.newSkillProjectIds.length > 3" (click)="app.isExpandedSelectedProjects = !app.isExpandedSelectedProjects">
+                        {{ app.isExpandedSelectedProjects ? 'Show less' : ('+' + (app.newSkillProjectIds.length - 3) + ' more') }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="add-project-actions flex-align gap-sm margin-top-md">
+                  <button
+                    class="btn btn-primary"
+                    (click)="app.addSkillDirectly()"
+                    [disabled]="app.isAddingSkill() || !app.newSkillName.trim() || app.newSkillProjectIds.length === 0">
+                    <span *ngIf="!app.isAddingSkill()">
+                      {{ app.newSkillProjectIds.length > 1 ? ('+ Add to ' + app.newSkillProjectIds.length + ' Projects') : '+ Add to Portfolio' }}
+                    </span>
+                    <span *ngIf="app.isAddingSkill()">Adding...</span>
+                  </button>
+                  <button class="btn btn-secondary" (click)="app.resetAddSkillForm()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Zero / Empty State (Matched with Projects Empty State) -->
+            <div class="card empty-projects-card text-center" *ngIf="app.getUserSkillNames().length === 0">
+              <div class="empty-icon-circle">
+                <svg class="nav-svg" viewBox="0 0 24 24" style="width: 32px; height: 32px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </div>
+              <h3>No Skills in Your Portfolio Yet</h3>
+              <p class="text-muted" style="max-width: 480px; margin: 8px auto 20px;">
+                You haven't attached any skills to your projects yet. Go to <strong>My Projects</strong> or import your repositories in <strong>GitHub Sync</strong> to automatically detect and populate your skills!
+              </p>
+              <div class="optimizer-empty-actions margin-top-sm">
+                <button class="btn btn-primary" (click)="app.setTab('projects')">Go to My Projects</button>
+                <button class="btn btn-outline-ai" (click)="app.setTab('github')">GitHub Sync</button>
+              </div>
+            </div>
+
+            <!-- Filter / Search Zero State -->
+            <div class="card empty-projects-card text-center" *ngIf="app.getUserSkillNames().length > 0 && app.getFilteredUserSkills().length === 0">
+              <div class="empty-icon-circle">
+                <svg class="search-icon" viewBox="0 0 24 24" style="position: static; width: 26px; height: 26px; stroke: var(--accent-primary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              <h3>No Matching Skills Found</h3>
+              <p class="text-muted" style="max-width: 480px; margin: 8px auto 20px;">
+                No skills matched your search query "<strong>{{ app.skillSearchQuery() }}</strong>" in category <strong>{{ app.skillCategoryFilter() }}</strong>.
+              </p>
+              <div class="optimizer-empty-actions margin-top-sm" style="max-width: 240px; margin-left: auto; margin-right: auto;">
+                <button class="btn btn-primary" (click)="app.clearSkillFilters()">Clear Filters</button>
+              </div>
+            </div>
+
+            <!-- User's Skills Grid -->
+            <div class="user-skills-grid" *ngIf="app.getFilteredUserSkills().length > 0">
+              <div class="user-skill-card" *ngFor="let s of app.getFilteredUserSkills()">
+                <div class="user-skill-top flex-between">
+                  <span class="user-skill-name" [title]="s.name">{{ s.name }}</span>
+                  <div class="user-skill-actions flex-align gap-xs">
+                    <span class="user-skill-count-pill" [title]="'Used in ' + s.count + ' project(s)'">
+                      {{ s.count }} project{{ s.count > 1 ? 's' : '' }}
+                    </span>
+                    <button class="btn-icon delete-user-skill-btn" (click)="app.removeSkillFromUserPortfolio(s.name)" title="Remove {{ s.name }} from your portfolio">
+                      <svg class="btn-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="user-skill-meta">
+                  <span class="skill-cat-pill" [ngClass]="app.getSkillCategoryClass(s.category)">
+                    {{ s.category }}
+                  </span>
+                </div>
+                <div class="user-skill-projects">
+                  <button 
+                    type="button"
+                    class="project-tag clickable-project-tag" 
+                    *ngFor="let pName of (app.isSkillProjectsExpanded(s.name) ? s.projectNames : (s.projectNames | slice:0:3))" 
+                    [title]="'View project: ' + pName"
+                    (click)="app.navigateToProject(pName)">
+                    {{ pName }}
+                  </button>
+                  <button 
+                    type="button"
+                    class="project-tag project-tag-more" 
+                    *ngIf="s.projectNames.length > 3" 
+                    (click)="app.toggleSkillProjectsExpand(s.name)"
+                    [title]="app.isSkillProjectsExpanded(s.name) ? 'Click to collapse projects' : 'Click to view all ' + s.projectNames.length + ' projects'">
+                    {{ app.isSkillProjectsExpanded(s.name) ? 'Show less ▴' : ('+' + (s.projectNames.length - 3) + ' more ▾') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+
+
+        </div>

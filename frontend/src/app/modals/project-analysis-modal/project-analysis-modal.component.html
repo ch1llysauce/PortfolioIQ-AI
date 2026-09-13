@@ -1,0 +1,79 @@
+<!-- PROJECT ANALYSIS MODAL (UI 5 Wireframe Spec) -->
+<div class="modal-backdrop" *ngIf="app.activeAnalysisProject()" (click)="app.closeProjectAnalysis()">
+  <div class="modal-card project-analysis-modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header flex-between">
+      <h2 class="analysis-modal-title">{{ app.activeAnalysisProject()?.name }}</h2>
+      <button class="btn-icon" (click)="app.closeProjectAnalysis()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="app.activeAnalysisProject()">
+      <!-- Project Metadata Card / Banner -->
+      <div class="analysis-project-info-card">
+        <div class="analysis-info-top-row">
+          <span class="analysis-info-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            Project Overview
+          </span>
+          <div class="analysis-status-wrapper">
+            <span class="phase-badge" [class]="'phase-' + app.activeAnalysisProject()?.status">
+              <span class="phase-dot"></span>
+              <span class="phase-text">{{ app.activeAnalysisProject()?.status === 'idea' ? 'Idea' : (app.activeAnalysisProject()?.status === 'completed' ? 'Completed' : 'In Progress') }}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="analysis-desc-box">
+          <span class="analysis-sublabel">Description</span>
+          <p class="analysis-desc-text" [class.empty-desc]="!app.activeAnalysisProject()?.description || app.activeAnalysisProject()?.description?.trim() === ''">
+            {{ app.activeAnalysisProject()?.description || 'No description provided for this project.' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- ML Probabilities Breakdown (UI 5 Spec) -->
+      <div class="card sub-card analysis-ml-card" *ngIf="app.mlPredictions()[app.activeAnalysisProject()?.id]">
+        <div class="analysis-ml-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <h3>Machine Learning Classification Breakdown</h3>
+        </div>
+        
+        <div class="predicted-highlight" *ngIf="!app.mlPredictions()[app.activeAnalysisProject().id].needs_details && app.mlPredictions()[app.activeAnalysisProject().id].confidence_score > 30">
+          <div class="predicted-highlight-main">
+            <span class="predicted-tag">Predicted Domain</span>
+            <strong class="predicted-domain-name">{{ app.mlPredictions()[app.activeAnalysisProject().id].predicted_category }}</strong>
+          </div>
+          <span class="confidence-pill">{{ app.mlPredictions()[app.activeAnalysisProject().id].confidence_score }}% Confidence</span>
+        </div>
+        <div class="predicted-highlight warning-highlight" *ngIf="app.mlPredictions()[app.activeAnalysisProject().id].needs_details || app.mlPredictions()[app.activeAnalysisProject().id].confidence_score <= 30">
+          <div class="predicted-highlight-main">
+            <span class="predicted-tag warning-tag">Status</span>
+            <strong>Needs More Details</strong>
+          </div>
+          <span class="confidence-pill warning-pill">{{ app.mlPredictions()[app.activeAnalysisProject().id].confidence_score }}% Confidence — Add a detailed description of features and tools used</span>
+        </div>
+
+        <div class="prob-list">
+          <div class="prob-item" *ngFor="let item of app.mlPredictions()[app.activeAnalysisProject().id].probabilities | keyvalue">
+            <div class="flex-between prob-item-header">
+              <span class="prob-label">{{ item.key }}</span>
+              <span class="prob-pct">{{ (item.value * 100).toFixed(1) }}%</span>
+            </div>
+            <div class="progress-bar-bg small">
+              <div class="progress-bar-fill" [style.width.%]="item.value * 100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer flex-between">
+      <button class="btn btn-secondary" (click)="app.closeProjectAnalysis()">Close</button>
+      <button class="btn btn-primary" (click)="app.editCurrentAnalysisProject()" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 0.88rem; font-weight: 600;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Edit Title & Description</span>
+      </button>
+    </div>
+  </div>
+</div>

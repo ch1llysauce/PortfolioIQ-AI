@@ -1,0 +1,135 @@
+<!-- Coach Sleek Top Header Bar -->
+        <div class="coach-top-bar">
+          <div class="flex-between flex-wrap gap-md w-full">
+            <div class="coach-profile-summary">
+              <div class="coach-main-avatar">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="coach-title">PortfolioIQ AI Developer Coach</h2>
+                <p class="coach-subtitle">
+                  Real-time career mentor powered by
+                  <strong class="text-accent">{{ app.coachStatus()?.provider || 'Groq Llama-3' }}</strong>
+                  <span class="live-model-pill" *ngIf="app.coachStatus()?.live">
+                    <span class="live-dot"></span>
+                    Live Cloud Model ({{ app.coachStatus()?.model }})
+                  </span>
+                  <span class="badge badge-warning margin-left-xs" *ngIf="!app.coachStatus()?.live">Demonstration Mode</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons on Right -->
+            <div class="coach-header-actions">
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="app.requestExecutiveCritique()" [disabled]="app.coachLoading()" title="Request Executive AI Critique">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Critique</span>
+              </button>
+              <button class="btn btn-secondary btn-sm coach-action-btn" (click)="app.requestProjectRecommendations()" [disabled]="app.coachLoading()" title="Recommend High-Impact Projects">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Recommend</span>
+              </button>
+              <button class="btn-icon coach-icon-btn" (click)="app.scrollCoachToTop(true)" title="Scroll to top">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+              </button>
+              <button class="btn-icon coach-icon-btn" (click)="app.scrollCoachToBottom(true)" title="Scroll to latest message">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+              </button>
+              <button class="btn-icon coach-icon-btn coach-clear-btn" (click)="app.clearCoachChat()" title="Clear chat / Reset conversation">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Chat Stream Canvas (Main UI) -->
+        <div class="coach-chat-stream-wrapper">
+          <!-- Full-width Scroll Container (Scrollbar pinned at far right edge) -->
+          <div class="chat-message-stream" #chatStream (scroll)="app.onCoachScroll($event)">
+            <!-- Centered Message Content Column -->
+            <div class="chat-message-stream-inner">
+              <div *ngFor="let msg of app.coachMessages()" 
+                   class="chat-bubble-row" 
+                   [class.user-row]="msg.role === 'user'" 
+                   [class.assistant-row]="msg.role === 'assistant'">
+                
+                <div class="chat-avatar" [class.clickable-avatar]="msg.role === 'user'" (click)="msg.role === 'user' ? app.openProfileModal() : null" [title]="msg.role === 'user' ? 'Your Profile Photo - Click to edit' : 'PortfolioIQ Coach'">
+                  <div class="user-avatar-initial" *ngIf="msg.role === 'user'">
+                    <img *ngIf="app.getUserAvatar()" [src]="app.getUserAvatar()" alt="User Avatar" class="user-avatar-img" />
+                    <span *ngIf="!app.getUserAvatar()">{{ app.getUserInitial() }}</span>
+                  </div>
+                  <span class="ai-avatar-badge" *ngIf="msg.role === 'assistant'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </div>
+
+                <div class="chat-bubble">
+                  <div class="chat-bubble-header">
+                    <div class="flex-align gap-xs">
+                      <span class="sender-name">{{ msg.role === 'user' ? 'You' : 'PortfolioIQ Coach' }}</span>
+                      <span class="badge badge-demo" *ngIf="msg.isDemo">Demo Mode</span>
+                    </div>
+                    <span class="message-time" *ngIf="msg.timestamp">{{ msg.timestamp }}</span>
+                  </div>
+                  <div class="chat-bubble-content">
+                    <div class="chat-rendered-markdown" [innerHTML]="app.formatCoachMarkdown(msg.content)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Thinking Indicator -->
+              <div class="chat-bubble-row assistant-row" *ngIf="app.coachLoading()">
+                <div class="chat-avatar">
+                  <span class="ai-avatar-badge">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </div>
+                <div class="chat-bubble typing-bubble">
+                  <span class="typing-text">AI Coach is analyzing your portfolio telemetry and generating response...</span>
+                  <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Suggested Followup Chips & Chat Input Dock -->
+          <div class="chat-input-bar">
+            <div class="chat-dock-container">
+              <!-- Suggested Followup Chips -->
+              <div class="suggested-prompts-container" *ngIf="app.suggestedFollowups().length && !app.coachLoading()">
+                <div class="suggested-label-wrapper">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>
+                  <span class="suggested-label">Suggested Questions:</span>
+                </div>
+                <div class="prompt-chips-wrapper">
+                  <button class="prompt-chip" *ngFor="let prompt of app.suggestedFollowups()" (click)="app.sendQuickPrompt(prompt)">
+                    {{ prompt }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input Capsule -->
+              <div class="chat-input-capsule">
+                <input 
+                  type="text" 
+                  class="chat-input-field" 
+                  placeholder="Ask your AI coach anything..." 
+                  [(ngModel)]="app.coachInput" 
+                  (keydown.enter)="app.sendCoachMessage()" 
+                  [disabled]="app.coachLoading()" 
+                />
+                <button class="btn btn-primary chat-send-btn" (click)="app.sendCoachMessage()" [disabled]="app.coachLoading() || !app.coachInput.trim()">
+                  <span *ngIf="!app.coachLoading()" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span>Send</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  </span>
+                  <span *ngIf="app.coachLoading()">Thinking...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
