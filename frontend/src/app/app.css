@@ -8888,7 +8888,16 @@ div[app-coach] {
     gap: 8px;
   }
 
-  .gh-lang-insights-row .gh-lang-stat-chip:last-child {
+  .gh-lang-insights-row .chip-primary-stack {
+    order: 1;
+  }
+
+  .gh-lang-insights-row .chip-total-codebases {
+    order: 2;
+  }
+
+  .gh-lang-insights-row .chip-ecosystem-focus {
+    order: 3;
     grid-column: 1 / -1;
   }
 

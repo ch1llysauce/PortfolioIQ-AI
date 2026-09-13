@@ -159,15 +159,15 @@
 
               <!-- Language Insights Ecosystem Stats -->
               <div class="gh-lang-insights-row" *ngIf="app.getGitHubLanguageSegments().length">
-                <div class="gh-lang-stat-chip">
+                <div class="gh-lang-stat-chip chip-primary-stack">
                   <span class="stat-chip-label">Primary Stack</span>
                   <strong class="stat-chip-value text-accent">{{ app.getGitHubLanguageSegments()[0]?.name || 'N/A' }} ({{ app.getGitHubLanguageSegments()[0]?.percentage }}%)</strong>
                 </div>
-                <div class="gh-lang-stat-chip">
+                <div class="gh-lang-stat-chip chip-ecosystem-focus">
                   <span class="stat-chip-label">Ecosystem Focus</span>
                   <strong class="stat-chip-value" [title]="app.getEcosystemFocus()">{{ app.getEcosystemFocus() }}</strong>
                 </div>
-                <div class="gh-lang-stat-chip">
+                <div class="gh-lang-stat-chip chip-total-codebases">
                   <span class="stat-chip-label">Total Codebases</span>
                   <strong class="stat-chip-value">{{ app.githubScanData()?.summary?.total_scanned_repos || 0 }} Scanned</strong>
                 </div>
