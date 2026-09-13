@@ -286,7 +286,6 @@
                     <span class="path-skill-name">{{ p }}</span>
                     <div class="flex-align gap-xs path-action-badge" (click)="$event.stopPropagation(); app.inspectNode(p); app.setKnowledgeViewMode('inspector')" title="Inspect {{ p }} in Skill Explorer">
                       <span class="badge badge-success">Mastered</span>
-                      <span class="path-inspect-arrow">→</span>
                     </div>
                   </div>
                 </div>
@@ -309,7 +308,6 @@
                     <span><strong>Step {{ i + 1 }}:</strong> {{ m }}</span>
                     <div class="flex-align gap-xs path-action-badge" (click)="$event.stopPropagation(); app.inspectNode(m); app.setKnowledgeViewMode('inspector')" title="Inspect {{ m }} in Skill Explorer">
                       <span class="badge badge-warning">Required First</span>
-                      <span class="path-inspect-arrow">→</span>
                     </div>
                   </div>
                 </div>
