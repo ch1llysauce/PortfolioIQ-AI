@@ -3175,16 +3175,17 @@ export class App implements OnInit {
 
   // Project Operations
   async fetchProjects() {
-    const { data, error } = await this.projectService.getProjects();
-    if (error) {
-      console.error('Failed to fetch projects:', error);
-      return;
-    }
+    const { data, error, fromCache } = await this.projectService.getProjects();
     if (data) {
       this.projects.set(data);
       await this.recalculatePortfolioScore();
       await this.recalculateSkillGap();
       this.classifyAllProjectsWithMl();
+      if (fromCache) {
+        console.info('Projects loaded from local offline cache.');
+      }
+    } else if (error) {
+      console.warn('Failed to fetch projects from cloud, no local cache available:', error);
     }
   }
 

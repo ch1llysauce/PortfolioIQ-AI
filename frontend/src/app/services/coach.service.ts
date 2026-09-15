@@ -153,20 +153,70 @@ export class CoachService {
     }
   }
 
+  private resolveUserId(): string | null {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.user?.id) return parsed.user.id;
+          }
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  private readLocalBackupMessages(userId?: string | null): ChatMessage[] | null {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      const keysToTry = [
+        userId ? `portfolioiq_coach_messages_${userId}` : null,
+        `portfolioiq_coach_messages_guest`
+      ].filter(Boolean) as string[];
+
+      for (const key of keysToTry) {
+        const local = localStorage.getItem(key);
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading local coach messages backup:', e);
+    }
+    return null;
+  }
+
   /**
    * Loads chat history from Supabase cloud database.
-   * If table is not yet migrated or offline, loads from localStorage backup.
+   * If table is not yet migrated, auth fails, or offline, loads from localStorage backup.
    */
   async loadMessagesFromCloud(): Promise<ChatMessage[] | null> {
+    let resolvedUserId: string | null = null;
     try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      const storageKey = `portfolioiq_coach_messages_${user?.id || 'guest'}`;
+      try {
+        const { data: { user } } = await this.supabase.auth.getUser();
+        resolvedUserId = user?.id || null;
+      } catch {
+        // Fallback to locally stored session if network/auth fails
+      }
+      if (!resolvedUserId) {
+        resolvedUserId = this.resolveUserId();
+      }
 
-      if (user) {
+      const storageKey = `portfolioiq_coach_messages_${resolvedUserId || 'guest'}`;
+
+      if (resolvedUserId) {
         const { data, error } = await this.supabase
           .from('coach_messages')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', resolvedUserId)
           .order('created_at', { ascending: true });
 
         if (!error && data && data.length > 0) {
@@ -182,22 +232,20 @@ export class CoachService {
           }
           return cloudMessages;
         }
-      }
 
-      // Fallback to local storage if user not logged in or cloud table empty
-      if (typeof localStorage !== 'undefined') {
-        const local = localStorage.getItem(storageKey);
-        if (local) {
-          const parsed = JSON.parse(local);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
+        if (error) {
+          console.warn('Could not query coach messages from Supabase cloud, falling back to local storage:', error);
+          const fallback = this.readLocalBackupMessages(resolvedUserId);
+          if (fallback) return fallback;
         }
       }
+
+      // Fallback to local storage if user not logged in, cloud table empty, or server offline
+      return this.readLocalBackupMessages(resolvedUserId);
     } catch (err) {
-      console.warn('Could not load messages from Supabase cloud, checking local storage:', err);
+      console.warn('Exception loading messages from Supabase cloud, checking local storage:', err);
+      return this.readLocalBackupMessages(resolvedUserId);
     }
-    return null;
   }
 
   /**
