@@ -762,7 +762,10 @@ export class App implements OnInit {
 
   getOnboardingAvatar(): string {
     const user = this.currentUser();
-    if (user?.user_metadata?.avatar_url) {
+    if (user?.user_metadata?.custom_avatar_url && user.user_metadata.custom_avatar_url !== '__NONE__') {
+      return user.user_metadata.custom_avatar_url;
+    }
+    if (user?.user_metadata?.avatar_url && user.user_metadata.avatar_url !== '__NONE__') {
       return user.user_metadata.avatar_url;
     }
     const gh = this.verifiedGitHubUsername() || this.githubUsername;
@@ -1636,10 +1639,10 @@ export class App implements OnInit {
     this.resumePdfUrlSafe.set(null);
     this.showResumeModal.set(false);
 
-    // Clear all portfolioiq keys from localStorage except theme preference
+    // Clear all portfolioiq keys from localStorage except theme preference and user custom avatars
     if (typeof localStorage !== 'undefined') {
       Object.keys(localStorage)
-        .filter(k => k.startsWith('portfolioiq_') && k !== 'portfolioiq_theme')
+        .filter(k => k.startsWith('portfolioiq_') && k !== 'portfolioiq_theme' && !k.startsWith('portfolioiq_custom_avatar_'))
         .forEach(k => localStorage.removeItem(k));
     }
 
@@ -1665,14 +1668,33 @@ export class App implements OnInit {
   }
 
   getUserAvatar(): string {
-    const custom = localStorage.getItem('portfolioiq_custom_avatar');
-    if (custom === '__NONE__') {
+    const user = this.currentUser();
+    const userId = user?.id;
+
+    // 1. Check explicit custom avatar in Supabase cloud user_metadata (immune to GitHub OAuth overwrites)
+    const cloudCustom = user?.user_metadata?.custom_avatar_url;
+    if (cloudCustom === '__NONE__') {
       return '';
     }
-    if (custom) {
-      return custom;
+    if (cloudCustom) {
+      return cloudCustom;
     }
-    const user = this.currentUser();
+
+    // 2. Check per-user local storage cache (survives logout/login)
+    if (userId && typeof localStorage !== 'undefined') {
+      const userCached = localStorage.getItem(`portfolioiq_custom_avatar_${userId}`);
+      if (userCached === '__NONE__') return '';
+      if (userCached) return userCached;
+    }
+
+    // 3. Fallback to generic local storage cache
+    if (typeof localStorage !== 'undefined') {
+      const genericCached = localStorage.getItem('portfolioiq_custom_avatar');
+      if (genericCached === '__NONE__') return '';
+      if (genericCached) return genericCached;
+    }
+
+    // 4. Cloud user_metadata avatar_url
     if (user?.user_metadata?.avatar_url === '__NONE__') {
       return '';
     }
@@ -1685,12 +1707,16 @@ export class App implements OnInit {
     if (user?.user_metadata?.avatar) {
       return user.user_metadata.avatar;
     }
+
+    // 5. OAuth identity data from GitHub
     if (user?.identities && Array.isArray(user.identities)) {
       const ghIdentity = user.identities.find((id: any) => id.provider === 'github');
       if (ghIdentity?.identity_data?.avatar_url) {
         return ghIdentity.identity_data.avatar_url;
       }
     }
+
+    // 6. Scanned GitHub profile or username fallback
     if (this.githubScanData()?.profile?.avatar_url) {
       return this.githubScanData()!.profile!.avatar_url;
     }
@@ -1698,6 +1724,7 @@ export class App implements OnInit {
     if (gh) {
       return `https://github.com/${gh}.png?size=64`;
     }
+
     return '';
   }
 
@@ -1723,26 +1750,17 @@ export class App implements OnInit {
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          const maxDim = 512;
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
+          const targetDim = 128; // 128x128 is ideal: sharp on 64px retina displays, ~2.5KB base64 fits within GoTrue JWT limit
+          canvas.width = targetDim;
+          canvas.height = targetDim;
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const base64 = canvas.toDataURL('image/jpeg', 0.88);
+            // Centered square crop
+            const minDim = Math.min(img.width, img.height);
+            const sx = (img.width - minDim) / 2;
+            const sy = (img.height - minDim) / 2;
+            ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetDim, targetDim);
+            const base64 = canvas.toDataURL('image/jpeg', 0.72);
             this.profileAvatarUrl = base64;
           } else {
             this.profileAvatarUrl = e.target.result as string;
@@ -1887,31 +1905,40 @@ export class App implements OnInit {
 
     this.isSavingProfile.set(true);
     try {
-      const { data, error } = await this.authService.updateUserProfile(trimmedName);
+      const user = this.currentUser();
+      const trimmedAvatar = this.profileAvatarUrl.trim();
+      const avatarChanged = trimmedAvatar !== this.initialProfileAvatarUrl.trim();
+
+      // Combine profile display name and custom avatar into a single user_metadata update
+      const metadataPayload: any = {
+        display_name: trimmedName,
+        full_name: trimmedName
+      };
+
+      if (avatarChanged) {
+        if (trimmedAvatar) {
+          metadataPayload.custom_avatar_url = trimmedAvatar;
+          metadataPayload.avatar_url = trimmedAvatar;
+        } else {
+          metadataPayload.custom_avatar_url = '__NONE__';
+          metadataPayload.avatar_url = '__NONE__';
+        }
+      }
+
+      const { data, error } = await this.authService.updateUserData(metadataPayload);
       if (error) throw error;
 
       if (data && data.user) {
         this.currentUser.set(data.user);
       }
 
-      // If avatar URL was modified, persist to local storage and cloud user_metadata
-      const trimmedAvatar = this.profileAvatarUrl.trim();
-      if (trimmedAvatar !== this.initialProfileAvatarUrl.trim()) {
-        if (trimmedAvatar) {
-          localStorage.setItem('portfolioiq_custom_avatar', trimmedAvatar);
-          try {
-            await this.authService.updateUserData({ avatar_url: trimmedAvatar });
-          } catch (avatarErr) {
-            console.warn('Could not sync avatar to cloud metadata:', avatarErr);
-          }
-        } else {
-          localStorage.setItem('portfolioiq_custom_avatar', '__NONE__');
-          try {
-            await this.authService.updateUserData({ avatar_url: '__NONE__' });
-          } catch (avatarErr) {
-            console.warn('Could not sync avatar to cloud metadata:', avatarErr);
-          }
+      // Persist to local storage keyed by user ID to survive logout
+      if (avatarChanged) {
+        const avatarToStore = trimmedAvatar ? trimmedAvatar : '__NONE__';
+        if (user?.id) {
+          localStorage.setItem(`portfolioiq_custom_avatar_${user.id}`, avatarToStore);
         }
+        localStorage.setItem('portfolioiq_custom_avatar', avatarToStore);
         this.initialProfileAvatarUrl = trimmedAvatar;
       }
 
