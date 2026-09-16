@@ -2962,26 +2962,36 @@ app-root {
 
 /* SIMULATION HERO METRICS */
 .simulation-hero-card {
-  background: linear-gradient(135deg, rgba(30, 27, 75, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(24, 24, 47, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
   border: 1px solid rgba(99, 102, 241, 0.35);
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .sim-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
 .sim-metric-box {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 10px;
+  padding: 18px 22px;
   box-sizing: border-box;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.sim-metric-box:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(24, 32, 56, 0.85);
 }
 
 .sim-label {
@@ -12990,18 +13000,24 @@ div[app-coach] {
 }
 
 /* ── Impact Simulation Hero Card & Metric Boxes (Light Mode) ── */
-[data-theme="light"] .simulation-hero-card,
 [data-theme="light"] .simulation-hero-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 20px 24px;
 }
 
-[data-theme="light"] .sim-metric-box,
 [data-theme="light"] .sim-metric-box {
   background: #f8fafc !important;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px;
+  padding: 18px 22px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .sim-metric-box:hover {
+  border-color: #cbd5e1 !important;
+  background: #f1f5f9 !important;
 }
 
 [data-theme="light"] .sim-label,
