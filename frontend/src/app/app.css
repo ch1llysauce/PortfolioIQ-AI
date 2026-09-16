@@ -8101,29 +8101,47 @@ div[app-coach] {
     border-radius: 6px;
   }
 
+  .simulation-hero-card {
+    padding: 14px 16px !important;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
   .sim-metrics-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
   }
 
   .sim-metric-box {
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 16px !important;
+    border-radius: 10px !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    border: 1px solid rgba(99, 102, 241, 0.25) !important;
+    box-sizing: border-box;
+  }
+
+  [data-theme="light"] .sim-metric-box {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   }
 
   .sim-label {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
   }
 
   .sim-val {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
   }
 
   .sim-gain-badge {
-    font-size: 0.68rem;
-    padding: 2px 6px;
+    font-size: 0.7rem;
+    padding: 2px 7px;
   }
 
   .blueprint-view-switcher {
@@ -13011,7 +13029,7 @@ div[app-coach] {
   background: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px;
-  padding: 18px 22px !important;
+  padding: 18px 22px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
